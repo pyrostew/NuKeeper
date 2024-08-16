@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuGet.Configuration;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.Logging;
@@ -15,7 +12,14 @@ using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.NuGetApi;
 using NuKeeper.Inspection.RepositoryInspection;
+
 using NUnit.Framework;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Inspection.Tests
 {
@@ -25,16 +29,16 @@ namespace NuKeeper.Inspection.Tests
         [Test]
         public async Task FindWithoutResults()
         {
-            var scanner = Substitute.For<IRepositoryScanner>();
-            var updater = Substitute.For<IPackageUpdatesLookup>();
-            var logger = Substitute.For<INuKeeperLogger>();
-            var folder = Substitute.For<IFolder>();
+            IRepositoryScanner scanner = Substitute.For<IRepositoryScanner>();
+            IPackageUpdatesLookup updater = Substitute.For<IPackageUpdatesLookup>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            IFolder folder = Substitute.For<IFolder>();
 
             ReturnsUpdateSetForEachPackage(updater);
 
-            var finder = new UpdateFinder(scanner, updater, logger);
+            UpdateFinder finder = new(scanner, updater, logger);
 
-            var results = await finder.FindPackageUpdateSets(
+            IReadOnlyCollection<PackageUpdateSet> results = await finder.FindPackageUpdateSets(
                 folder, NuGetSources.GlobalFeed, VersionChange.Major, UsePrerelease.FromPrerelease);
 
             Assert.That(results, Is.Not.Null);
@@ -48,21 +52,21 @@ namespace NuKeeper.Inspection.Tests
         [Test]
         public async Task FindWithOneResult()
         {
-            var scanner = Substitute.For<IRepositoryScanner>();
-            var updater = Substitute.For<IPackageUpdatesLookup>();
-            var logger = Substitute.For<INuKeeperLogger>();
-            var folder = Substitute.For<IFolder>();
+            IRepositoryScanner scanner = Substitute.For<IRepositoryScanner>();
+            IPackageUpdatesLookup updater = Substitute.For<IPackageUpdatesLookup>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            IFolder folder = Substitute.For<IFolder>();
 
-            var pip = BuildPackageInProject("somePackage");
+            PackageInProject pip = BuildPackageInProject("somePackage");
 
-            scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
+            _ = scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
                 .Returns(new List<PackageInProject> { pip });
 
             ReturnsUpdateSetForEachPackage(updater);
 
-            var finder = new UpdateFinder(scanner, updater, logger);
+            UpdateFinder finder = new(scanner, updater, logger);
 
-            var results = await finder.FindPackageUpdateSets(
+            IReadOnlyCollection<PackageUpdateSet> results = await finder.FindPackageUpdateSets(
                 folder, NuGetSources.GlobalFeed, VersionChange.Major, UsePrerelease.FromPrerelease);
 
             Assert.That(results, Is.Not.Null);
@@ -77,22 +81,22 @@ namespace NuKeeper.Inspection.Tests
         [Test]
         public async Task FindOneFilteredIncludeResult()
         {
-            var scanner = Substitute.For<IRepositoryScanner>();
-            var updater = Substitute.For<IPackageUpdatesLookup>();
-            var logger = Substitute.For<INuKeeperLogger>();
-            var folder = Substitute.For<IFolder>();
+            IRepositoryScanner scanner = Substitute.For<IRepositoryScanner>();
+            IPackageUpdatesLookup updater = Substitute.For<IPackageUpdatesLookup>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            IFolder folder = Substitute.For<IFolder>();
 
-            var pip = BuildPackageInProject("somePackage");
-            var anotherPackage = BuildPackageInProject("anotherPackage");
+            PackageInProject pip = BuildPackageInProject("somePackage");
+            PackageInProject anotherPackage = BuildPackageInProject("anotherPackage");
 
-            scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
+            _ = scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
                 .Returns(new List<PackageInProject> { pip, anotherPackage, anotherPackage, anotherPackage });
 
             ReturnsUpdateSetForEachPackage(updater);
 
-            var finder = new UpdateFinder(scanner, updater, logger);
+            UpdateFinder finder = new(scanner, updater, logger);
 
-            var results = await finder.FindPackageUpdateSets(
+            IReadOnlyCollection<PackageUpdateSet> results = await finder.FindPackageUpdateSets(
                 folder, NuGetSources.GlobalFeed, VersionChange.Major, UsePrerelease.FromPrerelease, new Regex("^somePackage"), null);
 
             Assert.That(results, Is.Not.Null);
@@ -107,23 +111,23 @@ namespace NuKeeper.Inspection.Tests
         [Test]
         public async Task FindTwoFilteredExcludeIncludeResults()
         {
-            var scanner = Substitute.For<IRepositoryScanner>();
-            var updater = Substitute.For<IPackageUpdatesLookup>();
-            var logger = Substitute.For<INuKeeperLogger>();
-            var folder = Substitute.For<IFolder>();
+            IRepositoryScanner scanner = Substitute.For<IRepositoryScanner>();
+            IPackageUpdatesLookup updater = Substitute.For<IPackageUpdatesLookup>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            IFolder folder = Substitute.For<IFolder>();
 
-            var pip = BuildPackageInProject("somePackage");
-            var anotherPackage = BuildPackageInProject("anotherPackage");
-            var andAnotherPackage = BuildPackageInProject("andAnotherPackage");
+            PackageInProject pip = BuildPackageInProject("somePackage");
+            PackageInProject anotherPackage = BuildPackageInProject("anotherPackage");
+            PackageInProject andAnotherPackage = BuildPackageInProject("andAnotherPackage");
 
-            scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
+            _ = scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
                 .Returns(new List<PackageInProject> { pip, anotherPackage, andAnotherPackage });
 
             ReturnsUpdateSetForEachPackage(updater);
 
-            var finder = new UpdateFinder(scanner, updater, logger);
+            UpdateFinder finder = new(scanner, updater, logger);
 
-            var results = await finder.FindPackageUpdateSets(
+            IReadOnlyCollection<PackageUpdateSet> results = await finder.FindPackageUpdateSets(
                 folder, NuGetSources.GlobalFeed, VersionChange.Major, UsePrerelease.FromPrerelease, new Regex("^andAnotherPackage"), new Regex("^anotherPackage"));
 
             Assert.That(results, Is.Not.Null);
@@ -138,22 +142,22 @@ namespace NuKeeper.Inspection.Tests
         [Test]
         public async Task FindOneFilteredExcludeResult()
         {
-            var scanner = Substitute.For<IRepositoryScanner>();
-            var updater = Substitute.For<IPackageUpdatesLookup>();
-            var logger = Substitute.For<INuKeeperLogger>();
-            var folder = Substitute.For<IFolder>();
+            IRepositoryScanner scanner = Substitute.For<IRepositoryScanner>();
+            IPackageUpdatesLookup updater = Substitute.For<IPackageUpdatesLookup>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            IFolder folder = Substitute.For<IFolder>();
 
-            var pip = BuildPackageInProject("somePackage");
-            var anotherPackage = BuildPackageInProject("anotherPackage");
+            PackageInProject pip = BuildPackageInProject("somePackage");
+            PackageInProject anotherPackage = BuildPackageInProject("anotherPackage");
 
-            scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
+            _ = scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
                 .Returns(new List<PackageInProject> { pip, anotherPackage, anotherPackage, anotherPackage });
 
             ReturnsUpdateSetForEachPackage(updater);
 
-            var finder = new UpdateFinder(scanner, updater, logger);
+            UpdateFinder finder = new(scanner, updater, logger);
 
-            var results = await finder.FindPackageUpdateSets(
+            IReadOnlyCollection<PackageUpdateSet> results = await finder.FindPackageUpdateSets(
                 folder, NuGetSources.GlobalFeed, VersionChange.Major, UsePrerelease.FromPrerelease, null, new Regex("^anotherPackage"));
 
             Assert.That(results, Is.Not.Null);
@@ -168,22 +172,22 @@ namespace NuKeeper.Inspection.Tests
         [Test]
         public async Task FindSkipsMetapackageResult()
         {
-            var scanner = Substitute.For<IRepositoryScanner>();
-            var updater = Substitute.For<IPackageUpdatesLookup>();
-            var logger = Substitute.For<INuKeeperLogger>();
-            var folder = Substitute.For<IFolder>();
+            IRepositoryScanner scanner = Substitute.For<IRepositoryScanner>();
+            IPackageUpdatesLookup updater = Substitute.For<IPackageUpdatesLookup>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            IFolder folder = Substitute.For<IFolder>();
 
-            var pip = BuildPackageInProject("somePackage");
-            var aspnetCore = BuildPackageInProject("Microsoft.AspNetCore.App");
+            PackageInProject pip = BuildPackageInProject("somePackage");
+            PackageInProject aspnetCore = BuildPackageInProject("Microsoft.AspNetCore.App");
 
-            scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
+            _ = scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
                 .Returns(new List<PackageInProject> { pip, aspnetCore });
 
             ReturnsUpdateSetForEachPackage(updater);
 
-            var finder = new UpdateFinder(scanner, updater, logger);
+            UpdateFinder finder = new(scanner, updater, logger);
 
-            var results = await finder.FindPackageUpdateSets(
+            IReadOnlyCollection<PackageUpdateSet> results = await finder.FindPackageUpdateSets(
                 folder, NuGetSources.GlobalFeed, VersionChange.Major, UsePrerelease.FromPrerelease);
 
             Assert.That(results, Is.Not.Null);
@@ -199,23 +203,23 @@ namespace NuKeeper.Inspection.Tests
         [Test]
         public async Task FindSkipsBothMetapackageResult()
         {
-            var scanner = Substitute.For<IRepositoryScanner>();
-            var updater = Substitute.For<IPackageUpdatesLookup>();
-            var logger = Substitute.For<INuKeeperLogger>();
-            var folder = Substitute.For<IFolder>();
+            IRepositoryScanner scanner = Substitute.For<IRepositoryScanner>();
+            IPackageUpdatesLookup updater = Substitute.For<IPackageUpdatesLookup>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            IFolder folder = Substitute.For<IFolder>();
 
-            var aspnetCoreAll = BuildPackageInProject("Microsoft.AspNetCore.All");
-            var pip = BuildPackageInProject("somePackage");
-            var aspnetCoreApp = BuildPackageInProject("Microsoft.AspNetCore.App");
+            PackageInProject aspnetCoreAll = BuildPackageInProject("Microsoft.AspNetCore.All");
+            PackageInProject pip = BuildPackageInProject("somePackage");
+            PackageInProject aspnetCoreApp = BuildPackageInProject("Microsoft.AspNetCore.App");
 
-            scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
+            _ = scanner.FindAllNuGetPackages(Arg.Any<IFolder>())
                 .Returns(new List<PackageInProject> { aspnetCoreAll, pip, aspnetCoreApp });
 
             ReturnsUpdateSetForEachPackage(updater);
 
-            var finder = new UpdateFinder(scanner, updater, logger);
+            UpdateFinder finder = new(scanner, updater, logger);
 
-            var results = await finder.FindPackageUpdateSets(
+            IReadOnlyCollection<PackageUpdateSet> results = await finder.FindPackageUpdateSets(
                 folder, NuGetSources.GlobalFeed, VersionChange.Major, UsePrerelease.FromPrerelease);
 
             Assert.That(results, Is.Not.Null);
@@ -232,7 +236,7 @@ namespace NuKeeper.Inspection.Tests
 
         private void ReturnsUpdateSetForEachPackage(IPackageUpdatesLookup updater)
         {
-            updater.FindUpdatesForPackages(
+            _ = updater.FindUpdatesForPackages(
                     Arg.Any<IReadOnlyCollection<PackageInProject>>(),
                     Arg.Any<NuGetSources>(),
                     Arg.Any<VersionChange>(),
@@ -244,17 +248,17 @@ namespace NuKeeper.Inspection.Tests
 
         private static PackageInProject BuildPackageInProject(string packageName)
         {
-            var path = new PackagePath("c:\\temp", "folder\\src\\project1\\packages.config",
+            PackagePath path = new("c:\\temp", "folder\\src\\project1\\packages.config",
                 PackageReferenceType.PackagesConfig);
             return new PackageInProject(packageName, "1.1.0", path);
         }
 
         private PackageUpdateSet BuildPackageUpdateSet(PackageInProject pip)
         {
-            var package = new PackageIdentity(pip.Id, new NuGetVersion("1.4.5"));
-            var latest = new PackageSearchMetadata(package, new PackageSource("http://none"), null, null);
+            PackageIdentity package = new(pip.Id, new NuGetVersion("1.4.5"));
+            PackageSearchMetadata latest = new(package, new PackageSource("http://none"), null, null);
 
-            var updates = new PackageLookupResult(VersionChange.Major, latest, null, null);
+            PackageLookupResult updates = new(VersionChange.Major, latest, null, null);
 
             return new PackageUpdateSet(updates, new List<PackageInProject> { pip });
         }

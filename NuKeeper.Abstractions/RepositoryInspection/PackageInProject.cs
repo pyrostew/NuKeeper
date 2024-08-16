@@ -1,8 +1,10 @@
-using System.Collections.Generic;
-using System.Linq;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.NuGet;
+
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Abstractions.RepositoryInspection
 {
@@ -14,7 +16,7 @@ namespace NuKeeper.Abstractions.RepositoryInspection
         {
             PackageVersionRange = packageVersionRange;
             Path = path;
-            ProjectReferences = projectReferences?.ToList() ?? new List<string>();
+            ProjectReferences = projectReferences?.ToList() ?? [];
         }
 
         public PackageInProject(string id, string versionRange, PackagePath path) :

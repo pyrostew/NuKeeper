@@ -1,9 +1,11 @@
+using NuGet.Versioning;
+
+using NuKeeper.Abstractions.NuGetApi;
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NuGet.Versioning;
-using NuKeeper.Abstractions.NuGetApi;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.Report.Formats
 {
@@ -31,16 +33,16 @@ namespace NuKeeper.Inspection.Report.Formats
 
         private void WriteMajorMinorPatchCount(IReadOnlyCollection<PackageUpdateSet> updates)
         {
-            var majors = 0;
-            var minors = 0;
-            var patches = 0;
-            foreach (var update in updates)
+            int majors = 0;
+            int minors = 0;
+            int patches = 0;
+            foreach (PackageUpdateSet update in updates)
             {
-                var baselineVersion = MinCurrentVersion(update);
+                NuGetVersion baselineVersion = MinCurrentVersion(update);
 
-                var majorUpdate = FilteredPackageVersion(baselineVersion, update.Packages.Major);
-                var minorUpdate = FilteredPackageVersion(baselineVersion, update.Packages.Minor);
-                var patchUpdate = FilteredPackageVersion(baselineVersion, update.Packages.Patch);
+                PackageSearchMetadata majorUpdate = FilteredPackageVersion(baselineVersion, update.Packages.Major);
+                PackageSearchMetadata minorUpdate = FilteredPackageVersion(baselineVersion, update.Packages.Minor);
+                PackageSearchMetadata patchUpdate = FilteredPackageVersion(baselineVersion, update.Packages.Patch);
 
                 if (majorUpdate != null && majorUpdate.Identity.Version.Major > baselineVersion.Major)
                 {
@@ -71,11 +73,11 @@ namespace NuKeeper.Inspection.Report.Formats
 
         private void WriteProjectCount(IReadOnlyCollection<PackageUpdateSet> updates)
         {
-            var currentPackagesInProjects = updates
+            List<PackageInProject> currentPackagesInProjects = updates
                 .SelectMany(p => p.CurrentPackages)
                 .ToList();
 
-            var projectCount = currentPackagesInProjects
+            int projectCount = currentPackagesInProjects
                 .Select(c => c.Path.FullName)
                 .Distinct()
                 .Count();
@@ -87,24 +89,14 @@ namespace NuKeeper.Inspection.Report.Formats
 
         private void WriteLibYears(IReadOnlyCollection<PackageUpdateSet> updates)
         {
-            var totalAge = Age.Sum(updates);
-            var displayValue = Age.AsLibYears(totalAge);
+            TimeSpan totalAge = Age.Sum(updates);
+            string displayValue = Age.AsLibYears(totalAge);
             _writer.WriteLine($"LibYears: {displayValue}");
         }
 
         private static PackageSearchMetadata FilteredPackageVersion(NuGetVersion baseline, PackageSearchMetadata packageVersion)
         {
-            if (packageVersion == null)
-            {
-                return null;
-            }
-
-            if (packageVersion.Identity.Version <= baseline)
-            {
-                return null;
-            }
-
-            return packageVersion;
+            return packageVersion == null ? null : packageVersion.Identity.Version <= baseline ? null : packageVersion;
         }
 
     }

@@ -17,31 +17,12 @@ namespace NuKeeper.Abstractions
 
         public static IReadOnlyCollection<string> FirstPopulatedList(List<string> list1, List<string> list2, List<string> list3)
         {
-            if (HasElements(list1))
-            {
-                return list1;
-            }
-
-            if (HasElements(list2))
-            {
-                return list2;
-            }
-
-            if (HasElements(list3))
-            {
-                return list3;
-            }
-
-            return null;
+            return HasElements(list1) ? list1 : HasElements(list2) ? list2 : HasElements(list3) ? list3 : (IReadOnlyCollection<string>)null;
         }
 
         private static bool HasElements(List<string> strings)
         {
-            if (strings == null)
-            {
-                return false;
-            }
-            return strings.Count > 0;
+            return strings != null && strings.Count > 0;
         }
     }
 }

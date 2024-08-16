@@ -1,6 +1,8 @@
 using Newtonsoft.Json;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -39,7 +41,7 @@ namespace NuKeeper.Gitlab
         // GET /projects/:id
         public async Task<Model.Project> GetProject(string projectName, string repositoryName)
         {
-            var encodedProjectName = HttpUtility.UrlEncode($"{projectName}/{repositoryName}");
+            string encodedProjectName = HttpUtility.UrlEncode($"{projectName}/{repositoryName}");
             return await GetResource<Model.Project>($"projects/{encodedProjectName}");
         }
 
@@ -48,8 +50,8 @@ namespace NuKeeper.Gitlab
         public async Task<Model.Branch> CheckExistingBranch(string projectName, string repositoryName,
             string branchName)
         {
-            var encodedProjectName = HttpUtility.UrlEncode($"{projectName}/{repositoryName}");
-            var encodedBranchName = HttpUtility.UrlEncode(branchName);
+            string encodedProjectName = HttpUtility.UrlEncode($"{projectName}/{repositoryName}");
+            string encodedBranchName = HttpUtility.UrlEncode(branchName);
 
             return await GetResource(
                 $"projects/{encodedProjectName}/repository/branches/{encodedBranchName}",
@@ -66,9 +68,9 @@ namespace NuKeeper.Gitlab
             string headBranch,
             string baseBranch)
         {
-            var encodedProjectName = HttpUtility.UrlEncode($"{projectName}/{repositoryName}");
-            var encodedBaseBranch = HttpUtility.UrlEncode(baseBranch);
-            var encodedHeadBranch = HttpUtility.UrlEncode(headBranch);
+            string encodedProjectName = HttpUtility.UrlEncode($"{projectName}/{repositoryName}");
+            string encodedBaseBranch = HttpUtility.UrlEncode(baseBranch);
+            string encodedHeadBranch = HttpUtility.UrlEncode(headBranch);
 
             return await GetResource(
                 $"projects/{encodedProjectName}/merge_requests?state=opened&view=simple&source_branch={encodedHeadBranch}&target_branch={encodedBaseBranch}",
@@ -81,19 +83,19 @@ namespace NuKeeper.Gitlab
         // POST /projects/:id/merge_requests
         public Task<Model.MergeRequest> OpenMergeRequest(string projectName, string repositoryName, Model.MergeRequest mergeRequest)
         {
-            var encodedProjectName = HttpUtility.UrlEncode($"{projectName}/{repositoryName}");
+            string encodedProjectName = HttpUtility.UrlEncode($"{projectName}/{repositoryName}");
 
-            var content = new StringContent(JsonConvert.SerializeObject(mergeRequest), Encoding.UTF8,
+            StringContent content = new(JsonConvert.SerializeObject(mergeRequest), Encoding.UTF8,
                 "application/json");
             return PostResource<Model.MergeRequest>($"projects/{encodedProjectName}/merge_requests", content);
         }
 
         private async Task<T> GetResource<T>(string url, Func<HttpStatusCode, Result<T>> customErrorHandling = null, [CallerMemberName] string caller = null)
         {
-            var fullUrl = new Uri(url, UriKind.Relative);
+            Uri fullUrl = new(url, UriKind.Relative);
             _logger.Detailed($"{caller}: Requesting {fullUrl}");
 
-            var response = await _client.GetAsync(fullUrl);
+            HttpResponseMessage response = await _client.GetAsync(fullUrl);
             return await HandleResponse(response, customErrorHandling, caller);
         }
 
@@ -101,7 +103,7 @@ namespace NuKeeper.Gitlab
         {
             _logger.Detailed($"{caller}: Requesting {url}");
 
-            var response = await _client.PostAsync(url, content);
+            HttpResponseMessage response = await _client.PostAsync(url, content);
 
             return await HandleResponse(response, customErrorHandling, caller);
         }
@@ -112,7 +114,7 @@ namespace NuKeeper.Gitlab
         {
             string msg;
 
-            var responseBody = await response.Content.ReadAsStringAsync();
+            string responseBody = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
@@ -120,10 +122,12 @@ namespace NuKeeper.Gitlab
 
                 if (customErrorHandling != null)
                 {
-                    var result = customErrorHandling(response.StatusCode);
+                    Result<T> result = customErrorHandling(response.StatusCode);
 
                     if (result.IsSuccessful)
+                    {
                         return result.Value;
+                    }
                 }
 
                 switch (response.StatusCode)

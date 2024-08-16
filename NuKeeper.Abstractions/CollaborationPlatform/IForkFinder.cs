@@ -1,5 +1,6 @@
-using System.Threading.Tasks;
 using NuKeeper.Abstractions.CollaborationModels;
+
+using System.Threading.Tasks;
 
 namespace NuKeeper.Abstractions.CollaborationPlatform
 {

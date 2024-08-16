@@ -1,6 +1,5 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.Logging;
@@ -11,7 +10,11 @@ using NuKeeper.Inspection.Report;
 using NuKeeper.Inspection.Sort;
 using NuKeeper.Inspection.Sources;
 using NuKeeper.Local;
+
 using NUnit.Framework;
+
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Local
 {
@@ -21,18 +24,18 @@ namespace NuKeeper.Tests.Local
         [Test]
         public async Task CanRunInspect()
         {
-            var finder = Substitute.For<IUpdateFinder>();
-            var updater = Substitute.For<ILocalUpdater>();
-            var engine = MakeLocalEngine(finder, updater);
+            IUpdateFinder finder = Substitute.For<IUpdateFinder>();
+            ILocalUpdater updater = Substitute.For<ILocalUpdater>();
+            LocalEngine engine = MakeLocalEngine(finder, updater);
 
-            var settings = new SettingsContainer
+            SettingsContainer settings = new()
             {
                 UserSettings = new UserSettings()
             };
 
             await engine.Run(settings, false);
 
-            await finder.Received()
+            _ = await finder.Received()
                 .FindPackageUpdateSets(Arg.Any<IFolder>(),
                     Arg.Any<NuGetSources>(),
                     Arg.Any<VersionChange>(),
@@ -49,18 +52,18 @@ namespace NuKeeper.Tests.Local
         [Test]
         public async Task CanRunUpdate()
         {
-            var finder = Substitute.For<IUpdateFinder>();
-            var updater = Substitute.For<ILocalUpdater>();
-            var engine = MakeLocalEngine(finder, updater);
+            IUpdateFinder finder = Substitute.For<IUpdateFinder>();
+            ILocalUpdater updater = Substitute.For<ILocalUpdater>();
+            LocalEngine engine = MakeLocalEngine(finder, updater);
 
-            var settings = new SettingsContainer
+            SettingsContainer settings = new()
             {
                 UserSettings = new UserSettings()
             };
 
             await engine.Run(settings, true);
 
-            await finder.Received()
+            _ = await finder.Received()
                 .FindPackageUpdateSets(Arg.Any<IFolder>(),
                     Arg.Any<NuGetSources>(),
                     Arg.Any<VersionChange>(),
@@ -77,24 +80,24 @@ namespace NuKeeper.Tests.Local
 
         private static LocalEngine MakeLocalEngine(IUpdateFinder finder, ILocalUpdater updater)
         {
-            var reader = Substitute.For<INuGetSourcesReader>();
-            finder.FindPackageUpdateSets(
+            INuGetSourcesReader reader = Substitute.For<INuGetSourcesReader>();
+            _ = finder.FindPackageUpdateSets(
                     Arg.Any<IFolder>(), Arg.Any<NuGetSources>(),
                     Arg.Any<VersionChange>(),
                     Arg.Any<UsePrerelease>())
                 .Returns(new List<PackageUpdateSet>());
 
-            var sorter = Substitute.For<IPackageUpdateSetSort>();
-            sorter.Sort(Arg.Any<IReadOnlyCollection<PackageUpdateSet>>())
+            IPackageUpdateSetSort sorter = Substitute.For<IPackageUpdateSetSort>();
+            _ = sorter.Sort(Arg.Any<IReadOnlyCollection<PackageUpdateSet>>())
                 .Returns(x => x.ArgAt<IReadOnlyCollection<PackageUpdateSet>>(0));
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var nugetLogger = Substitute.For<NuGet.Common.ILogger>();
+            NuGet.Common.ILogger nugetLogger = Substitute.For<NuGet.Common.ILogger>();
 
-            var reporter = Substitute.For<IReporter>();
-            
-            var engine = new LocalEngine(reader, finder, sorter, updater,
+            IReporter reporter = Substitute.For<IReporter>();
+
+            LocalEngine engine = new(reader, finder, sorter, updater,
                 reporter, logger, nugetLogger);
             Assert.That(engine, Is.Not.Null);
             return engine;

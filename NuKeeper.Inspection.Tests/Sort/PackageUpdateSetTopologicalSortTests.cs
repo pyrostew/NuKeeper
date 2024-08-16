@@ -1,16 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NSubstitute;
+
 using NuGet.Configuration;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Sort;
+
 using NUnit.Framework;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Inspection.Tests.Sort
 {
@@ -20,11 +24,11 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortEmptyList()
         {
-            var items = new List<PackageUpdateSet>();
+            List<PackageUpdateSet> items = [];
 
-            var sorter = new PackageUpdateSetTopologicalSort(Substitute.For<INuKeeperLogger>());
+            PackageUpdateSetTopologicalSort sorter = new(Substitute.For<INuKeeperLogger>());
 
-            var sorted = sorter.Sort(items)
+            List<PackageUpdateSet> sorted = sorter.Sort(items)
                 .ToList();
 
             Assert.That(sorted, Is.Not.Null);
@@ -34,14 +38,14 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortOneItemInList()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 MakeUpdateSet("foo", "1.2.3")
-            };
+            ];
 
-            var sorter = new PackageUpdateSetTopologicalSort(Substitute.For<INuKeeperLogger>());
+            PackageUpdateSetTopologicalSort sorter = new(Substitute.For<INuKeeperLogger>());
 
-            var sorted = sorter.Sort(items)
+            List<PackageUpdateSet> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -51,17 +55,17 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortTwoUnrelatedItems()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 MakeUpdateSet("fish", "1.2.3"),
                 MakeUpdateSet("bar", "2.3.4")
-            };
+            ];
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var sorter = new PackageUpdateSetTopologicalSort(logger);
+            PackageUpdateSetTopologicalSort sorter = new(logger);
 
-            var sorted = sorter.Sort(items)
+            List<PackageUpdateSet> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -75,20 +79,20 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortTwoRelatedItemsInCorrectOrder()
         {
-            var fishPackage = MakeUpdateSet("fish", "1.2.3");
+            PackageUpdateSet fishPackage = MakeUpdateSet("fish", "1.2.3");
 
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 fishPackage,
                 MakeUpdateSet("bar", "2.3.4", DependencyOn(fishPackage))
-            };
+            ];
 
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var sorter = new PackageUpdateSetTopologicalSort(logger);
+            PackageUpdateSetTopologicalSort sorter = new(logger);
 
-            var sorted = sorter.Sort(items)
+            List<PackageUpdateSet> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -102,20 +106,20 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortTwoRelatedItemsinReverseOrder()
         {
-            var fishPackage = MakeUpdateSet("fish", "1.2.3");
+            PackageUpdateSet fishPackage = MakeUpdateSet("fish", "1.2.3");
 
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 MakeUpdateSet("bar", "2.3.4", DependencyOn(fishPackage)),
                 fishPackage
-            };
+            ];
 
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var sorter = new PackageUpdateSetTopologicalSort(logger);
+            PackageUpdateSetTopologicalSort sorter = new(logger);
 
-            var sorted = sorter.Sort(items)
+            List<PackageUpdateSet> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -130,21 +134,21 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortThreeRelatePackages()
         {
-            var apexPackage = MakeUpdateSet("apex", "1.2.3");
+            PackageUpdateSet apexPackage = MakeUpdateSet("apex", "1.2.3");
 
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 MakeUpdateSet("foo", "1.2.3", DependencyOn(apexPackage)),
                 apexPackage,
                 MakeUpdateSet("bar", "2.3.4", DependencyOn(apexPackage)),
-            };
+            ];
 
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var sorter = new PackageUpdateSetTopologicalSort(logger);
+            PackageUpdateSetTopologicalSort sorter = new(logger);
 
-            var sorted = sorter.Sort(items)
+            List<PackageUpdateSet> sorted = sorter.Sort(items)
                 .ToList();
 
 
@@ -155,21 +159,21 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortWithCycle()
         {
-            var pakageOne = MakeUpdateSet("one", "1.2.3");
-            var packageAlpha = MakeUpdateSet("alpha", "2.3.4", DependencyOn(pakageOne));
+            PackageUpdateSet pakageOne = MakeUpdateSet("one", "1.2.3");
+            PackageUpdateSet packageAlpha = MakeUpdateSet("alpha", "2.3.4", DependencyOn(pakageOne));
             pakageOne = MakeUpdateSet("one", "1.2.3", DependencyOn(packageAlpha));
 
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 pakageOne,
                 packageAlpha
-            };
+            ];
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var sorter = new PackageUpdateSetTopologicalSort(logger);
+            PackageUpdateSetTopologicalSort sorter = new(logger);
 
-            var sorted = sorter.Sort(items)
+            List<PackageUpdateSet> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -183,7 +187,7 @@ namespace NuKeeper.Inspection.Tests.Sort
             Assert.That(sorted, Is.Not.Null);
             Assert.That(sorted, Is.Not.Empty);
             Assert.That(sorted.Count, Is.EqualTo(original.Count));
-            CollectionAssert.AreEquivalent(sorted, original);
+            Assert.That(original, Is.EquivalentTo(sorted));
         }
 
         private static PackageDependency DependencyOn(PackageUpdateSet package)
@@ -193,17 +197,17 @@ namespace NuKeeper.Inspection.Tests.Sort
 
         private static PackageUpdateSet MakeUpdateSet(string packageId, string packageVersion, PackageDependency upstream = null)
         {
-            var currentPackages = new List<PackageInProject>
-            {
+            List<PackageInProject> currentPackages =
+            [
                 new PackageInProject(packageId, packageVersion, PathToProjectOne()),
                 new PackageInProject(packageId, packageVersion, PathToProjectTwo())
-            };
+            ];
 
-            var majorUpdate = Metadata(packageId, packageVersion, upstream);
+            PackageSearchMetadata majorUpdate = Metadata(packageId, packageVersion, upstream);
 
-            var lookupResult = new PackageLookupResult(VersionChange.Major,
+            PackageLookupResult lookupResult = new(VersionChange.Major,
                 majorUpdate, null, null);
-            var updates = new PackageUpdateSet(lookupResult, currentPackages);
+            PackageUpdateSet updates = new(lookupResult, currentPackages);
 
             return updates;
         }
@@ -220,11 +224,7 @@ namespace NuKeeper.Inspection.Tests.Sort
 
         private static PackageSearchMetadata Metadata(string packageId, string version, PackageDependency upstream)
         {
-            var upstreams = new List<PackageDependency>();
-            if (upstream != null)
-            {
-                upstreams.Add(upstream);
-            }
+            List<PackageDependency> upstreams = upstream != null ? [upstream] : [];
 
             return new PackageSearchMetadata(
                 new PackageIdentity(packageId, new NuGetVersion(version)),

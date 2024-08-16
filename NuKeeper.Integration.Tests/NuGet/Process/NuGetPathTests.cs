@@ -1,4 +1,5 @@
 using NuKeeper.Update.Process;
+
 using NUnit.Framework;
 
 namespace NuKeeper.Integration.Tests.NuGet.Process
@@ -9,10 +10,10 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
         [Test]
         public void HasNugetPath()
         {
-            var nugetPath = new NuGetPath(NukeeperLogger).Executable;
+            string nugetPath = new NuGetPath(NukeeperLogger).Executable;
 
             Assert.That(nugetPath, Is.Not.Empty);
-            FileAssert.Exists(nugetPath);
+            Assert.That(nugetPath, Does.Exist);
         }
     }
 }

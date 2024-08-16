@@ -21,7 +21,7 @@ namespace NuKeeper.Abstractions
                 .Select(item => new { Item = item, PredTask = predicate.Invoke(item) })
                 .ToList();
 
-            await Task.WhenAll(itemTaskList.Select(x => x.PredTask));
+            _ = await Task.WhenAll(itemTaskList.Select(x => x.PredTask));
 
             return itemTaskList
                 .Where(x => x.PredTask.Result)
@@ -41,14 +41,9 @@ namespace NuKeeper.Abstractions
                 .Select(item => new { Item = item, PredTask = predicate.Invoke(item) })
                 .ToList();
 
-            await Task.WhenAll(itemTaskList.Select(x => x.PredTask));
+            _ = await Task.WhenAll(itemTaskList.Select(x => x.PredTask));
             var firstOrDefault = itemTaskList.FirstOrDefault(x => x.PredTask.Result);
-            if (firstOrDefault == null)
-            {
-                return await Task.FromResult(default(T));
-            }
-
-            return firstOrDefault.Item;
+            return firstOrDefault == null ? await Task.FromResult(default(T)) : firstOrDefault.Item;
         }
     }
 }

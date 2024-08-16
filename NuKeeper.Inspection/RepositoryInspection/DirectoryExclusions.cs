@@ -14,21 +14,21 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         private static bool PathContains(string fullPath, string dirName)
         {
-            var dirInPath = Path.DirectorySeparatorChar + dirName + Path.DirectorySeparatorChar;
+            string dirInPath = Path.DirectorySeparatorChar + dirName + Path.DirectorySeparatorChar;
 
             return
                 !string.IsNullOrEmpty(fullPath) &&
                  (fullPath.IndexOf(dirInPath, StringComparison.InvariantCultureIgnoreCase) >= 0);
         }
 
-        private static readonly List<string> ExcludedDirNames = new List<string>
-        {
+        private static readonly List<string> ExcludedDirNames =
+        [
             ".git",
             ".vs",
             "obj",
             "bin",
             "node_modules",
             "packages"
-        };
+        ];
     }
 }

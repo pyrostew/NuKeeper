@@ -1,10 +1,11 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.Git;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.AzureDevOps
 {
@@ -45,7 +46,7 @@ namespace NuKeeper.AzureDevOps
                 return null;
             }
 
-            var settings = repositoryUri.IsFile
+            RepositorySettings settings = repositoryUri.IsFile
                 ? await CreateSettingsFromLocal(repositoryUri, targetBranch)
                 : CreateSettingsFromRemote(repositoryUri, targetBranch);
 
@@ -66,13 +67,13 @@ namespace NuKeeper.AzureDevOps
             // for a organisation or
             // https://dev.azure.com/{owner}/_git/{repo}
             // for a private repository
-            var path = repositoryUri.AbsolutePath;
+            string path = repositoryUri.AbsolutePath;
 
-            var pathParts = path.Split('/')
+            string[] pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToArray();
 
-            var indexOfGit = Array.FindIndex(pathParts, t => t.Equals("_git", StringComparison.InvariantCultureIgnoreCase));
+            int indexOfGit = Array.FindIndex(pathParts, t => t.Equals("_git", StringComparison.InvariantCultureIgnoreCase));
 
             if (indexOfGit == 2 && pathParts.Length == 4)
             {
@@ -97,16 +98,16 @@ namespace NuKeeper.AzureDevOps
 
         private async Task<RepositorySettings> CreateSettingsFromLocal(Uri repositoryUri, string targetBranch)
         {
-            var remoteInfo = new RemoteInfo()
+            RemoteInfo remoteInfo = new()
             {
                 BranchName = targetBranch,
             };
 
-            var localCopy = repositoryUri;
+            Uri localCopy = repositoryUri;
             if (await _gitDriver.IsGitRepo(repositoryUri))
             {
                 // Check the origin remotes
-                var origin = await _gitDriver.GetRemoteForPlatform(repositoryUri, PlatformHost);
+                GitRemote origin = await _gitDriver.GetRemoteForPlatform(repositoryUri, PlatformHost);
 
                 if (origin != null)
                 {
@@ -127,13 +128,13 @@ namespace NuKeeper.AzureDevOps
             // for a organisation or
             // https://dev.azure.com/{owner}/_git/{repo}
             // for a private repository
-            var path = repositoryUri.AbsolutePath;
+            string path = repositoryUri.AbsolutePath;
 
-            var pathParts = path.Split('/')
+            string[] pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToArray();
 
-            var indexOfGit = Array.FindIndex(pathParts, t => t.Equals("_git", StringComparison.InvariantCultureIgnoreCase));
+            int indexOfGit = Array.FindIndex(pathParts, t => t.Equals("_git", StringComparison.InvariantCultureIgnoreCase));
 
             if (indexOfGit == 2 && pathParts.Length == 4)
             {
@@ -158,13 +159,16 @@ namespace NuKeeper.AzureDevOps
             return null;
         }
 
-        private static RepositorySettings CreateRepositorySettings(string org, Uri repositoryUri, string project, string repoName, RemoteInfo remoteInfo = null) => new RepositorySettings
+        private static RepositorySettings CreateRepositorySettings(string org, Uri repositoryUri, string project, string repoName, RemoteInfo remoteInfo = null)
         {
-            ApiUri = string.IsNullOrWhiteSpace(org) ? new Uri($"https://dev.azure.com/") : new Uri($"https://dev.azure.com/{org}/"),
-            RepositoryUri = repositoryUri,
-            RepositoryName = repoName,
-            RepositoryOwner = project,
-            RemoteInfo = remoteInfo
-        };
+            return new()
+            {
+                ApiUri = string.IsNullOrWhiteSpace(org) ? new Uri($"https://dev.azure.com/") : new Uri($"https://dev.azure.com/{org}/"),
+                RepositoryUri = repositoryUri,
+                RepositoryName = repoName,
+                RepositoryOwner = project,
+                RemoteInfo = remoteInfo
+            };
+        }
     }
 }

@@ -1,10 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NuGet.Configuration;
+
 using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGet;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Inspection.Sources
 {
@@ -24,21 +26,21 @@ namespace NuKeeper.Inspection.Sources
                 throw new ArgumentNullException(nameof(workingFolder));
             }
 
-            var settings = Settings.LoadDefaultSettings(workingFolder.FullPath);
+            ISettings settings = Settings.LoadDefaultSettings(workingFolder.FullPath);
 
-            foreach (var file in settings.GetConfigFilePaths())
+            foreach (string file in settings.GetConfigFilePaths())
             {
                 _logger.Detailed($"Reading file {file} for package sources");
             }
 
-            var enabledSources = SettingsUtility.GetEnabledSources(settings).ToList();
+            List<PackageSource> enabledSources = SettingsUtility.GetEnabledSources(settings).ToList();
 
             return ReadFromFile(enabledSources);
         }
 
         private NuGetSources ReadFromFile(IReadOnlyCollection<PackageSource> sources)
         {
-            foreach (var source in sources)
+            foreach (PackageSource source in sources)
             {
                 _logger.Detailed(
                     $"Read [{source.Name}] : {source.SourceUri} from file: {source.Source}");

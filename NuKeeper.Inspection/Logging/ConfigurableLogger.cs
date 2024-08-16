@@ -1,5 +1,6 @@
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Logging;
+
 using System;
 
 namespace NuKeeper.Inspection.Logging
@@ -43,30 +44,20 @@ namespace NuKeeper.Inspection.Logging
 
         private void CheckLoggerCreated()
         {
-            if (_inner == null)
-            {
-                _inner = CreateLogger(LogLevel.Detailed, LogDestination.Console, string.Empty);
-            }
+            _inner ??= CreateLogger(LogLevel.Detailed, LogDestination.Console, string.Empty);
         }
 
         private static IInternalLogger CreateLogger(
             LogLevel logLevel, LogDestination destination,
             string filePath)
         {
-            switch (destination)
+            return destination switch
             {
-                case LogDestination.Console:
-                    return new ConsoleLogger(logLevel);
-
-                case LogDestination.File:
-                    return new FileLogger(filePath, logLevel);
-
-                case LogDestination.Off:
-                    return new NullLogger();
-
-                default:
-                    throw new NuKeeperException($"Unknown log destination {destination}");
-            }
+                LogDestination.Console => new ConsoleLogger(logLevel),
+                LogDestination.File => new FileLogger(filePath, logLevel),
+                LogDestination.Off => new NullLogger(),
+                _ => throw new NuKeeperException($"Unknown log destination {destination}"),
+            };
         }
     }
 }

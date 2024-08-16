@@ -1,6 +1,8 @@
-using System;
 using NuKeeper.Abstractions.Formats;
+
 using NUnit.Framework;
+
+using System;
 
 namespace NuKeeper.Abstractions.Tests.Formats
 {
@@ -10,9 +12,9 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestSomeSeconds()
         {
-            var duration = new TimeSpan(0, 0, 32);
+            TimeSpan duration = new(0, 0, 32);
 
-            var result = TimeSpanFormat.Ago(duration);
+            string result = TimeSpanFormat.Ago(duration);
 
             Assert.That(result, Is.EqualTo("32 seconds ago"));
         }
@@ -20,9 +22,9 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestSomeMinutes()
         {
-            var duration = new TimeSpan(0, 12, 3);
+            TimeSpan duration = new(0, 12, 3);
 
-            var result = TimeSpanFormat.Ago(duration);
+            string result = TimeSpanFormat.Ago(duration);
 
             Assert.That(result, Is.EqualTo("12 minutes ago"));
         }
@@ -30,9 +32,9 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestAnHour()
         {
-            var duration = new TimeSpan(1, 1, 1);
+            TimeSpan duration = new(1, 1, 1);
 
-            var result = TimeSpanFormat.Ago(duration);
+            string result = TimeSpanFormat.Ago(duration);
 
             Assert.That(result, Is.EqualTo("1 hour ago"));
         }
@@ -40,9 +42,9 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestSomeHours()
         {
-            var duration = new TimeSpan(9, 12, 3);
+            TimeSpan duration = new(9, 12, 3);
 
-            var result = TimeSpanFormat.Ago(duration);
+            string result = TimeSpanFormat.Ago(duration);
 
             Assert.That(result, Is.EqualTo("9 hours ago"));
         }
@@ -50,9 +52,9 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestSomeDays()
         {
-            var duration = new TimeSpan(12, 9, 12, 3);
+            TimeSpan duration = new(12, 9, 12, 3);
 
-            var result = TimeSpanFormat.Ago(duration);
+            string result = TimeSpanFormat.Ago(duration);
 
             Assert.That(result, Is.EqualTo("12 days ago"));
         }
@@ -60,10 +62,10 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestTwoDatesSeperatedByOneDays()
         {
-            var end = DateTime.UtcNow;
-            var start = end.AddDays(-1);
+            DateTime end = DateTime.UtcNow;
+            DateTime start = end.AddDays(-1);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("1 day ago"));
         }
@@ -71,10 +73,10 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestTwoDatesSeperatedByTwoDays()
         {
-            var end = DateTime.UtcNow;
-            var start = end.AddDays(-2);
+            DateTime end = DateTime.UtcNow;
+            DateTime start = end.AddDays(-2);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("2 days ago"));
         }
@@ -82,10 +84,10 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestTwoDatesYearsApart()
         {
-            var end = DateTime.UtcNow;
-            var start = end.AddYears(-2);
+            DateTime end = DateTime.UtcNow;
+            DateTime start = end.AddYears(-2);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("2 years ago"));
         }
@@ -93,10 +95,10 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestTwoDatesMonthsApart()
         {
-            var end = DateTime.UtcNow;
-            var start = end.AddMonths(-4);
+            DateTime end = DateTime.UtcNow;
+            DateTime start = end.AddMonths(-4);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("4 months ago"));
         }
@@ -104,10 +106,10 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestMonthStart()
         {
-            var end = new DateTime(2018, 2, 1);
-            var start = end.AddDays(-1);
+            DateTime end = new(2018, 2, 1);
+            DateTime start = end.AddDays(-1);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("1 day ago"));
         }
@@ -115,10 +117,10 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestYearStart()
         {
-            var end = new DateTime(2018, 1, 1);
-            var start = end.AddDays(-1);
+            DateTime end = new(2018, 1, 1);
+            DateTime start = end.AddDays(-1);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("1 day ago"));
         }
@@ -126,10 +128,10 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestTwoDatesTenMonthsApart()
         {
-            var end = new DateTime(2018, 4, 5);
-            var start = end.AddMonths(-10);
+            DateTime end = new(2018, 4, 5);
+            DateTime start = end.AddMonths(-10);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("10 months ago"));
         }
@@ -137,10 +139,10 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestTwoDatesFourteenApart()
         {
-            var end = new DateTime(2018, 3, 4);
-            var start = end.AddMonths(-14);
+            DateTime end = new(2018, 3, 4);
+            DateTime start = end.AddMonths(-14);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("1 year and 2 months ago"));
         }
@@ -149,12 +151,12 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestTwoDatesYearsAndMonthsApart()
         {
-            var end = DateTime.UtcNow;
-            var start = end
+            DateTime end = DateTime.UtcNow;
+            DateTime start = end
                 .AddYears(-2)
                 .AddMonths(-10);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("2 years and 10 months ago"));
         }
@@ -162,12 +164,12 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TestTwoDatesThreeYearsAndOneMonthApart()
         {
-            var end = DateTime.UtcNow;
-            var start = end
+            DateTime end = DateTime.UtcNow;
+            DateTime start = end
                 .AddYears(-3)
                 .AddMonths(-1);
 
-            var result = TimeSpanFormat.Ago(start, end);
+            string result = TimeSpanFormat.Ago(start, end);
 
             Assert.That(result, Is.EqualTo("3 years and 1 month ago"));
         }

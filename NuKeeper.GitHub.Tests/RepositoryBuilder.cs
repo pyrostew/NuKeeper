@@ -1,7 +1,6 @@
-using System;
 using NuKeeper.Abstractions.CollaborationModels;
 
-#pragma warning disable CA1054
+using System;
 
 namespace NuKeeper.GitHub.Tests
 {

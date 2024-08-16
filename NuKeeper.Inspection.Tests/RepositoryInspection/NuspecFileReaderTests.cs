@@ -1,20 +1,24 @@
+using NSubstitute;
+
+using NuGet.Versioning;
+
+using NuKeeper.Abstractions.Logging;
+using NuKeeper.Abstractions.RepositoryInspection;
+using NuKeeper.Inspection.RepositoryInspection;
+
+using NUnit.Framework;
+
 using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NSubstitute;
-using NuGet.Versioning;
-using NuKeeper.Abstractions.Logging;
-using NuKeeper.Abstractions.RepositoryInspection;
-using NuKeeper.Inspection.RepositoryInspection;
-using NUnit.Framework;
 
 namespace NuKeeper.Inspection.Tests.RepositoryInspection
 {
     [TestFixture]
     public class NuspecFileReaderTests
     {
-        const string PackagesFileWithSinglePackage =
+        private const string PackagesFileWithSinglePackage =
             @"<package><metadata><dependencies>
 <dependency id=""foo"" version=""1.2.3.4"" /></dependencies></metadata></package>";
 
@@ -28,8 +32,8 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
             const string emptyContents =
                 @"<package/>";
 
-            var reader = MakeReader();
-            var packages = reader.Read(StreamFromString(emptyContents), TempPath());
+            NuspecFileReader reader = MakeReader();
+            System.Collections.Generic.IReadOnlyCollection<PackageInProject> packages = reader.Read(StreamFromString(emptyContents), TempPath());
 
             Assert.That(packages, Is.Not.Null);
             Assert.That(packages, Is.Empty);
@@ -38,8 +42,8 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void SinglePackageShouldBeRead()
         {
-            var reader = MakeReader();
-            var packages = reader.Read(StreamFromString(PackagesFileWithSinglePackage), TempPath());
+            NuspecFileReader reader = MakeReader();
+            System.Collections.Generic.IReadOnlyCollection<PackageInProject> packages = reader.Read(StreamFromString(PackagesFileWithSinglePackage), TempPath());
 
             Assert.That(packages, Is.Not.Null);
             Assert.That(packages, Is.Not.Empty);
@@ -48,20 +52,20 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void SinglePackageShouldBePopulated()
         {
-            var reader = MakeReader();
-            var packages = reader.Read(StreamFromString(PackagesFileWithSinglePackage), TempPath());
+            NuspecFileReader reader = MakeReader();
+            System.Collections.Generic.IReadOnlyCollection<PackageInProject> packages = reader.Read(StreamFromString(PackagesFileWithSinglePackage), TempPath());
 
-            var package = packages.FirstOrDefault();
+            PackageInProject package = packages.FirstOrDefault();
             PackageAssert.IsPopulated(package);
         }
 
         [Test]
         public void SinglePackageShouldBeCorrect()
         {
-            var reader = MakeReader();
-            var packages = reader.Read(StreamFromString(PackagesFileWithSinglePackage), TempPath());
+            NuspecFileReader reader = MakeReader();
+            System.Collections.Generic.IReadOnlyCollection<PackageInProject> packages = reader.Read(StreamFromString(PackagesFileWithSinglePackage), TempPath());
 
-            var package = packages.FirstOrDefault();
+            PackageInProject package = packages.FirstOrDefault();
 
             Assert.That(package, Is.Not.Null);
             Assert.That(package.Id, Is.EqualTo("foo"));
@@ -72,8 +76,8 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void TwoPackagesShouldBePopulated()
         {
-            var reader = MakeReader();
-            var packages = reader.Read(StreamFromString(PackagesFileWithTwoPackages), TempPath())
+            NuspecFileReader reader = MakeReader();
+            System.Collections.Generic.List<PackageInProject> packages = reader.Read(StreamFromString(PackagesFileWithTwoPackages), TempPath())
                 .ToList();
 
             Assert.That(packages, Is.Not.Null);
@@ -86,8 +90,8 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void TwoPackagesShouldBeRead()
         {
-            var reader = MakeReader();
-            var packages = reader.Read(StreamFromString(PackagesFileWithTwoPackages), TempPath())
+            NuspecFileReader reader = MakeReader();
+            System.Collections.Generic.List<PackageInProject> packages = reader.Read(StreamFromString(PackagesFileWithTwoPackages), TempPath())
                 .ToList();
 
             Assert.That(packages.Count, Is.EqualTo(2));
@@ -102,12 +106,12 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void ResultIsReiterable()
         {
-            var path = TempPath();
+            PackagePath path = TempPath();
 
-            var reader = MakeReader();
-            var packages = reader.Read(StreamFromString(PackagesFileWithTwoPackages), path);
+            NuspecFileReader reader = MakeReader();
+            System.Collections.Generic.IReadOnlyCollection<PackageInProject> packages = reader.Read(StreamFromString(PackagesFileWithTwoPackages), path);
 
-            foreach (var package in packages)
+            foreach (PackageInProject package in packages)
             {
                 PackageAssert.IsPopulated(package);
             }
@@ -118,10 +122,10 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void WhenOnePackageCannotBeRead_TheOthersAreStillRead()
         {
-            var badVersion = PackagesFileWithTwoPackages.Replace("1.2.3.4", "notaversion", StringComparison.OrdinalIgnoreCase);
+            string badVersion = PackagesFileWithTwoPackages.Replace("1.2.3.4", "notaversion", StringComparison.OrdinalIgnoreCase);
 
-            var reader = MakeReader();
-            var packages = reader.Read(StreamFromString(badVersion), TempPath())
+            NuspecFileReader reader = MakeReader();
+            System.Collections.Generic.List<PackageInProject> packages = reader.Read(StreamFromString(badVersion), TempPath())
                 .ToList();
 
             Assert.That(packages.Count, Is.EqualTo(1));

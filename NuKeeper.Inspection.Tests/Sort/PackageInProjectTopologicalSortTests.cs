@@ -1,13 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using NSubstitute;
+
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Sort;
+
 using NUnit.Framework;
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace NuKeeper.Inspection.Tests.Sort
 {
@@ -17,11 +20,11 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortEmptyList()
         {
-            var items = new List<PackageInProject>();
+            List<PackageInProject> items = [];
 
-            var sorter = new PackageInProjectTopologicalSort(Substitute.For<INuKeeperLogger>());
+            PackageInProjectTopologicalSort sorter = new(Substitute.For<INuKeeperLogger>());
 
-            var sorted = sorter.Sort(items)
+            List<PackageInProject> sorted = sorter.Sort(items)
                 .ToList();
 
             Assert.That(sorted, Is.Not.Null);
@@ -31,14 +34,14 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortOneItem()
         {
-            var items = new List<PackageInProject>
-            {
+            List<PackageInProject> items =
+            [
                 PackageFor("foo", "1.2.3", "bar{sep}fish.csproj"),
-            };
+            ];
 
-            var sorter = new PackageInProjectTopologicalSort(Substitute.For<INuKeeperLogger>());
+            PackageInProjectTopologicalSort sorter = new(Substitute.For<INuKeeperLogger>());
 
-            var sorted = sorter.Sort(items)
+            List<PackageInProject> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -48,17 +51,17 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortTwoUnrelatedItems()
         {
-            var items = new List<PackageInProject>
-            {
+            List<PackageInProject> items =
+            [
                 PackageFor("foo", "1.2.3", "bar{sep}fish.csproj"),
                 PackageFor("bar", "2.3.4", "project2{sep}p2.csproj")
-            };
+            ];
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var sorter = new PackageInProjectTopologicalSort(logger);
+            PackageInProjectTopologicalSort sorter = new(logger);
 
-            var sorted = sorter.Sort(items)
+            List<PackageInProject> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -68,20 +71,20 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortTwoRelatedItemsinCorrectOrder()
         {
-            var aProj = PackageFor("foo", "1.2.3", "someproject{sep}someproject.csproj");
-            var testProj = PackageFor("bar", "2.3.4", "someproject.tests{sep}someproject.tests.csproj", aProj);
+            PackageInProject aProj = PackageFor("foo", "1.2.3", "someproject{sep}someproject.csproj");
+            PackageInProject testProj = PackageFor("bar", "2.3.4", "someproject.tests{sep}someproject.tests.csproj", aProj);
 
-            var items = new List<PackageInProject>
-            {
+            List<PackageInProject> items =
+            [
                 testProj,
                 aProj
-            };
+            ];
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var sorter = new PackageInProjectTopologicalSort(logger);
+            PackageInProjectTopologicalSort sorter = new(logger);
 
-            var sorted = sorter.Sort(items)
+            List<PackageInProject> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -95,20 +98,20 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortTwoRelatedItemsinReverseOrder()
         {
-            var aProj = PackageFor("foo", "1.2.3", "someproject{sep}someproject.csproj");
-            var testProj = PackageFor("bar", "2.3.4", "someproject.tests{sep}someproject.tests.csproj", aProj);
+            PackageInProject aProj = PackageFor("foo", "1.2.3", "someproject{sep}someproject.csproj");
+            PackageInProject testProj = PackageFor("bar", "2.3.4", "someproject.tests{sep}someproject.tests.csproj", aProj);
 
-            var items = new List<PackageInProject>
-            {
+            List<PackageInProject> items =
+            [
                 aProj,
                 testProj
-            };
+            ];
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var sorter = new PackageInProjectTopologicalSort(logger);
+            PackageInProjectTopologicalSort sorter = new(logger);
 
-            var sorted = sorter.Sort(items)
+            List<PackageInProject> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -122,22 +125,22 @@ namespace NuKeeper.Inspection.Tests.Sort
         [Test]
         public void CanSortWithCycle()
         {
-            var aProj = PackageFor("foo", "1.2.3", "someproject{sep}someproject.csproj");
-            var testProj = PackageFor("bar", "2.3.4", "someproject.tests{sep}someproject.tests.csproj", aProj);
+            PackageInProject aProj = PackageFor("foo", "1.2.3", "someproject{sep}someproject.csproj");
+            PackageInProject testProj = PackageFor("bar", "2.3.4", "someproject.tests{sep}someproject.tests.csproj", aProj);
             // fake a circular ref - aproj is a new object but the same file path as above
             aProj = PackageFor("foo", "1.2.3", "someproject{sep}someproject.csproj", testProj);
 
-            var items = new List<PackageInProject>
-            {
+            List<PackageInProject> items =
+            [
                 aProj,
                 testProj
-            };
+            ];
 
-            var logger = Substitute.For<INuKeeperLogger>();
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
 
-            var sorter = new PackageInProjectTopologicalSort(logger);
+            PackageInProjectTopologicalSort sorter = new(logger);
 
-            var sorted = sorter.Sort(items)
+            List<PackageInProject> sorted = sorter.Sort(items)
                 .ToList();
 
             AssertIsASortOf(sorted, items);
@@ -150,23 +153,18 @@ namespace NuKeeper.Inspection.Tests.Sort
             Assert.That(sorted, Is.Not.Null);
             Assert.That(sorted, Is.Not.Empty);
             Assert.That(sorted.Count, Is.EqualTo(original.Count));
-            CollectionAssert.AreEquivalent(sorted, original);
+            Assert.That(original, Is.EquivalentTo(sorted));
         }
 
         private static PackageInProject PackageFor(string packageId, string packageVersion,
             string relativePath, PackageInProject refProject = null)
         {
             relativePath = relativePath.Replace("{sep}", $"{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase);
-            var basePath = "c_temp" + Path.DirectorySeparatorChar + "test";
+            string basePath = "c_temp" + Path.DirectorySeparatorChar + "test";
 
-            var refs = new List<string>();
+            List<string> refs = refProject != null ? [refProject.Path.FullName] : [];
 
-            if (refProject != null)
-            {
-                refs.Add(refProject.Path.FullName);
-            }
-
-            var packageVersionRange = PackageVersionRange.Parse(packageId, packageVersion);
+            PackageVersionRange packageVersionRange = PackageVersionRange.Parse(packageId, packageVersion);
 
             return new PackageInProject(packageVersionRange,
                 new PackagePath(basePath, relativePath, PackageReferenceType.ProjectFile),

@@ -1,8 +1,9 @@
+using NuKeeper.Abstractions.Inspections.Files;
+using NuKeeper.Abstractions.Logging;
+
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NuKeeper.Abstractions.Inspections.Files;
-using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Inspection.Files
 {
@@ -59,7 +60,7 @@ namespace NuKeeper.Inspection.Files
             // remove any "read-only" flag that would prevent the delete
             File.SetAttributes(targetDir, FileAttributes.Normal);
 
-            var files = Directory.GetFiles(targetDir);
+            string[] files = Directory.GetFiles(targetDir);
 
             foreach (string file in files)
             {
@@ -67,7 +68,7 @@ namespace NuKeeper.Inspection.Files
                 File.Delete(file);
             }
 
-            var subDirs = Directory.GetDirectories(targetDir);
+            string[] subDirs = Directory.GetDirectories(targetDir);
             foreach (string dir in subDirs)
             {
                 DeleteDirectoryInternal(dir);

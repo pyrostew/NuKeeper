@@ -1,10 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Report.Formats;
+
 using NUnit.Framework;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Inspection.Tests.Report.Formats
 {
@@ -14,42 +16,42 @@ namespace NuKeeper.Inspection.Tests.Report.Formats
         [Test]
         public void NoRowsHasHeaderLineInOutput()
         {
-            var rows = new List<PackageUpdateSet>();
+            List<PackageUpdateSet> rows = [];
 
-            var output = ReportToString(rows);
+            string output = ReportToString(rows);
 
             Assert.That(output, Is.Not.Null);
             Assert.That(output, Is.Not.Empty);
 
-            var lines = output.Split(Environment.NewLine);
+            string[] lines = output.Split(Environment.NewLine);
             Assert.That(lines.Length, Is.EqualTo(1));
         }
 
         [Test]
         public void OneRowHasOutput()
         {
-            var rows = PackageUpdates.OnePackageUpdateSet();
+            List<PackageUpdateSet> rows = PackageUpdates.OnePackageUpdateSet();
 
-            var output = ReportToString(rows);
+            string output = ReportToString(rows);
 
             Assert.That(output, Is.Not.Null);
             Assert.That(output, Is.Not.Empty);
 
-            var lines = output.Split(Environment.NewLine);
+            string[] lines = output.Split(Environment.NewLine);
             Assert.That(lines.Length, Is.EqualTo(2));
         }
 
         [Test]
         public void OneRowHasMatchedCommas()
         {
-            var rows = new List<PackageUpdateSet>();
+            List<PackageUpdateSet> rows = [];
 
-            var output = ReportToString(rows);
-            var lines = output.Split(Environment.NewLine);
+            string output = ReportToString(rows);
+            string[] lines = output.Split(Environment.NewLine);
 
-            foreach (var line in lines)
+            foreach (string line in lines)
             {
-                var commas = line.Count(c => c == ',');
+                int commas = line.Count(c => c == ',');
                 Assert.That(commas, Is.EqualTo(11), $"Failed on line {line}");
             }
         }
@@ -57,21 +59,21 @@ namespace NuKeeper.Inspection.Tests.Report.Formats
         [Test]
         public void TwoRowsHaveOutput()
         {
-            var package1 = PackageVersionRange.Parse("foo.bar", "1.2.3");
-            var package2 = PackageVersionRange.Parse("fish", "2.3.4");
+            PackageVersionRange package1 = PackageVersionRange.Parse("foo.bar", "1.2.3");
+            PackageVersionRange package2 = PackageVersionRange.Parse("fish", "2.3.4");
 
-            var rows = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> rows =
+            [
                 PackageUpdates.UpdateSetFor(package1, PackageUpdates.MakePackageForV110(package1)),
                 PackageUpdates.UpdateSetFor(package2, PackageUpdates.MakePackageForV110(package2))
-            };
+            ];
 
-            var output = ReportToString(rows);
+            string output = ReportToString(rows);
 
             Assert.That(output, Is.Not.Null);
             Assert.That(output, Is.Not.Empty);
 
-            var lines = output.Split(Environment.NewLine);
+            string[] lines = output.Split(Environment.NewLine);
             Assert.That(lines.Length, Is.EqualTo(3));
             Assert.That(lines[1], Does.Contain("foo.bar,"));
             Assert.That(lines[2], Does.Contain("fish,"));
@@ -79,9 +81,9 @@ namespace NuKeeper.Inspection.Tests.Report.Formats
 
         private static string ReportToString(List<PackageUpdateSet> rows)
         {
-            var output = new TestReportWriter();
+            TestReportWriter output = new();
 
-            var reporter = new CsvReportFormat(output);
+            CsvReportFormat reporter = new(output);
             reporter.Write("test", rows);
 
             return output.Data();

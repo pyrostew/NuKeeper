@@ -1,7 +1,9 @@
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Inspection.Files;
 using NuKeeper.Inspection.Logging;
+
 using NUnit.Framework;
+
 using System;
 using System.IO;
 using System.Linq;
@@ -28,8 +30,8 @@ namespace NuKeeper.Git.Tests
             }
 
             // create a local repo to test against
-            var folder = TestDirectoryHelper.UniqueTemporaryFolder();
-            var gitDriver = new GitCmdDriver(_pathTogit, _logger, new Folder(_logger, folder), new Abstractions.Git.GitUsernamePasswordCredentials());
+            DirectoryInfo folder = TestDirectoryHelper.UniqueTemporaryFolder();
+            GitCmdDriver gitDriver = new(_pathTogit, _logger, new Folder(_logger, folder), new Abstractions.Git.GitUsernamePasswordCredentials());
             Assert.DoesNotThrowAsync(() => gitDriver.Clone(new Uri(_origin)));
             _repo = folder;
         }
@@ -43,33 +45,33 @@ namespace NuKeeper.Git.Tests
         [Test]
         public async Task ShouldDiscoverLocalRepo()
         {
-            var gitDiscoveryDriver = new GitCmdDiscoveryDriver(_pathTogit, _logger);
-            var repo = await gitDiscoveryDriver.DiscoverRepo(new Uri(_repo.FullName));
-            Assert.AreEqual(_origin, repo.AbsoluteUri);
+            GitCmdDiscoveryDriver gitDiscoveryDriver = new(_pathTogit, _logger);
+            Uri repo = await gitDiscoveryDriver.DiscoverRepo(new Uri(_repo.FullName));
+            Assert.That(_origin == repo.AbsoluteUri);
         }
 
         [Test]
         public async Task ShouldGetRemotes()
         {
-            var gitDiscoveryDriver = new GitCmdDiscoveryDriver(_pathTogit, _logger);
-            var classicGitDiscoveryDriver = new LibGit2SharpDiscoveryDriver(_logger);
-            var remotes = await gitDiscoveryDriver.GetRemotes(new Uri(_repo.FullName));
-            var classicRemotes = await classicGitDiscoveryDriver.GetRemotes(new Uri(_repo.FullName));
+            GitCmdDiscoveryDriver gitDiscoveryDriver = new(_pathTogit, _logger);
+            LibGit2SharpDiscoveryDriver classicGitDiscoveryDriver = new(_logger);
+            System.Collections.Generic.IEnumerable<Abstractions.Git.GitRemote> remotes = await gitDiscoveryDriver.GetRemotes(new Uri(_repo.FullName));
+            System.Collections.Generic.IEnumerable<Abstractions.Git.GitRemote> classicRemotes = await classicGitDiscoveryDriver.GetRemotes(new Uri(_repo.FullName));
 
-            var remotesArray = remotes?.ToArray();
-            var classicRemotesArray = classicRemotes?.ToArray();
+            Abstractions.Git.GitRemote[] remotesArray = remotes?.ToArray();
+            Abstractions.Git.GitRemote[] classicRemotesArray = classicRemotes?.ToArray();
 
-            Assert.IsNotNull(remotesArray, "GitCmdDiscoveryDriver returned null for GetRemotes");
-            Assert.IsNotNull(classicRemotesArray, "LibGit2SharpDiscoveryDriver returned null for GetRemotes");
+            Assert.That(remotesArray, Is.Not.Null, "GitCmdDiscoveryDriver returned null for GetRemotes");
+            Assert.That(classicRemotesArray, Is.Not.Null, "LibGit2SharpDiscoveryDriver returned null for GetRemotes");
 
-            Assert.AreEqual(remotesArray?.Length, classicRemotesArray?.Length, "Lib2Sharp and GitCmd should have the same number of results");
+            Assert.That(remotesArray?.Length == classicRemotesArray?.Length, "Lib2Sharp and GitCmd should have the same number of results");
 
-            for(var count=0; count< classicRemotesArray.Length; count++)
+            for (int count = 0; count < classicRemotesArray.Length; count++)
             {
-                var classicRemote = classicRemotesArray[count];
-                var remote = remotesArray.Where(r => r.Name.Equals(classicRemote.Name, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                Assert.NotNull(classicRemote, $"GitCmd does not find remote {remote.Name}");
-                Assert.AreEqual(classicRemote.Url, remote.Url, $"GitCmd does return the same url: {remote.Url}");
+                Abstractions.Git.GitRemote classicRemote = classicRemotesArray[count];
+                Abstractions.Git.GitRemote remote = remotesArray.Where(r => r.Name.Equals(classicRemote.Name, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+                Assert.That(classicRemote, Is.Not.Null, $"GitCmd does not find remote {remote.Name}");
+                Assert.That(classicRemote.Url == remote.Url, $"GitCmd does return the same url: {remote.Url}");
             }
         }
     }

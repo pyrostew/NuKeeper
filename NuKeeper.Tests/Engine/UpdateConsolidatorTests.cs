@@ -1,9 +1,11 @@
-using System.Collections.Generic;
-using System.Linq;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Engine;
+
 using NUnit.Framework;
+
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Tests.Engine
 {
@@ -13,12 +15,12 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenOneItemIsConsolidated()
         {
-            var items = PackageUpdates.MakeUpdateSet("foo")
+            List<PackageUpdateSet> items = PackageUpdates.MakeUpdateSet("foo")
                 .InList();
 
-            var output = UpdateConsolidator.Consolidate(items, true);
+            IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, true);
 
-            var listOfLists = output.ToList();
+            List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
 
             // one list, containing all the items
             Assert.That(listOfLists.Count, Is.EqualTo(1));
@@ -28,12 +30,12 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenOneItemIsNotConsolidated()
         {
-            var items = PackageUpdates.MakeUpdateSet("foo")
+            List<PackageUpdateSet> items = PackageUpdates.MakeUpdateSet("foo")
                 .InList();
 
-            var output = UpdateConsolidator.Consolidate(items, false);
+            IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, false);
 
-            var listOfLists = output.ToList();
+            List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
 
             // one list, containing all the items
             Assert.That(listOfLists.Count, Is.EqualTo(1));
@@ -43,15 +45,15 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenItemsAreConsolidated()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 PackageUpdates.MakeUpdateSet("foo"),
                 PackageUpdates.MakeUpdateSet("bar")
-            };
+            ];
 
-            var output = UpdateConsolidator.Consolidate(items, true);
+            IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, true);
 
-            var listOfLists = output.ToList();
+            List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
 
             // one list, containing all the items
             Assert.That(listOfLists.Count, Is.EqualTo(1));
@@ -61,15 +63,15 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenItemsAreNotConsolidated()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 PackageUpdates.MakeUpdateSet("foo"),
                 PackageUpdates.MakeUpdateSet("bar")
-            };
+            ];
 
-            var output = UpdateConsolidator.Consolidate(items, false);
+            IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, false);
 
-            var listOfLists = output.ToList();
+            List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
 
             // two lists, each containing 1 item
             Assert.That(listOfLists.Count, Is.EqualTo(2));

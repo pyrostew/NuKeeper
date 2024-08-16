@@ -1,4 +1,5 @@
 using NSubstitute;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
@@ -8,7 +9,9 @@ using NuKeeper.Abstractions.Logging;
 using NuKeeper.Collaboration;
 using NuKeeper.Engine;
 using NuKeeper.Inspection.Files;
+
 using NUnit.Framework;
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -31,11 +34,11 @@ namespace NuKeeper.Tests.Engine
             _collaborationFactory = Substitute.For<ICollaborationFactory>();
             _folderFactory = Substitute.For<IFolderFactory>();
             _logger = Substitute.For<INuKeeperLogger>();
-            _disoverableRepositories = new List<RepositorySettings>();
+            _disoverableRepositories = [];
 
-            _collaborationFactory.CollaborationPlatform.GetCurrentUser().Returns(new User("", "", ""));
-            _collaborationFactory.Settings.Returns(new CollaborationPlatformSettings());
-            _collaborationFactory
+            _ = _collaborationFactory.CollaborationPlatform.GetCurrentUser().Returns(new User("", "", ""));
+            _ = _collaborationFactory.Settings.Returns(new CollaborationPlatformSettings());
+            _ = _collaborationFactory
                 .RepositoryDiscovery
                 .GetRepositories(Arg.Any<SourceControlServerSettings>())
                 .Returns(_disoverableRepositories);
@@ -44,9 +47,9 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task Run_ExceptionWhenUpdatingRepository_StillTreatsOtherRepositories()
         {
-            var settings = MakeSettings();
-            var repoSettingsOne = MakeRepositorySettingsAndAddAsDiscoverable();
-            var repoSettingsTwo = MakeRepositorySettingsAndAddAsDiscoverable();
+            SettingsContainer settings = MakeSettings();
+            RepositorySettings repoSettingsOne = MakeRepositorySettingsAndAddAsDiscoverable();
+            RepositorySettings repoSettingsTwo = MakeRepositorySettingsAndAddAsDiscoverable();
             _repoEngine
                 .When(
                     r => r.Run(
@@ -57,17 +60,15 @@ namespace NuKeeper.Tests.Engine
                     )
                 )
                 .Do(r => throw new Exception());
-            var engine = MakeCollaborationEngine();
+            ICollaborationEngine engine = MakeCollaborationEngine();
 
             try
             {
-                await engine.Run(settings);
+                _ = await engine.Run(settings);
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception) { }
-#pragma warning restore CA1031 // Do not catch general exception types
 
-            await _repoEngine
+            _ = await _repoEngine
                 .Received()
                 .Run(
                     repoSettingsTwo,
@@ -80,10 +81,10 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void Run_ExceptionWhenUpdatingRepository_RethrowsException()
         {
-            var exceptionMessage = "Try again later";
-            var settings = MakeSettings();
-            var repoSettingsOne = MakeRepositorySettingsAndAddAsDiscoverable();
-            var repoSettingsTwo = MakeRepositorySettingsAndAddAsDiscoverable();
+            string exceptionMessage = "Try again later";
+            SettingsContainer settings = MakeSettings();
+            RepositorySettings repoSettingsOne = MakeRepositorySettingsAndAddAsDiscoverable();
+            RepositorySettings repoSettingsTwo = MakeRepositorySettingsAndAddAsDiscoverable();
             _repoEngine
                 .When(
                     r => r.Run(
@@ -94,22 +95,22 @@ namespace NuKeeper.Tests.Engine
                     )
                 )
                 .Do(r => throw new NuKeeperException(exceptionMessage));
-            var engine = MakeCollaborationEngine();
+            ICollaborationEngine engine = MakeCollaborationEngine();
 
-            var ex = Assert.ThrowsAsync<NuKeeperException>(() => engine.Run(settings));
+            NuKeeperException ex = Assert.ThrowsAsync<NuKeeperException>(() => engine.Run(settings));
 
-            var innerEx = ex.InnerException as NuKeeperException;
-            Assert.IsNotNull(innerEx);
-            Assert.AreEqual(exceptionMessage, innerEx.Message);
+            NuKeeperException innerEx = ex.InnerException as NuKeeperException;
+            Assert.That(innerEx, Is.Not.Null);
+            Assert.That(innerEx.Message, Is.EqualTo(exceptionMessage));
         }
 
         [Test]
         public void Run_MultipleExceptionsWhenUpdatingRepositories_AreFlattened()
         {
-            var settings = MakeSettings();
-            var repoSettingsOne = MakeRepositorySettingsAndAddAsDiscoverable();
-            var repoSettingsTwo = MakeRepositorySettingsAndAddAsDiscoverable();
-            var repoSettingsThree = MakeRepositorySettingsAndAddAsDiscoverable();
+            SettingsContainer settings = MakeSettings();
+            RepositorySettings repoSettingsOne = MakeRepositorySettingsAndAddAsDiscoverable();
+            RepositorySettings repoSettingsTwo = MakeRepositorySettingsAndAddAsDiscoverable();
+            RepositorySettings repoSettingsThree = MakeRepositorySettingsAndAddAsDiscoverable();
             _repoEngine
                 .When(
                     r => r.Run(
@@ -130,15 +131,15 @@ namespace NuKeeper.Tests.Engine
                     )
                 )
                 .Do(r => throw new TaskCanceledException("Repo 3 failed!"));
-            var engine = MakeCollaborationEngine();
+            ICollaborationEngine engine = MakeCollaborationEngine();
 
-            var ex = Assert.ThrowsAsync<NuKeeperException>(() => engine.Run(settings));
+            NuKeeperException ex = Assert.ThrowsAsync<NuKeeperException>(() => engine.Run(settings));
 
-            var aggregateEx = ex.InnerException as AggregateException;
-            var exceptions = aggregateEx?.InnerExceptions;
-            Assert.IsNotNull(aggregateEx);
-            Assert.IsNotNull(exceptions);
-            Assert.AreEqual(2, exceptions.Count);
+            AggregateException aggregateEx = ex.InnerException as AggregateException;
+            System.Collections.ObjectModel.ReadOnlyCollection<Exception> exceptions = aggregateEx?.InnerExceptions;
+            Assert.That(aggregateEx, Is.Not.Null);
+            Assert.That(exceptions, Is.Not.Null);
+            Assert.That(exceptions.Count, Is.EqualTo(2));
             Assert.That(exceptions, Has.One.InstanceOf(typeof(InvalidOperationException)));
             Assert.That(exceptions, Has.One.InstanceOf(typeof(TaskCanceledException)));
         }
@@ -146,10 +147,10 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task SuccessCaseWithNoRepos()
         {
-            var engine = MakeCollaborationEngine(
-                new List<RepositorySettings>());
+            CollaborationEngine engine = MakeCollaborationEngine(
+                []);
 
-            var count = await engine.Run(MakeSettings());
+            int count = await engine.Run(MakeSettings());
 
             Assert.That(count, Is.EqualTo(0));
         }
@@ -157,13 +158,13 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task SuccessCaseWithOneRepo()
         {
-            var oneRepo = new List<RepositorySettings>
-            {
+            List<RepositorySettings> oneRepo =
+            [
                 new RepositorySettings()
-            };
-            var engine = MakeCollaborationEngine(oneRepo);
+            ];
+            CollaborationEngine engine = MakeCollaborationEngine(oneRepo);
 
-            var count = await engine.Run(MakeSettings());
+            int count = await engine.Run(MakeSettings());
 
             Assert.That(count, Is.EqualTo(1));
         }
@@ -171,14 +172,14 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task SuccessCaseWithTwoRepos()
         {
-            var repos = new List<RepositorySettings>
-            {
+            List<RepositorySettings> repos =
+            [
                 new RepositorySettings(),
                 new RepositorySettings()
-            };
-            var engine = MakeCollaborationEngine(repos);
+            ];
+            CollaborationEngine engine = MakeCollaborationEngine(repos);
 
-            var count = await engine.Run(MakeSettings());
+            int count = await engine.Run(MakeSettings());
 
             Assert.That(count, Is.EqualTo(2));
         }
@@ -186,14 +187,14 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task SuccessCaseWithTwoReposAndTwoPrsPerRepo()
         {
-            var repos = new List<RepositorySettings>
-            {
+            List<RepositorySettings> repos =
+            [
                 new RepositorySettings(),
                 new RepositorySettings()
-            };
-            var engine = MakeCollaborationEngine(2, repos);
+            ];
+            CollaborationEngine engine = MakeCollaborationEngine(2, repos);
 
-            var count = await engine.Run(MakeSettings());
+            int count = await engine.Run(MakeSettings());
 
             Assert.That(count, Is.EqualTo(2));
         }
@@ -201,15 +202,15 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task CountIsNotIncrementedWhenRepoEngineFails()
         {
-            var repos = new List<RepositorySettings>
-            {
+            List<RepositorySettings> repos =
+            [
                 new RepositorySettings(),
                 new RepositorySettings(),
                 new RepositorySettings()
-            };
-            var engine = MakeCollaborationEngine(0, repos);
+            ];
+            CollaborationEngine engine = MakeCollaborationEngine(0, repos);
 
-            var count = await engine.Run(MakeSettings());
+            int count = await engine.Run(MakeSettings());
 
             Assert.That(count, Is.EqualTo(0));
         }
@@ -217,16 +218,16 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task WhenThereIsAMaxNumberOfRepos()
         {
-            var repos = new List<RepositorySettings>
-            {
+            List<RepositorySettings> repos =
+            [
                 new RepositorySettings(),
                 new RepositorySettings(),
                 new RepositorySettings()
-            };
+            ];
 
-            var engine = MakeCollaborationEngine(1, repos);
+            CollaborationEngine engine = MakeCollaborationEngine(1, repos);
 
-            var settings = new SettingsContainer
+            SettingsContainer settings = new()
             {
                 UserSettings = new UserSettings
                 {
@@ -235,7 +236,7 @@ namespace NuKeeper.Tests.Engine
                 SourceControlServerSettings = MakeServerSettings()
             };
 
-            var count = await engine.Run(settings);
+            int count = await engine.Run(settings);
 
             Assert.That(count, Is.EqualTo(1));
         }
@@ -252,7 +253,7 @@ namespace NuKeeper.Tests.Engine
 
         private RepositorySettings MakeRepositorySettingsAndAddAsDiscoverable()
         {
-            var repositorySettings = new RepositorySettings();
+            RepositorySettings repositorySettings = new();
             _disoverableRepositories.Add(repositorySettings);
             return repositorySettings;
         }
@@ -267,20 +268,20 @@ namespace NuKeeper.Tests.Engine
             int repoEngineResult,
             List<RepositorySettings> repos)
         {
-            var collaborationFactory = Substitute.For<ICollaborationFactory>();
-            var repoEngine = Substitute.For<IGitRepositoryEngine>();
-            var folders = Substitute.For<IFolderFactory>();
+            ICollaborationFactory collaborationFactory = Substitute.For<ICollaborationFactory>();
+            IGitRepositoryEngine repoEngine = Substitute.For<IGitRepositoryEngine>();
+            IFolderFactory folders = Substitute.For<IFolderFactory>();
 
-            var user = new User("testUser", "Testy", "testuser@test.com");
-            collaborationFactory.CollaborationPlatform.GetCurrentUser().Returns(user);
+            User user = new("testUser", "Testy", "testuser@test.com");
+            _ = collaborationFactory.CollaborationPlatform.GetCurrentUser().Returns(user);
 
-            collaborationFactory.Settings.Returns(new CollaborationPlatformSettings());
+            _ = collaborationFactory.Settings.Returns(new CollaborationPlatformSettings());
 
-            collaborationFactory.RepositoryDiscovery.GetRepositories(Arg.Any<SourceControlServerSettings>()).Returns(repos);
+            _ = collaborationFactory.RepositoryDiscovery.GetRepositories(Arg.Any<SourceControlServerSettings>()).Returns(repos);
 
-            repoEngine.Run(null, null, null, null).ReturnsForAnyArgs(repoEngineResult);
+            _ = repoEngine.Run(null, null, null, null).ReturnsForAnyArgs(repoEngineResult);
 
-            var engine = new CollaborationEngine(collaborationFactory, repoEngine,
+            CollaborationEngine engine = new(collaborationFactory, repoEngine,
                 folders, Substitute.For<INuKeeperLogger>());
 
             return engine;

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Inspections.Files;
@@ -12,6 +7,12 @@ using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Logging;
 using NuKeeper.Inspection.NuGetApi;
 using NuKeeper.Inspection.RepositoryInspection;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Inspection
 {
@@ -47,16 +48,16 @@ namespace NuKeeper.Inspection
             Regex includes = null,
             Regex excludes = null)
         {
-            var packages = FindPackages(workingFolder);
+            IReadOnlyCollection<PackageInProject> packages = FindPackages(workingFolder);
 
             _logger.Normal($"Found {packages.Count} packages");
 
-            var filtered = FilteredByIncludeExclude(packages, includes, excludes);
+            IReadOnlyCollection<PackageInProject> filtered = FilteredByIncludeExclude(packages, includes, excludes);
 
             _logger.Log(PackagesFoundLogger.Log(filtered));
 
             // look for updates to these packages
-            var updates = await _packageUpdatesLookup.FindUpdatesForPackages(
+            IReadOnlyCollection<PackageUpdateSet> updates = await _packageUpdatesLookup.FindUpdatesForPackages(
                 filtered, sources, allowedChange, usePrerelease);
 
             _logger.Log(UpdatesLogger.Log(updates));
@@ -66,13 +67,13 @@ namespace NuKeeper.Inspection
 
         private IReadOnlyCollection<PackageInProject> FilteredByIncludeExclude(IReadOnlyCollection<PackageInProject> all, Regex includes, Regex excludes)
         {
-            var filteredByIncludeExclude = all
+            List<PackageInProject> filteredByIncludeExclude = all
                 .Where(package => RegexMatch.IncludeExclude(package.Id, includes, excludes))
                 .ToList();
 
             if (filteredByIncludeExclude.Count < all.Count)
             {
-                var filterDesc = string.Empty;
+                string filterDesc = string.Empty;
                 if (excludes != null)
                 {
                     filterDesc += $"Exclude '{excludes}'";
@@ -92,12 +93,12 @@ namespace NuKeeper.Inspection
         private IReadOnlyCollection<PackageInProject> FindPackages(IFolder workingFolder)
         {
             // scan for nuget packages
-            var allPackages = _repositoryScanner.FindAllNuGetPackages(workingFolder);
+            IReadOnlyCollection<PackageInProject> allPackages = _repositoryScanner.FindAllNuGetPackages(workingFolder);
 
-            var metaPackages = allPackages
+            IEnumerable<PackageInProject> metaPackages = allPackages
                 .Where(x => KnownMetapackage.Contains(x.Id, StringComparer.OrdinalIgnoreCase));
 
-            foreach (var metaPackage in metaPackages)
+            foreach (PackageInProject metaPackage in metaPackages)
             {
                 LogVersionedMetapackage(metaPackage);
             }

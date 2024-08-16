@@ -1,8 +1,11 @@
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.Process;
+
 using NUnit.Framework;
+
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -32,22 +35,22 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
             const string expectedPackageString =
                 "<dependency id=\"foo\" version=\"{packageVersion}\" />";
 
-            var testFolder = memberName;
-            var testNuspec = $"{memberName}.nuspec";
-            var workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory, testFolder);
-            Directory.CreateDirectory(workDirectory);
-            var projectContents = testProjectContents.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase);
-            var projectPath = Path.Combine(workDirectory, testNuspec);
+            string testFolder = memberName;
+            string testNuspec = $"{memberName}.nuspec";
+            string workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory, testFolder);
+            _ = Directory.CreateDirectory(workDirectory);
+            string projectContents = testProjectContents.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase);
+            string projectPath = Path.Combine(workDirectory, testNuspec);
             await File.WriteAllTextAsync(projectPath, projectContents);
 
-            var command = new UpdateNuspecCommand(NukeeperLogger);
+            UpdateNuspecCommand command = new(NukeeperLogger);
 
-            var package = new PackageInProject("foo", oldPackageVersion,
+            PackageInProject package = new("foo", oldPackageVersion,
                 new PackagePath(workDirectory, testNuspec, PackageReferenceType.Nuspec));
 
             await command.Invoke(package, new NuGetVersion(newPackageVersion), null, NuGetSources.GlobalFeed);
 
-            var contents = await File.ReadAllTextAsync(projectPath);
+            string contents = await File.ReadAllTextAsync(projectPath);
             Assert.That(contents, Does.Contain(expectedPackageString.Replace("{packageVersion}", newPackageVersion, StringComparison.OrdinalIgnoreCase)));
             Assert.That(contents, Does.Not.Contain(expectedPackageString.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase)));
         }

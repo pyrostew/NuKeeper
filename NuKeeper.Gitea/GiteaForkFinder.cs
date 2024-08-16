@@ -3,6 +3,7 @@ using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.GitHub;
+
 using System;
 using System.Threading.Tasks;
 
@@ -10,9 +11,9 @@ namespace NuKeeper.Gitea
 {
     public class GiteaForkFinder : IForkFinder
     {
-        private ICollaborationPlatform _collaborationPlatform;
-        private INuKeeperLogger _logger;
-        private ForkMode _forkMode;
+        private readonly ICollaborationPlatform _collaborationPlatform;
+        private readonly INuKeeperLogger _logger;
+        private readonly ForkMode _forkMode;
 
         public GiteaForkFinder(ICollaborationPlatform collaborationPlatform, INuKeeperLogger logger, ForkMode forkMode)
         {
@@ -25,37 +26,27 @@ namespace NuKeeper.Gitea
 
         public async Task<ForkData> FindPushFork(string userName, ForkData fallbackFork)
         {
-            if (fallbackFork == null)
-            {
-                throw new ArgumentNullException(nameof(fallbackFork));
-            }
-
-            switch (_forkMode)
-            {
-                case ForkMode.PreferFork:
-                    return await FindUserForkOrUpstream(userName, fallbackFork);
-
-                case ForkMode.PreferSingleRepository:
-                    return await FindUpstreamRepoOrUserFork(userName, fallbackFork);
-
-                case ForkMode.SingleRepositoryOnly:
-                    return await FindUpstreamRepoOnly(fallbackFork);
-
-                default:
-                    throw new ArgumentOutOfRangeException($"Unknown fork mode: {_forkMode}");
-            }
+            return fallbackFork == null
+                ? throw new ArgumentNullException(nameof(fallbackFork))
+                : _forkMode switch
+                {
+                    ForkMode.PreferFork => await FindUserForkOrUpstream(userName, fallbackFork),
+                    ForkMode.PreferSingleRepository => await FindUpstreamRepoOrUserFork(userName, fallbackFork),
+                    ForkMode.SingleRepositoryOnly => await FindUpstreamRepoOnly(fallbackFork),
+                    _ => throw new ArgumentOutOfRangeException($"Unknown fork mode: {_forkMode}"),
+                };
         }
 
         private async Task<ForkData> FindUserForkOrUpstream(string userName, ForkData pullFork)
         {
-            var userFork = await TryFindUserFork(userName, pullFork);
+            ForkData userFork = await TryFindUserFork(userName, pullFork);
             if (userFork != null)
             {
                 return userFork;
             }
 
             // as a fallback, we want to pull and push from the same origin repo.
-            var canUseOriginRepo = await IsPushableRepo(pullFork);
+            bool canUseOriginRepo = await IsPushableRepo(pullFork);
             if (canUseOriginRepo)
             {
                 _logger.Normal($"No fork for user {userName}. Using upstream fork for user {pullFork.Owner} at {pullFork.Uri}");
@@ -69,7 +60,7 @@ namespace NuKeeper.Gitea
         private async Task<ForkData> FindUpstreamRepoOrUserFork(string userName, ForkData pullFork)
         {
             // prefer to pull and push from the same origin repo.
-            var canUseOriginRepo = await IsPushableRepo(pullFork);
+            bool canUseOriginRepo = await IsPushableRepo(pullFork);
             if (canUseOriginRepo)
             {
                 _logger.Normal($"Using upstream fork as push, for user {pullFork.Owner} at {pullFork.Uri}");
@@ -77,7 +68,7 @@ namespace NuKeeper.Gitea
             }
 
             // fall back to trying a fork
-            var userFork = await TryFindUserFork(userName, pullFork);
+            ForkData userFork = await TryFindUserFork(userName, pullFork);
             if (userFork != null)
             {
                 return userFork;
@@ -90,7 +81,7 @@ namespace NuKeeper.Gitea
         private async Task<ForkData> FindUpstreamRepoOnly(ForkData pullFork)
         {
             // Only want to pull and push from the same origin repo.
-            var canUseOriginRepo = await IsPushableRepo(pullFork);
+            bool canUseOriginRepo = await IsPushableRepo(pullFork);
             if (canUseOriginRepo)
             {
                 _logger.Normal($"Using upstream fork as push, for project {pullFork.Owner} at {pullFork.Uri}");
@@ -108,17 +99,17 @@ namespace NuKeeper.Gitea
 
         private async Task<bool> IsPushableRepo(ForkData originFork)
         {
-            var originRepo = await _collaborationPlatform.GetUserRepository(originFork.Owner, originFork.Name);
+            Repository originRepo = await _collaborationPlatform.GetUserRepository(originFork.Owner, originFork.Name);
             return originRepo?.UserPermissions.Push == true;
         }
 
         private async Task<ForkData> TryFindUserFork(string userName, ForkData originFork)
         {
-            var userFork = await _collaborationPlatform.GetUserRepository(userName, originFork.Name);
+            Repository userFork = await _collaborationPlatform.GetUserRepository(userName, originFork.Name);
             if (userFork != null)
             {
-                var isMatchingFork = RepoIsForkOf(userFork, originFork.Uri);
-                var forkIsPushable = userFork.UserPermissions.Push;
+                bool isMatchingFork = RepoIsForkOf(userFork, originFork.Uri);
+                bool forkIsPushable = userFork.UserPermissions.Push;
                 if (isMatchingFork && forkIsPushable)
                 {
                     // the user has a pushable fork
@@ -132,13 +123,8 @@ namespace NuKeeper.Gitea
             }
 
             // no user fork exists, try and create it as a fork of the main repo
-            var newFork = await _collaborationPlatform.MakeUserFork(originFork.Owner, originFork.Name);
-            if (newFork != null)
-            {
-                return RepositoryToForkData(newFork);
-            }
-
-            return null;
+            Repository newFork = await _collaborationPlatform.MakeUserFork(originFork.Owner, originFork.Name);
+            return newFork != null ? RepositoryToForkData(newFork) : null;
         }
 
         private static bool RepoIsForkOf(Repository userRepo, Uri originRepo)
@@ -158,8 +144,8 @@ namespace NuKeeper.Gitea
                 return false;
             }
 
-            var userParentUrl = GithubUriHelpers.Normalise(userRepo.Parent.CloneUrl);
-            var originUrl = GithubUriHelpers.Normalise(originRepo);
+            Uri userParentUrl = GithubUriHelpers.Normalise(userRepo.Parent.CloneUrl);
+            Uri originUrl = GithubUriHelpers.Normalise(originRepo);
 
             return userParentUrl.Equals(originUrl);
         }

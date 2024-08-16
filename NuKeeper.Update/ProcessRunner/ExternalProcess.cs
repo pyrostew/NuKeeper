@@ -1,5 +1,6 @@
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -23,7 +24,7 @@ namespace NuKeeper.Update.ProcessRunner
 
             try
             {
-                var processInfo = MakeProcessStartInfo(workingDirectory, command, arguments);
+                ProcessStartInfo processInfo = MakeProcessStartInfo(workingDirectory, command, arguments);
                 process = System.Diagnostics.Process.Start(processInfo);
             }
             catch (Exception ex)
@@ -35,7 +36,7 @@ namespace NuKeeper.Update.ProcessRunner
                     throw;
                 }
 
-                var message = $"Error starting external process for {command}: {ex.GetType().Name} {ex.Message}";
+                string message = $"Error starting external process for {command}: {ex.GetType().Name} {ex.Message}";
                 return new ProcessOutput(string.Empty, message, 1);
             }
 
@@ -44,21 +45,21 @@ namespace NuKeeper.Update.ProcessRunner
                 throw new NuKeeperException($"Could not start external process for {command}");
             }
 
-            var outputs = await Task.WhenAll(
+            string[] outputs = await Task.WhenAll(
                 process.StandardOutput.ReadToEndAsync(),
                 process.StandardError.ReadToEndAsync()
             );
 
-            var textOut = outputs[0];
-            var errorOut = outputs[1];
+            string textOut = outputs[0];
+            string errorOut = outputs[1];
 
             process.WaitForExit();
 
-            var exitCode = process.ExitCode;
+            int exitCode = process.ExitCode;
 
             if (exitCode != 0)
             {
-                var message = $"Command {command} failed with exit code: {exitCode}\n\n{textOut}\n\n{errorOut}";
+                string message = $"Command {command} failed with exit code: {exitCode}\n\n{textOut}\n\n{errorOut}";
                 _logger.Detailed(message);
 
                 if (ensureSuccess)

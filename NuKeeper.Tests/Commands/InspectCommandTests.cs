@@ -1,11 +1,14 @@
 using NSubstitute;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.Output;
 using NuKeeper.Commands;
 using NuKeeper.Inspection.Logging;
 using NuKeeper.Local;
+
 using NUnit.Framework;
+
 using System;
 using System.Threading.Tasks;
 
@@ -17,15 +20,15 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldCallEngineAndSucceed()
         {
-            var engine = Substitute.For<ILocalEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
-            fileSettings.GetSettings().Returns(FileSettings.Empty());
+            _ = fileSettings.GetSettings().Returns(FileSettings.Empty());
 
-            var command = new InspectCommand(engine, logger, fileSettings);
+            InspectCommand command = new(engine, logger, fileSettings);
 
-            var status = await command.OnExecute();
+            int status = await command.OnExecute();
 
             Assert.That(status, Is.EqualTo(0));
             await engine
@@ -36,9 +39,9 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task EmptyFileResultsInDefaultSettings()
         {
-            var fileSettings = FileSettings.Empty();
+            FileSettings fileSettings = FileSettings.Empty();
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -61,12 +64,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadMaxAgeFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 Age = "8d"
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -76,12 +79,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task InvalidMaxAgeWillFail()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 Age = "fish"
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Null);
         }
@@ -90,13 +93,13 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadIncludeExcludeFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 Include = "foo",
                 Exclude = "bar"
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -107,14 +110,14 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadBranchNamePrefixFromFile()
         {
-            var testTemplate = "nukeeper/MyBranch";
+            string testTemplate = "nukeeper/MyBranch";
 
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 BranchNameTemplate = testTemplate
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.BranchSettings, Is.Not.Null);
@@ -124,15 +127,15 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task LogLevelIsNormalByDefault()
         {
-            var engine = Substitute.For<ILocalEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
-            fileSettings.GetSettings().Returns(FileSettings.Empty());
+            _ = fileSettings.GetSettings().Returns(FileSettings.Empty());
 
-            var command = new InspectCommand(engine, logger, fileSettings);
+            InspectCommand command = new(engine, logger, fileSettings);
 
-            await command.OnExecute();
+            _ = await command.OnExecute();
 
             logger
                 .Received(1)
@@ -142,16 +145,18 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldSetLogLevelFromCommand()
         {
-            var engine = Substitute.For<ILocalEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
-            fileSettings.GetSettings().Returns(FileSettings.Empty());
+            _ = fileSettings.GetSettings().Returns(FileSettings.Empty());
 
-            var command = new InspectCommand(engine, logger, fileSettings);
-            command.Verbosity = LogLevel.Minimal;
+            InspectCommand command = new(engine, logger, fileSettings)
+            {
+                Verbosity = LogLevel.Minimal
+            };
 
-            await command.OnExecute();
+            _ = await command.OnExecute();
 
             logger
                 .Received(1)
@@ -161,20 +166,20 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldSetLogLevelFromFile()
         {
-            var engine = Substitute.For<ILocalEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
-            var settings = new FileSettings
+            FileSettings settings = new()
             {
                 Verbosity = LogLevel.Detailed
             };
 
-            fileSettings.GetSettings().Returns(settings);
+            _ = fileSettings.GetSettings().Returns(settings);
 
-            var command = new InspectCommand(engine, logger, fileSettings);
+            InspectCommand command = new(engine, logger, fileSettings);
 
-            await command.OnExecute();
+            _ = await command.OnExecute();
 
             logger
                 .Received(1)
@@ -184,21 +189,23 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task CommandLineLogLevelOverridesFile()
         {
-            var engine = Substitute.For<ILocalEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
-            var settings = new FileSettings
+            FileSettings settings = new()
             {
                 Verbosity = LogLevel.Detailed
             };
 
-            fileSettings.GetSettings().Returns(settings);
+            _ = fileSettings.GetSettings().Returns(settings);
 
-            var command = new InspectCommand(engine, logger, fileSettings);
-            command.Verbosity = LogLevel.Minimal;
+            InspectCommand command = new(engine, logger, fileSettings)
+            {
+                Verbosity = LogLevel.Minimal
+            };
 
-            await command.OnExecute();
+            _ = await command.OnExecute();
 
             logger
                 .Received(1)
@@ -208,18 +215,20 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task LogToFileBySettingFileName()
         {
-            var engine = Substitute.For<ILocalEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
-            var settings = FileSettings.Empty();
+            FileSettings settings = FileSettings.Empty();
 
-            fileSettings.GetSettings().Returns(settings);
+            _ = fileSettings.GetSettings().Returns(settings);
 
-            var command = new InspectCommand(engine, logger, fileSettings);
-            command.LogFile = "somefile.log";
+            InspectCommand command = new(engine, logger, fileSettings)
+            {
+                LogFile = "somefile.log"
+            };
 
-            await command.OnExecute();
+            _ = await command.OnExecute();
 
             logger
                 .Received(1)
@@ -229,18 +238,20 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task LogToFileBySettingLogDestination()
         {
-            var engine = Substitute.For<ILocalEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
-            var settings = FileSettings.Empty();
+            FileSettings settings = FileSettings.Empty();
 
-            fileSettings.GetSettings().Returns(settings);
+            _ = fileSettings.GetSettings().Returns(settings);
 
-            var command = new InspectCommand(engine, logger, fileSettings);
-            command.LogDestination = LogDestination.File;
+            InspectCommand command = new(engine, logger, fileSettings)
+            {
+                LogDestination = LogDestination.File
+            };
 
-            await command.OnExecute();
+            _ = await command.OnExecute();
 
             logger
                 .Received(1)
@@ -250,14 +261,14 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldSetOutputOptionsFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 OutputDestination = OutputDestination.File,
                 OutputFormat = OutputFormat.Csv,
                 OutputFileName = "foo.csv"
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.UserSettings.OutputDestination, Is.EqualTo(OutputDestination.File));
@@ -268,13 +279,13 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WhenFileNameIsExplicit_ShouldDefaultOutputDestToFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 OutputDestination = null,
                 OutputFormat = OutputFormat.Csv
             };
 
-            var settings = await CaptureSettings(fileSettings, null, null, "foo.csv");
+            SettingsContainer settings = await CaptureSettings(fileSettings, null, null, "foo.csv");
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.UserSettings.OutputDestination, Is.EqualTo(OutputDestination.File));
@@ -285,13 +296,13 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WhenFileNameIsExplicit_ShouldKeepOutputDest()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 OutputDestination = OutputDestination.Off,
                 OutputFormat = OutputFormat.Csv
             };
 
-            var settings = await CaptureSettings(fileSettings, null, null, "foo.csv");
+            SettingsContainer settings = await CaptureSettings(fileSettings, null, null, "foo.csv");
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.UserSettings.OutputDestination, Is.EqualTo(OutputDestination.Off));
@@ -302,7 +313,7 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldSetOutputOptionsFromCommand()
         {
-            var settingsOut = await CaptureSettings(FileSettings.Empty(),
+            SettingsContainer settingsOut = await CaptureSettings(FileSettings.Empty(),
                 OutputDestination.File,
                 OutputFormat.Csv);
 
@@ -315,17 +326,17 @@ namespace NuKeeper.Tests.Commands
             OutputFormat? outputFormat = null,
             string outputFileName = null)
         {
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
             SettingsContainer settingsOut = null;
-            var engine = Substitute.For<ILocalEngine>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
             await engine.Run(Arg.Do<SettingsContainer>(x => settingsOut = x), false);
 
 
-            fileSettings.GetSettings().Returns(settingsIn);
+            _ = fileSettings.GetSettings().Returns(settingsIn);
 
-            var command = new InspectCommand(engine, logger, fileSettings);
+            InspectCommand command = new(engine, logger, fileSettings);
 
             if (outputDestination.HasValue)
             {
@@ -341,7 +352,7 @@ namespace NuKeeper.Tests.Commands
                 command.OutputFileName = outputFileName;
             }
 
-            await command.OnExecute();
+            _ = await command.OnExecute();
 
             return settingsOut;
         }

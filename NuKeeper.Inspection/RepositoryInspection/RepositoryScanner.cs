@@ -1,10 +1,11 @@
+using NuKeeper.Abstractions.Inspections.Files;
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using NuKeeper.Abstractions.Inspections.Files;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.RepositoryInspection
 {
@@ -38,11 +39,11 @@ namespace NuKeeper.Inspection.RepositoryInspection
         private IEnumerable<PackageInProject> FindPackages(IFolder workingFolder,
             IPackageReferenceFinder packageReferenceFinder)
         {
-            var files = packageReferenceFinder
+            IEnumerable<FileInfo> files = packageReferenceFinder
                 .GetFilePatterns()
                 .SelectMany(workingFolder.Find);
 
-            var filesInUsableDirectories =
+            IEnumerable<FileInfo> filesInUsableDirectories =
                 files.Where(f => !_directoryExclusions.PathIsExcluded(f.FullName));
 
             return filesInUsableDirectories.SelectMany(f =>
@@ -55,8 +56,8 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         private static string GetRelativeFileName(string rootDir, string fileName)
         {
-            var separatorChar = Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture);
-            var rootDirWithSeparator = rootDir.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
+            string separatorChar = Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture);
+            string rootDirWithSeparator = rootDir.EndsWith(separatorChar, StringComparison.OrdinalIgnoreCase)
                 ? rootDir
                 : rootDir + Path.DirectorySeparatorChar;
             return fileName.Replace(rootDirWithSeparator, string.Empty);

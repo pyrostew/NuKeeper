@@ -1,5 +1,6 @@
 using NuGet.Common;
 using NuGet.Credentials;
+
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
@@ -8,6 +9,7 @@ using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Git;
 using NuKeeper.Inspection.Files;
+
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -60,7 +62,7 @@ namespace NuKeeper.Engine
 
             DefaultCredentialServiceUtility.SetupDefaultCredentialService(_nugetLogger, true);
 
-            var repositoryData = await BuildGitRepositorySpec(repository, credentials.Username);
+            RepositoryData repositoryData = await BuildGitRepositorySpec(repository, credentials.Username);
             if (repositoryData == null)
             {
                 return 0;
@@ -72,7 +74,7 @@ namespace NuKeeper.Engine
             // otherwise it's ok to work locally, and check there
             if (!(settings.SourceControlServerSettings.Scope == ServerScope.Repository || repository.IsLocalRepo))
             {
-                var remoteRepoContainsDotNet = await _repositoryFilter.ContainsDotNetProjects(repository);
+                bool remoteRepoContainsDotNet = await _repositoryFilter.ContainsDotNetProjects(repository);
                 if (!remoteRepoContainsDotNet)
                 {
                     return 0;
@@ -106,8 +108,8 @@ namespace NuKeeper.Engine
 
             repositoryData.IsLocalRepo = repository.IsLocalRepo;
             IGitDriver git = string.IsNullOrWhiteSpace(settings?.UserSettings?.GitPath) ?
-                new LibGit2SharpDriver(_logger, folder, credentials, user) as IGitDriver :
-                new GitCmdDriver(settings.UserSettings.GitPath, _logger, folder, credentials) as IGitDriver;
+                new LibGit2SharpDriver(_logger, folder, credentials, user) :
+                new GitCmdDriver(settings.UserSettings.GitPath, _logger, folder, credentials);
 
             try
             {
@@ -126,8 +128,8 @@ namespace NuKeeper.Engine
             RepositorySettings repository,
             string userName)
         {
-            var pullFork = new ForkData(repository.RepositoryUri, repository.RepositoryOwner, repository.RepositoryName);
-            var pushFork = await _collaborationFactory.ForkFinder.FindPushFork(userName, pullFork);
+            ForkData pullFork = new(repository.RepositoryUri, repository.RepositoryOwner, repository.RepositoryName);
+            ForkData pushFork = await _collaborationFactory.ForkFinder.FindPushFork(userName, pullFork);
 
             if (pushFork == null)
             {

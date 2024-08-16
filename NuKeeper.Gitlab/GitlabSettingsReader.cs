@@ -1,10 +1,10 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
-using NuKeeper.Abstractions.Formats;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Gitlab
 {
@@ -23,10 +23,9 @@ namespace NuKeeper.Gitlab
 
         public Task<bool> CanRead(Uri repositoryUri)
         {
-            if (repositoryUri == null)
-                return Task.FromResult(false);
-
-            return Task.FromResult(repositoryUri.Host.Contains("gitlab", StringComparison.OrdinalIgnoreCase));
+            return repositoryUri == null
+                ? Task.FromResult(false)
+                : Task.FromResult(repositoryUri.Host.Contains("gitlab", StringComparison.OrdinalIgnoreCase));
         }
 
         public void UpdateCollaborationPlatformSettings(CollaborationPlatformSettings settings)
@@ -36,7 +35,7 @@ namespace NuKeeper.Gitlab
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            var envToken = _environmentVariablesProvider.GetEnvironmentVariable(GitLabTokenEnvironmentVariableName);
+            string envToken = _environmentVariablesProvider.GetEnvironmentVariable(GitLabTokenEnvironmentVariableName);
 
             settings.Token = Concat.FirstValue(envToken, settings.Token);
         }
@@ -50,8 +49,8 @@ namespace NuKeeper.Gitlab
             }
 
             // Assumption - url should look like https://gitlab.com/{username}/{projectname}.git";
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
@@ -61,10 +60,10 @@ namespace NuKeeper.Gitlab
                     $"The provided uri was is not in the correct format. Provided {repositoryUri} and format should be {UrlPattern}");
             }
 
-            var repoOwner = string.Join("/", pathParts.Take(pathParts.Count - 1));
-            var repoName = pathParts.Last().Replace(".git", string.Empty);
+            string repoOwner = string.Join("/", pathParts.Take(pathParts.Count - 1));
+            string repoName = pathParts.Last().Replace(".git", string.Empty);
 
-            var uriBuilder = new UriBuilder(repositoryUri) { Path = "/api/v4/" };
+            UriBuilder uriBuilder = new(repositoryUri) { Path = "/api/v4/" };
 
             return Task.FromResult(new RepositorySettings
             {

@@ -1,7 +1,8 @@
-using System;
-using System.Linq;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.RepositoryInspection;
+
+using System;
+using System.Linq;
 
 namespace NuKeeper.Inspection.Report.Formats
 {
@@ -14,32 +15,23 @@ namespace NuKeeper.Inspection.Report.Formats
                 throw new ArgumentNullException(nameof(update));
             }
 
-            var occurrences = update.CurrentPackages.Count;
-            var versionsInUse = update.CurrentPackages
+            int occurrences = update.CurrentPackages.Count;
+            System.Collections.Generic.List<NuGet.Versioning.NuGetVersion> versionsInUse = update.CurrentPackages
                 .Select(p => p.Version)
                 .ToList();
 
-            var lowest = versionsInUse.Min();
-            var highest = versionsInUse.Max();
+            NuGet.Versioning.NuGetVersion lowest = versionsInUse.Min();
+            NuGet.Versioning.NuGetVersion highest = versionsInUse.Max();
 
-            string versionInUse;
-            if (lowest == highest)
-            {
-                versionInUse = highest.ToString();
-            }
-            else
-            {
-                versionInUse = $"{lowest} - {highest}";
-            }
-
-            var ago = "?";
+            string versionInUse = lowest == highest ? highest.ToString() : $"{lowest} - {highest}";
+            string ago = "?";
             if (update.Selected.Published.HasValue)
             {
-                var pubDate = update.Selected.Published.Value.UtcDateTime;
+                DateTime pubDate = update.Selected.Published.Value.UtcDateTime;
                 ago = TimeSpanFormat.Ago(pubDate, DateTime.UtcNow);
             }
 
-            var optS = occurrences > 1 ? "s" : string.Empty;
+            string optS = occurrences > 1 ? "s" : string.Empty;
 
             return $"{update.SelectedId} to {update.SelectedVersion} from {versionInUse} in {occurrences} place{optS} since {ago}.";
         }

@@ -1,6 +1,7 @@
+using NuKeeper.Abstractions.NuGet;
+
 using System.IO;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions.NuGet;
 
 namespace NuKeeper.Update.Process
 {

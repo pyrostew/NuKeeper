@@ -1,6 +1,8 @@
-using System.IO;
 using NuKeeper.Abstractions.RepositoryInspection;
+
 using NUnit.Framework;
+
+using System.IO;
 
 namespace NuKeeper.Inspection.Tests.RepositoryInspection
 {
@@ -18,9 +20,9 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void ConstructorShouldProduceExpectedSimplePropsForProjectFile()
         {
-            var sep = Path.DirectorySeparatorChar;
+            char sep = Path.DirectorySeparatorChar;
 
-            var path = new PackagePath(
+            PackagePath path = new(
                 _baseDirectory,
                 $"{sep}checkout1{sep}src{sep}myproj.csproj",
                 PackageReferenceType.ProjectFile);
@@ -33,8 +35,8 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void ConstructorShouldProduceExpectedSimplePropsForPackagesConfigFile()
         {
-            var sep = Path.DirectorySeparatorChar;
-            var path = new PackagePath(
+            char sep = Path.DirectorySeparatorChar;
+            PackagePath path = new(
                 _baseDirectory,
                 $"{sep}checkout1{sep}src{sep}packages.config",
                 PackageReferenceType.PackagesConfig);
@@ -47,8 +49,8 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void ConstructorShouldProduceExpectedParsedFileName()
         {
-            var sep = Path.DirectorySeparatorChar;
-            var path = new PackagePath(
+            char sep = Path.DirectorySeparatorChar;
+            PackagePath path = new(
                 _baseDirectory,
                 $"checkout1{sep}src{sep}myproj.csproj",
                 PackageReferenceType.ProjectFile);
@@ -60,8 +62,8 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void ConstructorShouldProduceExpectedParsedFullPath()
         {
-            var sep = Path.DirectorySeparatorChar;
-            var path = new PackagePath(
+            char sep = Path.DirectorySeparatorChar;
+            PackagePath path = new(
                 _baseDirectory,
                 $"checkout1{sep}src{sep}myproj.csproj",
                 PackageReferenceType.ProjectFile);
@@ -74,9 +76,9 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void ConstructorShouldProduceExpectedInfoForProjectFile()
         {
-            var sep = Path.DirectorySeparatorChar;
+            char sep = Path.DirectorySeparatorChar;
 
-            var path = new PackagePath(
+            PackagePath path = new(
                 _baseDirectory,
                 $"{sep}checkout1{sep}src{sep}myproj.csproj",
                 PackageReferenceType.ProjectFile);
@@ -88,9 +90,9 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void ConstructorShouldProduceExpectedPathForProjectFile()
         {
-            var sep = Path.DirectorySeparatorChar;
+            char sep = Path.DirectorySeparatorChar;
 
-            var path = new PackagePath(
+            PackagePath path = new(
                 _baseDirectory,
                 $"{sep}checkout1{sep}src{sep}myproj.csproj",
                 PackageReferenceType.ProjectFile);
@@ -103,8 +105,8 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void ConstructorShouldProduceExpectedParsedPropsWithExtraSlash()
         {
-            var sep = Path.DirectorySeparatorChar;
-            var path = new PackagePath(
+            char sep = Path.DirectorySeparatorChar;
+            PackagePath path = new(
                 _baseDirectory,
                 $"{sep}checkout1{sep}src{sep}myproj.csproj",
                 PackageReferenceType.ProjectFile);
@@ -117,8 +119,8 @@ namespace NuKeeper.Inspection.Tests.RepositoryInspection
         [Test]
         public void ConstructorShouldProduceExpectedParsedFullPathWithExtraSlash()
         {
-            var sep = Path.DirectorySeparatorChar;
-            var path = new PackagePath(
+            char sep = Path.DirectorySeparatorChar;
+            PackagePath path = new(
                 _baseDirectory,
                 $"{sep}checkout1{sep}src{sep}myproj.csproj",
                 PackageReferenceType.ProjectFile);

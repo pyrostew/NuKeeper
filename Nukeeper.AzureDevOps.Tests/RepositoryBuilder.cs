@@ -1,20 +1,18 @@
-using System;
 using NuKeeper.Abstractions.CollaborationModels;
 
-#pragma warning disable CA1054
+using System;
 
 namespace Nukeeper.AzureDevOps.Tests
 {
     public static class RepositoryBuilder
     {
-#pragma warning disable CA1051 // Do not declare visible instance fields
 #pragma warning disable CA2211 // Non-constant fields should not be visible
-        public static Uri ParentHtmlUrl = new Uri("http://repos.com/org/parent");
-        public static Uri ParentCloneUrl = new Uri("http://repos.com/org/parent.git");
+        public static Uri ParentHtmlUrl = new("http://repos.com/org/parent");
+        public static Uri ParentCloneUrl = new("http://repos.com/org/parent.git");
 
-        public static Uri ForkHtmlUrl = new Uri("http://repos.com/org/repo");
-        public static Uri ForkCloneUrl = new Uri("http://repos.com/org/repo.git");
-        public static Uri NoMatchUrl = new Uri("http://repos.com/org/nomatch");
+        public static Uri ForkHtmlUrl = new("http://repos.com/org/repo");
+        public static Uri ForkCloneUrl = new("http://repos.com/org/repo.git");
+        public static Uri NoMatchUrl = new("http://repos.com/org/nomatch");
 
         public static Repository MakeRepository(bool canPull, bool canPush)
         {

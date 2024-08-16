@@ -2,6 +2,7 @@ using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,9 +36,9 @@ namespace NuKeeper.Update.Selection
                 _maxPublishedDate = DateTime.UtcNow.Subtract(settings.MinimumAge);
             }
 
-            var filtered = ApplyFilters(candidates);
+            IReadOnlyCollection<PackageUpdateSet> filtered = ApplyFilters(candidates);
 
-            var capped = filtered
+            List<PackageUpdateSet> capped = filtered
                 .Take(settings.MaxPackageUpdates)
                 .ToList();
 
@@ -49,13 +50,13 @@ namespace NuKeeper.Update.Selection
         private IReadOnlyCollection<PackageUpdateSet> ApplyFilters(
             IReadOnlyCollection<PackageUpdateSet> all)
         {
-            var filtered = all
+            List<PackageUpdateSet> filtered = all
                 .Where(MatchesMinAge)
                 .ToList();
 
             if (filtered.Count < all.Count)
             {
-                var agoFormat = TimeSpanFormat.Ago(_settings.MinimumAge);
+                string agoFormat = TimeSpanFormat.Ago(_settings.MinimumAge);
                 _logger.Normal($"Filtered by minimum package age '{agoFormat}' from {all.Count} to {filtered.Count}");
             }
 
@@ -64,7 +65,7 @@ namespace NuKeeper.Update.Selection
 
         private void LogPackageCounts(int candidates, int filtered, int capped)
         {
-            var message = $"Selection of package updates: {candidates} candidates";
+            string message = $"Selection of package updates: {candidates} candidates";
             if (filtered < candidates)
             {
                 message += $", filtered to {filtered}";
@@ -85,13 +86,8 @@ namespace NuKeeper.Update.Selection
                 return true;
             }
 
-            var published = packageUpdateSet.Selected.Published;
-            if (!published.HasValue)
-            {
-                return true;
-            }
-
-            return published.Value.UtcDateTime <= _maxPublishedDate.Value;
+            DateTimeOffset? published = packageUpdateSet.Selected.Published;
+            return !published.HasValue || published.Value.UtcDateTime <= _maxPublishedDate.Value;
         }
     }
 }

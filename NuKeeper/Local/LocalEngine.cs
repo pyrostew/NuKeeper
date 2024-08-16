@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NuGet.Common;
 using NuGet.Credentials;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.Logging;
@@ -16,6 +11,13 @@ using NuKeeper.Inspection.Files;
 using NuKeeper.Inspection.Report;
 using NuKeeper.Inspection.Sort;
 using NuKeeper.Inspection.Sources;
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Local
 {
@@ -56,11 +58,11 @@ namespace NuKeeper.Local
 
             DefaultCredentialServiceUtility.SetupDefaultCredentialService(_nugetLogger, true);
 
-            var folder = TargetFolder(settings.UserSettings);
+            IFolder folder = TargetFolder(settings.UserSettings);
 
-            var sources = _nuGetSourcesReader.Read(folder, settings.UserSettings.NuGetSources);
+            NuGetSources sources = _nuGetSourcesReader.Read(folder, settings.UserSettings.NuGetSources);
 
-            var sortedUpdates = await GetSortedUpdates(
+            IReadOnlyCollection<PackageUpdateSet> sortedUpdates = await GetSortedUpdates(
                 folder,
                 sources,
                 settings.UserSettings.AllowedChange,
@@ -84,7 +86,7 @@ namespace NuKeeper.Local
             Regex includes,
             Regex excludes)
         {
-            var updates = await _updateFinder.FindPackageUpdateSets(
+            IReadOnlyCollection<PackageUpdateSet> updates = await _updateFinder.FindPackageUpdateSets(
                 folder, sources, allowedChange, usePrerelease, includes, excludes);
 
             return _sorter.Sort(updates)

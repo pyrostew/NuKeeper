@@ -1,6 +1,8 @@
 using NuGet.Common;
+
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Integration.Tests.LogHelpers;
+
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 
@@ -8,8 +10,8 @@ namespace NuKeeper.Integration.Tests
 {
     public abstract class TestWithFailureLogging
     {
-        private NuKeeperTestLogger _nkLogger = new NuKeeperTestLogger();
-        private NugetTestLogger _ngLogger = new NugetTestLogger();
+        private readonly NuKeeperTestLogger _nkLogger = new();
+        private readonly NugetTestLogger _ngLogger = new();
 
         public INuKeeperLogger NukeeperLogger => _nkLogger;
         public ILogger NugetLogger => _ngLogger;

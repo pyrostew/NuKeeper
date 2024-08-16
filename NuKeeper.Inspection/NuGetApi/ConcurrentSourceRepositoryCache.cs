@@ -1,13 +1,14 @@
-using System.Collections.Concurrent;
 using NuGet.Configuration;
 using NuGet.Protocol.Core.Types;
+
+using System.Collections.Concurrent;
 
 namespace NuKeeper.Inspection.NuGetApi
 {
     public class ConcurrentSourceRepositoryCache
     {
         private readonly ConcurrentDictionary<PackageSource, SourceRepository> _packageSources
-            = new ConcurrentDictionary<PackageSource, SourceRepository>();
+            = new();
 
         public SourceRepository Get(PackageSource source)
         {

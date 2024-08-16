@@ -1,13 +1,16 @@
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+
+using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Engine;
+
 using NUnit.Framework;
+
 using System;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions.CollaborationModels;
 
 namespace NuKeeper.Tests.Engine
 {
@@ -17,40 +20,40 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task ShouldFilterWhenNoMatchFound()
         {
-            var collaborationFactory = Substitute.For<ICollaborationFactory>();
-            collaborationFactory.CollaborationPlatform.Search(null).ReturnsForAnyArgs(Task.FromResult(new SearchCodeResult(0)));
+            ICollaborationFactory collaborationFactory = Substitute.For<ICollaborationFactory>();
+            _ = collaborationFactory.CollaborationPlatform.Search(null).ReturnsForAnyArgs(Task.FromResult(new SearchCodeResult(0)));
 
             IRepositoryFilter subject = new RepositoryFilter(collaborationFactory, Substitute.For<INuKeeperLogger>());
 
-            var result = await subject.ContainsDotNetProjects(MakeSampleRepository());
+            bool result = await subject.ContainsDotNetProjects(MakeSampleRepository());
 
-            Assert.False(result);
+            Assert.That(result, Is.False);
         }
 
         [Test]
         public async Task ShouldNotFilterWhenMatchFound()
         {
-            var collaborationFactory = Substitute.For<ICollaborationFactory>();
-            collaborationFactory.CollaborationPlatform.Search(null).ReturnsForAnyArgs(Task.FromResult(new SearchCodeResult(1)));
+            ICollaborationFactory collaborationFactory = Substitute.For<ICollaborationFactory>();
+            _ = collaborationFactory.CollaborationPlatform.Search(null).ReturnsForAnyArgs(Task.FromResult(new SearchCodeResult(1)));
 
             IRepositoryFilter subject = new RepositoryFilter(collaborationFactory, Substitute.For<INuKeeperLogger>());
 
-            var result = await subject.ContainsDotNetProjects(MakeSampleRepository());
+            bool result = await subject.ContainsDotNetProjects(MakeSampleRepository());
 
-            Assert.True(result);
+            Assert.That(result, Is.True);
         }
 
         [Test]
         public async Task ShouldNotFilterWhenSearchFails()
         {
-            var collaborationFactory = Substitute.For<ICollaborationFactory>();
-            collaborationFactory.CollaborationPlatform.Search(null).ThrowsForAnyArgs(new Exception());
+            ICollaborationFactory collaborationFactory = Substitute.For<ICollaborationFactory>();
+            _ = collaborationFactory.CollaborationPlatform.Search(null).ThrowsForAnyArgs(new Exception());
 
             IRepositoryFilter subject = new RepositoryFilter(collaborationFactory, Substitute.For<INuKeeperLogger>());
 
-            var result = await subject.ContainsDotNetProjects(MakeSampleRepository());
+            bool result = await subject.ContainsDotNetProjects(MakeSampleRepository());
 
-            Assert.True(result);
+            Assert.That(result, Is.True);
         }
 
         private static RepositorySettings MakeSampleRepository()

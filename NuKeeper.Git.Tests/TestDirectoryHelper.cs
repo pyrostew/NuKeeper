@@ -12,20 +12,20 @@ namespace NuKeeper.Git.Tests
 
         public static string DiscoverPathToGit()
         {
-            var env = Environment.GetEnvironmentVariable("PATH")
+            string[] env = Environment.GetEnvironmentVariable("PATH")
                 .Split(System.IO.Path.PathSeparator);
 
-            foreach (var path in env)
+            foreach (string path in env)
             {
                 try
                 {
-                    var files = Directory.GetFiles(path).Where(x => Path.GetFileNameWithoutExtension(x) == "git");
+                    System.Collections.Generic.IEnumerable<string> files = Directory.GetFiles(path).Where(x => Path.GetFileNameWithoutExtension(x) == "git");
                     if (files.Any())
                     {
                         return files.FirstOrDefault();
                     }
                 }
-                catch(DirectoryNotFoundException)
+                catch (DirectoryNotFoundException)
                 {
                 }
             }
@@ -35,10 +35,10 @@ namespace NuKeeper.Git.Tests
 
         public static DirectoryInfo UniqueTemporaryFolder()
         {
-            var uniqueName = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
-            var folder = Path.Combine(Path.GetTempPath(), "NuKeeper", uniqueName);
+            string uniqueName = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+            string folder = Path.Combine(Path.GetTempPath(), "NuKeeper", uniqueName);
 
-            var tempDir = new DirectoryInfo(folder);
+            DirectoryInfo tempDir = new(folder);
             tempDir.Create();
 
             return tempDir;
@@ -67,12 +67,12 @@ namespace NuKeeper.Git.Tests
             FileInfo[] files = toNormalize.GetFiles();
             DirectoryInfo[] subdirectories = toNormalize.GetDirectories();
 
-            foreach (var file in files)
+            foreach (FileInfo file in files)
             {
                 File.SetAttributes(file.FullName, FileAttributes.Normal);
             }
 
-            foreach (var subdirectory in subdirectories)
+            foreach (DirectoryInfo subdirectory in subdirectories)
             {
                 NormalizeAttributes(subdirectory);
             }
@@ -91,7 +91,7 @@ namespace NuKeeper.Git.Tests
                 }
                 catch (Exception ex)
                 {
-                    var caughtExceptionType = ex.GetType();
+                    Type caughtExceptionType = ex.GetType();
 
                     if (!whitelist.Any(knownExceptionType => knownExceptionType.IsAssignableFrom(caughtExceptionType)))
                     {

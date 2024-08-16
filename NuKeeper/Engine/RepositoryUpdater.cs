@@ -1,4 +1,3 @@
-using System;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Git;
 using NuKeeper.Abstractions.Logging;
@@ -9,10 +8,12 @@ using NuKeeper.Inspection;
 using NuKeeper.Inspection.Report;
 using NuKeeper.Inspection.Sources;
 using NuKeeper.Update.Process;
+
+using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Engine
 {
@@ -70,11 +71,11 @@ namespace NuKeeper.Engine
                 await GitInit(git, repository);
             }
 
-            var userSettings = settings.UserSettings;
+            UserSettings userSettings = settings.UserSettings;
 
-            var sources = _nugetSourcesReader.Read(settings.WorkingFolder ?? git.WorkingFolder, userSettings.NuGetSources);
+            NuGetSources sources = _nugetSourcesReader.Read(settings.WorkingFolder ?? git.WorkingFolder, userSettings.NuGetSources);
 
-            var updates = await _updateFinder.FindPackageUpdateSets(
+            IReadOnlyCollection<PackageUpdateSet> updates = await _updateFinder.FindPackageUpdateSets(
                 settings.WorkingFolder ?? git.WorkingFolder,
                 sources,
                 userSettings.AllowedChange,
@@ -97,7 +98,7 @@ namespace NuKeeper.Engine
 
             while (updates.Any())
             {
-                var targetUpdates = _updateSelection.SelectTargets(
+                IReadOnlyCollection<PackageUpdateSet> targetUpdates = _updateSelection.SelectTargets(
                     repository.Push,
                     updates,
                     settings.PackageFilters
@@ -109,7 +110,7 @@ namespace NuKeeper.Engine
                     return 0;
                 }
 
-                var (updatesDone, thresholdReached) = await DoTargetUpdates(git, repository, targetUpdates,
+                (int updatesDone, bool? thresholdReached) = await DoTargetUpdates(git, repository, targetUpdates,
                     sources, settings);
 
                 if (updatesDone != 0)
@@ -118,7 +119,9 @@ namespace NuKeeper.Engine
                 }
 
                 if (thresholdReached.GetValueOrDefault())
+                {
                     return 0;
+                }
 
                 updates = new ReadOnlyCollection<PackageUpdateSet>(
                     updates.Except(targetUpdates).ToList()
@@ -142,7 +145,7 @@ namespace NuKeeper.Engine
 
             await _solutionRestore.CheckRestore(targetUpdates, settings.WorkingFolder ?? git.WorkingFolder, sources);
 
-            var (updatesDone, thresholdReached) = await _packageUpdater.MakeUpdatePullRequests(git, repository, targetUpdates, sources, settings);
+            (int updatesDone, bool thresholdReached) = await _packageUpdater.MakeUpdatePullRequests(git, repository, targetUpdates, sources, settings);
 
             if (updatesDone < targetUpdates.Count)
             {
@@ -159,7 +162,7 @@ namespace NuKeeper.Engine
         private static async Task GitInit(IGitDriver git, RepositoryData repository)
         {
             await git.Clone(repository.Pull.Uri, repository.DefaultBranch);
-            repository.DefaultBranch = repository.DefaultBranch ?? await git.GetCurrentHead();
+            repository.DefaultBranch ??= await git.GetCurrentHead();
             await git.AddRemote(repository.Remote, repository.Push.Uri);
         }
     }

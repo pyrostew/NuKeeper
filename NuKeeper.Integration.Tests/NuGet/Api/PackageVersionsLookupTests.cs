@@ -1,7 +1,9 @@
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Inspection.NuGetApi;
+
 using NUnit.Framework;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,13 +16,13 @@ namespace NuKeeper.Integration.Tests.Nuget.Api
         [Test]
         public async Task WellKnownPackageName_ShouldReturnResultsList()
         {
-            var lookup = BuildPackageLookup();
+            IPackageVersionsLookup lookup = BuildPackageLookup();
 
-            var packages = await lookup.Lookup("Newtonsoft.Json", false, NuGetSources.GlobalFeed);
+            IReadOnlyCollection<PackageSearchMetadata> packages = await lookup.Lookup("Newtonsoft.Json", false, NuGetSources.GlobalFeed);
 
             Assert.That(packages, Is.Not.Null);
 
-            var packageList = packages.ToList();
+            List<PackageSearchMetadata> packageList = packages.ToList();
             Assert.That(packageList, Is.Not.Empty);
             Assert.That(packageList.Count, Is.GreaterThan(1));
         }
@@ -28,14 +30,14 @@ namespace NuKeeper.Integration.Tests.Nuget.Api
         [Test]
         public async Task WellKnownPackageName_ShouldReturnPopulatedResults()
         {
-            var lookup = BuildPackageLookup();
+            IPackageVersionsLookup lookup = BuildPackageLookup();
 
-            var packages = await lookup.Lookup("Newtonsoft.Json", false, NuGetSources.GlobalFeed);
+            IReadOnlyCollection<PackageSearchMetadata> packages = await lookup.Lookup("Newtonsoft.Json", false, NuGetSources.GlobalFeed);
 
             Assert.That(packages, Is.Not.Null);
 
-            var packageList = packages.ToList();
-            var latest = packageList
+            List<PackageSearchMetadata> packageList = packages.ToList();
+            PackageSearchMetadata latest = packageList
                 .OrderByDescending(p => p.Identity.Version)
                 .FirstOrDefault();
 
@@ -52,13 +54,13 @@ namespace NuKeeper.Integration.Tests.Nuget.Api
         [Test]
         public async Task CanGetPreReleases()
         {
-            var lookup = BuildPackageLookup();
+            IPackageVersionsLookup lookup = BuildPackageLookup();
 
-            var packages = await lookup.Lookup("Moq", true, NuGetSources.GlobalFeed);
+            IReadOnlyCollection<PackageSearchMetadata> packages = await lookup.Lookup("Moq", true, NuGetSources.GlobalFeed);
 
             Assert.That(packages, Is.Not.Null);
 
-            var betas = packages
+            List<PackageSearchMetadata> betas = packages
                 .Where(p => p.Identity.Version.IsPrerelease)
                 .OrderByDescending(p => p.Identity.Version)
                 .ToList();
@@ -66,7 +68,7 @@ namespace NuKeeper.Integration.Tests.Nuget.Api
             Assert.That(betas, Is.Not.Null);
             Assert.That(betas, Is.Not.Empty);
 
-            var beta = betas.FirstOrDefault();
+            PackageSearchMetadata beta = betas.FirstOrDefault();
 
             Assert.That(beta, Is.Not.Null);
             Assert.That(beta.Identity, Is.Not.Null);
@@ -79,14 +81,14 @@ namespace NuKeeper.Integration.Tests.Nuget.Api
         [Test]
         public async Task PackageShouldHaveDependencies()
         {
-            var lookup = BuildPackageLookup();
+            IPackageVersionsLookup lookup = BuildPackageLookup();
 
-            var packages = await lookup.Lookup("Moq", false, NuGetSources.GlobalFeed);
+            IReadOnlyCollection<PackageSearchMetadata> packages = await lookup.Lookup("Moq", false, NuGetSources.GlobalFeed);
 
             Assert.That(packages, Is.Not.Null);
 
-            var packageList = packages.ToList();
-            var latest = packageList
+            List<PackageSearchMetadata> packageList = packages.ToList();
+            PackageSearchMetadata latest = packageList
                 .OrderByDescending(p => p.Identity.Version)
                 .FirstOrDefault();
 
@@ -98,30 +100,30 @@ namespace NuKeeper.Integration.Tests.Nuget.Api
         [Test]
         public async Task CanBeCalledTwice()
         {
-            var lookup = BuildPackageLookup();
-            var packages1 = await lookup.Lookup("Newtonsoft.Json", false, NuGetSources.GlobalFeed);
+            IPackageVersionsLookup lookup = BuildPackageLookup();
+            IReadOnlyCollection<PackageSearchMetadata> packages1 = await lookup.Lookup("Newtonsoft.Json", false, NuGetSources.GlobalFeed);
             Assert.That(packages1, Is.Not.Null);
 
-            var packages2 = await lookup.Lookup("Moq", false, NuGetSources.GlobalFeed);
+            IReadOnlyCollection<PackageSearchMetadata> packages2 = await lookup.Lookup("Moq", false, NuGetSources.GlobalFeed);
             Assert.That(packages2, Is.Not.Null);
         }
 
         [Test]
         public async Task CanBeCalledInParallel()
         {
-            var lookup = BuildPackageLookup();
+            IPackageVersionsLookup lookup = BuildPackageLookup();
 
-            var tasks = new List<Task<IReadOnlyCollection<PackageSearchMetadata>>>();
+            List<Task<IReadOnlyCollection<PackageSearchMetadata>>> tasks = [];
 
             for (int i = 0; i < 10; i++)
             {
-                var task = lookup.Lookup("Newtonsoft.Json", false, NuGetSources.GlobalFeed);
+                Task<IReadOnlyCollection<PackageSearchMetadata>> task = lookup.Lookup("Newtonsoft.Json", false, NuGetSources.GlobalFeed);
                 tasks.Add(task);
             }
 
-            await Task.WhenAll(tasks);
+            _ = await Task.WhenAll(tasks);
 
-            foreach (var task in tasks)
+            foreach (Task<IReadOnlyCollection<PackageSearchMetadata>> task in tasks)
             {
                 Assert.That(task.IsCompletedSuccessfully);
             }

@@ -3,6 +3,7 @@ using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace NuKeeper.Gitea
 
         public async Task<User> GetCurrentUser()
         {
-            var user = await _client.GetCurrentUser();
+            Model.User user = await _client.GetCurrentUser();
             return new User(user.Login, user.FullName, user.Email);
         }
 
@@ -46,7 +47,7 @@ namespace NuKeeper.Gitea
                 throw new ArgumentNullException(nameof(target));
             }
 
-            var result = await _client.GetPullRequests(target.Owner, target.Name, headBranch, baseBranch);
+            IEnumerable<Model.PullRequest> result = await _client.GetPullRequests(target.Owner, target.Name, headBranch, baseBranch);
 
             return result.Any();
         }
@@ -63,10 +64,10 @@ namespace NuKeeper.Gitea
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var projectName = target.Owner;
-            var repositoryName = target.Name;
+            string projectName = target.Owner;
+            string repositoryName = target.Name;
 
-            var mergeRequest = new Model.CreatePullRequestOption
+            Model.CreatePullRequestOption mergeRequest = new()
             {
                 Title = request.Title,
                 Head = request.Head,
@@ -78,26 +79,26 @@ namespace NuKeeper.Gitea
                 DueDate = DateTime.Now.AddDays(7)
             };
 
-            await _client.OpenPullRequest(projectName, repositoryName, mergeRequest);
+            _ = await _client.OpenPullRequest(projectName, repositoryName, mergeRequest);
         }
 
         public async Task<IReadOnlyList<Organization>> GetOrganizations()
         {
-            var orgas = await _client.GetOrganizations();
-            return orgas?.Select(x => MapOrganization(x)).ToList() ?? new List<Organization>();
+            List<Model.Organization> orgas = await _client.GetOrganizations();
+            return orgas?.Select(MapOrganization).ToList() ?? [];
         }
 
         public async Task<IReadOnlyList<Repository>> GetRepositoriesForOrganisation(string organizationName)
         {
-            var repos = await _client.GetOrganizationRepositories(organizationName);
-            return repos?.Select(x => MapRepository(x)).ToList() ?? new List<Repository>();
+            List<Model.Repository> repos = await _client.GetOrganizationRepositories(organizationName);
+            return repos?.Select(MapRepository).ToList() ?? [];
         }
 
         public async Task<Repository> GetUserRepository(string userName, string repositoryName)
         {
             try
             {
-                var repo = await _client.GetRepository(userName, repositoryName);
+                Model.Repository repo = await _client.GetRepository(userName, repositoryName);
                 return MapRepository(repo);
             }
             catch (NuKeeperException)
@@ -109,7 +110,7 @@ namespace NuKeeper.Gitea
 
         public async Task<Repository> MakeUserFork(string owner, string repositoryName)
         {
-            var fork = await _client.ForkRepository(owner, repositoryName, null);
+            Model.Repository fork = await _client.ForkRepository(owner, repositoryName, null);
             return MapRepository(fork);
         }
 
@@ -122,7 +123,7 @@ namespace NuKeeper.Gitea
         /// <returns>true if exist</returns>
         public async Task<bool> RepositoryBranchExists(string userName, string repositoryName, string branchName)
         {
-            var result = await _client.GetRepositoryBranch(userName, repositoryName, branchName);
+            Model.BranchInfo result = await _client.GetRepositoryBranch(userName, repositoryName, branchName);
             return result != null;
         }
 

@@ -1,9 +1,12 @@
 using NSubstitute;
+
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.Output;
+
 using NUnit.Framework;
+
 using System;
 using System.Globalization;
 using System.IO;
@@ -35,9 +38,9 @@ namespace NuKeeper.Abstractions.Tests.Configuration
         [Test]
         public void MissingFileReturnsNoSettings()
         {
-            var fsr = new FileSettingsReader(Substitute.For<INuKeeperLogger>());
+            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            var data = fsr.Read(_uniqueTemporaryFolder);
+            FileSettings data = fsr.Read(_uniqueTemporaryFolder);
 
             Assert.That(data, Is.Not.Null);
             Assert.That(data.Age, Is.Null);
@@ -65,11 +68,11 @@ namespace NuKeeper.Abstractions.Tests.Configuration
         [Test]
         public void EmptyConfigReturnsNoSettings()
         {
-            var path = MakeTestFile("{}");
+            string path = MakeTestFile("{}");
 
-            var fsr = new FileSettingsReader(Substitute.For<INuKeeperLogger>());
+            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            var data = fsr.Read(path);
+            FileSettings data = fsr.Read(path);
 
             Assert.That(data, Is.Not.Null);
             Assert.That(data.Age, Is.Null);
@@ -122,11 +125,11 @@ namespace NuKeeper.Abstractions.Tests.Configuration
         [Test]
         public void PopulatedConfigReturnsAllStringSettings()
         {
-            var path = MakeTestFile(FullFileData);
+            string path = MakeTestFile(FullFileData);
 
-            var fsr = new FileSettingsReader(Substitute.For<INuKeeperLogger>());
+            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            var data = fsr.Read(path);
+            FileSettings data = fsr.Read(path);
 
             Assert.That(data, Is.Not.Null);
             Assert.That(data.Age, Is.EqualTo("3d"));
@@ -144,11 +147,11 @@ namespace NuKeeper.Abstractions.Tests.Configuration
         [Test]
         public void PopulatedConfigReturnsLabels()
         {
-            var path = MakeTestFile(FullFileData);
+            string path = MakeTestFile(FullFileData);
 
-            var fsr = new FileSettingsReader(Substitute.For<INuKeeperLogger>());
+            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            var data = fsr.Read(path);
+            FileSettings data = fsr.Read(path);
 
             Assert.That(data.Label.Count, Is.EqualTo(2));
             Assert.That(data.Label, Does.Contain("foo"));
@@ -158,11 +161,11 @@ namespace NuKeeper.Abstractions.Tests.Configuration
         [Test]
         public void PopulatedConfigReturnsNumericSettings()
         {
-            var path = MakeTestFile(FullFileData);
+            string path = MakeTestFile(FullFileData);
 
-            var fsr = new FileSettingsReader(Substitute.For<INuKeeperLogger>());
+            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            var data = fsr.Read(path);
+            FileSettings data = fsr.Read(path);
 
             Assert.That(data.MaxPackageUpdates, Is.EqualTo(42));
             Assert.That(data.MaxOpenPullRequests, Is.EqualTo(10));
@@ -172,11 +175,11 @@ namespace NuKeeper.Abstractions.Tests.Configuration
         [Test]
         public void PopulatedConfigReturnsEnumSettings()
         {
-            var path = MakeTestFile(FullFileData);
+            string path = MakeTestFile(FullFileData);
 
-            var fsr = new FileSettingsReader(Substitute.For<INuKeeperLogger>());
+            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            var data = fsr.Read(path);
+            FileSettings data = fsr.Read(path);
 
             Assert.That(data.Change, Is.EqualTo(VersionChange.Minor));
             Assert.That(data.ForkMode, Is.EqualTo(ForkMode.PreferFork));
@@ -209,11 +212,11 @@ namespace NuKeeper.Abstractions.Tests.Configuration
                ""deLeTEBranCHafTERMerge"": ""true""
             }";
 
-            var path = MakeTestFile(configData);
+            string path = MakeTestFile(configData);
 
-            var fsr = new FileSettingsReader(Substitute.For<INuKeeperLogger>());
+            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            var data = fsr.Read(path);
+            FileSettings data = fsr.Read(path);
 
             Assert.That(data, Is.Not.Null);
             Assert.That(data.Age, Is.EqualTo("3d"));
@@ -241,11 +244,11 @@ namespace NuKeeper.Abstractions.Tests.Configuration
                ""something"":""nothing""
             }";
 
-            var path = MakeTestFile(configData);
+            string path = MakeTestFile(configData);
 
-            var fsr = new FileSettingsReader(Substitute.For<INuKeeperLogger>());
+            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            var data = fsr.Read(path);
+            FileSettings data = fsr.Read(path);
 
             Assert.That(data, Is.Not.Null);
             Assert.That(data.Age, Is.EqualTo("3d"));
@@ -254,17 +257,17 @@ namespace NuKeeper.Abstractions.Tests.Configuration
 
         private string MakeTestFile(string contents)
         {
-            var path = Path.Join(_uniqueTemporaryFolder, "nukeeper.settings.json");
+            string path = Path.Join(_uniqueTemporaryFolder, "nukeeper.settings.json");
             File.WriteAllText(path, contents);
             return _uniqueTemporaryFolder;
         }
 
         private static string UniqueTemporaryFolder()
         {
-            var uniqueName = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
-            var folder = Path.Combine(Path.GetTempPath(), "NuKeeper", uniqueName);
+            string uniqueName = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+            string folder = Path.Combine(Path.GetTempPath(), "NuKeeper", uniqueName);
 
-            var tempDir = new DirectoryInfo(folder);
+            DirectoryInfo tempDir = new(folder);
             tempDir.Create();
 
             return folder;

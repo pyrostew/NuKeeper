@@ -1,4 +1,5 @@
 using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.IO;
 
@@ -6,7 +7,7 @@ namespace NuKeeper.Inspection.Logging
 {
     public class FileLogger : IInternalLogger
     {
-        private readonly object _fileLocker = new object();
+        private readonly object _fileLocker = new();
         private readonly string _filePath;
         private readonly LogLevel _logLevel;
 
@@ -49,7 +50,7 @@ namespace NuKeeper.Inspection.Logging
         {
             lock (_fileLocker)
             {
-                using var w = File.AppendText(_filePath);
+                using StreamWriter w = File.AppendText(_filePath);
                 w.WriteLine(message);
             }
         }

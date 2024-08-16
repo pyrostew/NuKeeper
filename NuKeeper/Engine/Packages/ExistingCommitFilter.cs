@@ -2,6 +2,7 @@ using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Git;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,15 +35,15 @@ namespace NuKeeper.Engine.Packages
 
             try
             {
-                var filtered = new List<PackageUpdateSet>();
+                List<PackageUpdateSet> filtered = [];
                 // commit messages are compared without whitespace because the system tends to add ws.
-                var commitMessages = await git.GetNewCommitMessages(baseBranch, headBranch);
-                var compactCommitMessages = commitMessages.Select(m => new string(m.Where(c => !char.IsWhiteSpace(c)).ToArray()));
+                IReadOnlyCollection<string> commitMessages = await git.GetNewCommitMessages(baseBranch, headBranch);
+                IEnumerable<string> compactCommitMessages = commitMessages.Select(m => new string(m.Where(c => !char.IsWhiteSpace(c)).ToArray()));
 
-                foreach (var update in updates)
+                foreach (PackageUpdateSet update in updates)
                 {
-                    var updateCommitMessage = _collaborationFactory.CommitWorder.MakeCommitMessage(update);
-                    var compactUpdateCommitMessage = new string(updateCommitMessage.Where(c => !char.IsWhiteSpace(c)).ToArray());
+                    string updateCommitMessage = _collaborationFactory.CommitWorder.MakeCommitMessage(update);
+                    string compactUpdateCommitMessage = new(updateCommitMessage.Where(c => !char.IsWhiteSpace(c)).ToArray());
 
                     if (!compactCommitMessages.Contains(compactUpdateCommitMessage))
                     {
@@ -52,9 +53,7 @@ namespace NuKeeper.Engine.Packages
                 }
                 return filtered;
             }
-#pragma warning disable CA1031
             catch (Exception ex)
-#pragma warning restore CA1031
             {
                 _logger.Error($"Failed on existing Commit check for {baseBranch} <= {headBranch}", ex);
 

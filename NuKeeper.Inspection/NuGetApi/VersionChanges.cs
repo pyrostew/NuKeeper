@@ -1,7 +1,9 @@
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.NuGetApi;
+
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,13 +16,13 @@ namespace NuKeeper.Inspection.NuGetApi
             IEnumerable<PackageSearchMetadata> candidateVersions,
             VersionChange allowedChange)
         {
-            var orderedCandidates = candidateVersions
+            List<PackageSearchMetadata> orderedCandidates = candidateVersions
                 .OrderByDescending(p => p.Identity.Version)
                 .ToList();
 
-            var major = FirstMatch(orderedCandidates, current, VersionChange.Major);
-            var minor = FirstMatch(orderedCandidates, current, VersionChange.Minor);
-            var patch = FirstMatch(orderedCandidates, current, VersionChange.Patch);
+            PackageSearchMetadata major = FirstMatch(orderedCandidates, current, VersionChange.Major);
+            PackageSearchMetadata minor = FirstMatch(orderedCandidates, current, VersionChange.Minor);
+            PackageSearchMetadata patch = FirstMatch(orderedCandidates, current, VersionChange.Patch);
             return new PackageLookupResult(allowedChange, major, minor, patch);
         }
 
@@ -34,23 +36,14 @@ namespace NuKeeper.Inspection.NuGetApi
 
         private static bool Filter(NuGetVersion v1, NuGetVersion v2, VersionChange allowedChange)
         {
-            switch (allowedChange)
+            return allowedChange switch
             {
-                case VersionChange.Major:
-                    return true;
-
-                case VersionChange.Minor:
-                    return v1.Major == v2.Major;
-
-                case VersionChange.Patch:
-                    return (v1.Major == v2.Major) && (v1.Minor == v2.Minor);
-
-                case VersionChange.None:
-                    return (v1 == v2);
-
-                default:
-                    throw new NuKeeperException($"Unknown version change {allowedChange}");
-            }
+                VersionChange.Major => true,
+                VersionChange.Minor => v1.Major == v2.Major,
+                VersionChange.Patch => (v1.Major == v2.Major) && (v1.Minor == v2.Minor),
+                VersionChange.None => v1 == v2,
+                _ => throw new NuKeeperException($"Unknown version change {allowedChange}"),
+            };
         }
     }
 }

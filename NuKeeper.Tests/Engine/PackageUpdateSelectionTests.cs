@@ -1,4 +1,5 @@
 using NSubstitute;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.Configuration;
@@ -7,7 +8,9 @@ using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Engine.Packages;
 using NuKeeper.Inspection.Sort;
 using NuKeeper.Update.Selection;
+
 using NUnit.Framework;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,9 +23,9 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenThereAreNoInputs_NoTargetsOut()
         {
-            var target = MakeSelection();
+            IPackageUpdateSelection target = MakeSelection();
 
-            var results = target.SelectTargets(PushFork(),
+            IReadOnlyCollection<PackageUpdateSet> results = target.SelectTargets(PushFork(),
                 new List<PackageUpdateSet>(), NoFilter());
 
             Assert.That(results, Is.Not.Null);
@@ -32,12 +35,12 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenThereIsOneInput_ItIsTheTarget()
         {
-            var updateSets = PackageUpdates.UpdateFooFromOneVersion()
+            List<PackageUpdateSet> updateSets = PackageUpdates.UpdateFooFromOneVersion()
                 .InList();
 
-            var target = MakeSelection();
+            IPackageUpdateSelection target = MakeSelection();
 
-            var results = target.SelectTargets(PushFork(), updateSets, NoFilter());
+            IReadOnlyCollection<PackageUpdateSet> results = target.SelectTargets(PushFork(), updateSets, NoFilter());
 
             Assert.That(results, Is.Not.Null);
             Assert.That(results.Count, Is.EqualTo(1));
@@ -48,15 +51,15 @@ namespace NuKeeper.Tests.Engine
         public void WhenThereAreTwoInputs_MoreVersionsFirst_FirstIsTheTarget()
         {
             // sort should not change this ordering
-            var updateSets = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> updateSets =
+            [
                 PackageUpdates.UpdateBarFromTwoVersions(),
                 PackageUpdates.UpdateFooFromOneVersion()
-            };
+            ];
 
-            var target = MakeSelection();
+            IPackageUpdateSelection target = MakeSelection();
 
-            var results = target.SelectTargets(PushFork(), updateSets, NoFilter());
+            IReadOnlyCollection<PackageUpdateSet> results = target.SelectTargets(PushFork(), updateSets, NoFilter());
 
             Assert.That(results.Count, Is.EqualTo(2));
             Assert.That(results.First().SelectedId, Is.EqualTo("bar"));
@@ -66,15 +69,15 @@ namespace NuKeeper.Tests.Engine
         public void WhenThereAreTwoInputs_MoreVersionsSecond_SecondIsTheTarget()
         {
             // sort should change this ordering
-            var updateSets = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> updateSets =
+            [
                 PackageUpdates.UpdateFooFromOneVersion(),
                 PackageUpdates.UpdateBarFromTwoVersions()
-            };
+            ];
 
-            var target = MakeSelection();
+            IPackageUpdateSelection target = MakeSelection();
 
-            var results = target.SelectTargets(PushFork(), updateSets, NoFilter());
+            IReadOnlyCollection<PackageUpdateSet> results = target.SelectTargets(PushFork(), updateSets, NoFilter());
 
             Assert.That(results.Count, Is.EqualTo(2));
             Assert.That(results.First().SelectedId, Is.EqualTo("bar"));
@@ -82,8 +85,8 @@ namespace NuKeeper.Tests.Engine
 
         private static IPackageUpdateSelection MakeSelection()
         {
-            var logger = Substitute.For<INuKeeperLogger>();
-            var updateSelection = new UpdateSelection(logger);
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            UpdateSelection updateSelection = new(logger);
             return new PackageUpdateSelection(MakeSort(), updateSelection, logger);
         }
 

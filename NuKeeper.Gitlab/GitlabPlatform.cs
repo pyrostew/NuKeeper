@@ -1,13 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Gitlab.Model;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 using User = NuKeeper.Abstractions.CollaborationModels.User;
 
@@ -37,7 +38,7 @@ namespace NuKeeper.Gitlab
 
         public async Task<User> GetCurrentUser()
         {
-            var user = await _client.GetCurrentUser();
+            Model.User user = await _client.GetCurrentUser();
 
             return new User(user.UserName, user.Name, user.Email);
         }
@@ -49,10 +50,10 @@ namespace NuKeeper.Gitlab
                 throw new ArgumentNullException(nameof(target));
             }
 
-            var projectName = target.Owner;
-            var repositoryName = target.Name;
+            string projectName = target.Owner;
+            string repositoryName = target.Name;
 
-            var result = await _client.GetMergeRequests(projectName, repositoryName, headBranch, baseBranch);
+            IEnumerable<MergeInfo> result = await _client.GetMergeRequests(projectName, repositoryName, headBranch, baseBranch);
 
             return result.Any();
         }
@@ -69,10 +70,10 @@ namespace NuKeeper.Gitlab
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var projectName = target.Owner;
-            var repositoryName = target.Name;
+            string projectName = target.Owner;
+            string repositoryName = target.Name;
 
-            var mergeRequest = new MergeRequest
+            MergeRequest mergeRequest = new()
             {
                 Title = request.Title,
                 SourceBranch = request.Head,
@@ -83,7 +84,7 @@ namespace NuKeeper.Gitlab
                 Labels = labels.ToList()
             };
 
-            await _client.OpenMergeRequest(projectName, repositoryName, mergeRequest);
+            _ = await _client.OpenMergeRequest(projectName, repositoryName, mergeRequest);
         }
 
         public Task<IReadOnlyList<Organization>> GetOrganizations()
@@ -100,7 +101,7 @@ namespace NuKeeper.Gitlab
 
         public async Task<Repository> GetUserRepository(string userName, string repositoryName)
         {
-            var project = await _client.GetProject(userName, repositoryName);
+            Project project = await _client.GetProject(userName, repositoryName);
 
             return new Repository(project.Name, project.Archived,
                 new UserPermissions(true, true, true),
@@ -116,7 +117,7 @@ namespace NuKeeper.Gitlab
 
         public async Task<bool> RepositoryBranchExists(string userName, string repositoryName, string branchName)
         {
-            var result = await _client.CheckExistingBranch(userName, repositoryName, branchName);
+            Branch result = await _client.CheckExistingBranch(userName, repositoryName, branchName);
 
             return result != null;
         }

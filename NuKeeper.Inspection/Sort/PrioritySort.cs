@@ -1,8 +1,10 @@
+using NuGet.Versioning;
+
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NuGet.Versioning;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.Sort
 {
@@ -20,34 +22,34 @@ namespace NuKeeper.Inspection.Sort
         {
             long countCurrentVersions = update.CountCurrentVersions();
             long countUsages = update.CurrentPackages.Count;
-            var versionChangeScore = ScoreVersionChange(update);
-            var ageScore = ScoreAge(update);
+            long versionChangeScore = ScoreVersionChange(update);
+            long ageScore = ScoreAge(update);
 
             long score = countCurrentVersions;
-            score = score * Shift;
-            score = score + countUsages;
-            score = score * Shift;
+            score *= Shift;
+            score += countUsages;
+            score *= Shift;
             score = score + versionChangeScore + ageScore;
             return score;
         }
 
         private static long ScoreAge(PackageUpdateSet update)
         {
-            var publishedDate = update.Selected.Published;
+            DateTimeOffset? publishedDate = update.Selected.Published;
             if (!publishedDate.HasValue)
             {
                 return 0;
             }
 
-            var published = publishedDate.Value.ToUniversalTime().DateTime;
-            var interval = DateTime.UtcNow.Subtract(published);
+            DateTime published = publishedDate.Value.ToUniversalTime().DateTime;
+            TimeSpan interval = DateTime.UtcNow.Subtract(published);
             return interval.Days;
         }
 
         private static long ScoreVersionChange(PackageUpdateSet update)
         {
-            var newVersion = update.Selected.Identity.Version;
-            var versionInUse = update.CurrentPackages
+            NuGetVersion newVersion = update.Selected.Identity.Version;
+            NuGetVersion versionInUse = update.CurrentPackages
                 .Select(p => p.Version)
                 .Max();
 
@@ -62,25 +64,20 @@ namespace NuKeeper.Inspection.Sort
                 preReleaseScore = Shift * 12;
             }
 
-            var majors = newVersion.Major - oldVersion.Major;
+            int majors = newVersion.Major - oldVersion.Major;
             if (majors > 0)
             {
                 return (majors * 100) + preReleaseScore;
             }
 
-            var minors = newVersion.Minor - oldVersion.Minor;
+            int minors = newVersion.Minor - oldVersion.Minor;
             if (minors > 0)
             {
                 return (minors * 10) + preReleaseScore;
             }
 
-            var patches = newVersion.Patch - oldVersion.Patch;
-            if (patches > 0)
-            {
-                return patches + preReleaseScore;
-            }
-
-            return preReleaseScore;
+            int patches = newVersion.Patch - oldVersion.Patch;
+            return patches > 0 ? patches + preReleaseScore : preReleaseScore;
         }
     }
 }

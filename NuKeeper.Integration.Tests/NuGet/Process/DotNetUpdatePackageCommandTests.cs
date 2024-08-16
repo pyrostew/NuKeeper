@@ -1,12 +1,15 @@
 using NuGet.Configuration;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Files;
 using NuKeeper.Update.Process;
 using NuKeeper.Update.ProcessRunner;
+
 using NUnit.Framework;
+
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -93,8 +96,8 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
         public async Task ShouldUpdateDuplicateProject()
         {
             const string name = nameof(ShouldUpdateDuplicateProject);
-            var projectPath = Path.Combine(_uniqueTemporaryFolder.FullPath, name, "AnotherProject.csproj");
-            Directory.CreateDirectory(Path.GetDirectoryName(projectPath));
+            string projectPath = Path.Combine(_uniqueTemporaryFolder.FullPath, name, "AnotherProject.csproj");
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(projectPath));
             using (File.Create(projectPath))
             {
                 // close file stream automatically
@@ -126,25 +129,25 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
             const string expectedPackageString =
                 "<PackageReference Include=\"Microsoft.AspNet.WebApi.Client\" Version=\"{packageVersion}\" />";
 
-            var testFolder = memberName;
-            var testProject = $"{memberName}.csproj";
+            string testFolder = memberName;
+            string testProject = $"{memberName}.csproj";
 
-            var workDirectory = Path.Combine(_uniqueTemporaryFolder.FullPath, testFolder);
-            Directory.CreateDirectory(workDirectory);
+            string workDirectory = Path.Combine(_uniqueTemporaryFolder.FullPath, testFolder);
+            _ = Directory.CreateDirectory(workDirectory);
 
-            var projectContents = testProjectContents.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase);
-            var projectPath = Path.Combine(workDirectory, testProject);
+            string projectContents = testProjectContents.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase);
+            string projectPath = Path.Combine(workDirectory, testProject);
             await File.WriteAllTextAsync(projectPath, projectContents);
 
-            var command = new DotNetUpdatePackageCommand(new ExternalProcess(NukeeperLogger));
+            DotNetUpdatePackageCommand command = new(new ExternalProcess(NukeeperLogger));
 
-            var packageToUpdate = new PackageInProject("Microsoft.AspNet.WebApi.Client", oldPackageVersion,
+            PackageInProject packageToUpdate = new("Microsoft.AspNet.WebApi.Client", oldPackageVersion,
                 new PackagePath(workDirectory, testProject, packageReferenceType));
 
             await command.Invoke(packageToUpdate, new NuGetVersion(newPackageVersion),
                 new PackageSource(NuGetConstants.V3FeedUrl), NuGetSources.GlobalFeed);
 
-            var contents = await File.ReadAllTextAsync(projectPath);
+            string contents = await File.ReadAllTextAsync(projectPath);
             Assert.That(contents, Does.Contain(expectedPackageString.Replace("{packageVersion}", newPackageVersion, StringComparison.OrdinalIgnoreCase)));
             Assert.That(contents,
                 Does.Not.Contain(expectedPackageString.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase)));
@@ -152,7 +155,7 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
 
         private IFolder UniqueTemporaryFolder()
         {
-            var factory = new FolderFactory(NukeeperLogger);
+            FolderFactory factory = new(NukeeperLogger);
             return factory.UniqueTemporaryFolder();
         }
     }

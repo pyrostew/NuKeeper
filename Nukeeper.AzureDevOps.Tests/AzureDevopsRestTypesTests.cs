@@ -1,5 +1,7 @@
 using Newtonsoft.Json;
+
 using NuKeeper.AzureDevOps;
+
 using NUnit.Framework;
 
 namespace Nukeeper.AzureDevOps.Tests
@@ -11,10 +13,10 @@ namespace Nukeeper.AzureDevOps.Tests
         [TestCase((long)0)]
         [TestCase((long)2147483647)] //int.MaxValue
         [TestCase((long)4294967295)] //uint.MaxValue
-        [TestCase((long)9223372036854775807)] //long.MaxValue
+        [TestCase(9223372036854775807)] //long.MaxValue
         public void AzureRepository_CanBeDeserializedWithSize(long size)
         {
-            var json = AzureRepositoryJsonWithSize(size);
+            string json = AzureRepositoryJsonWithSize(size);
             Assert.DoesNotThrow(() => JsonConvert.DeserializeObject<AzureRepository>(json));
         }
 

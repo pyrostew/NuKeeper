@@ -1,3 +1,6 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Git;
@@ -5,6 +8,7 @@ using NuKeeper.AzureDevOps;
 using NuKeeper.BitBucket;
 using NuKeeper.BitBucketLocal;
 using NuKeeper.Collaboration;
+using NuKeeper.Commands;
 using NuKeeper.Engine;
 using NuKeeper.Engine.Packages;
 using NuKeeper.Git;
@@ -12,16 +16,15 @@ using NuKeeper.Gitea;
 using NuKeeper.GitHub;
 using NuKeeper.Gitlab;
 using NuKeeper.Local;
+using NuKeeper.Update.Process;
 using NuKeeper.Update.Selection;
+
 using SimpleInjector;
+
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using NuKeeper.Commands;
-using NuKeeper.Update.Process;
 
 namespace NuKeeper
 {
@@ -29,7 +32,7 @@ namespace NuKeeper
     {
         public static Container Init()
         {
-            var container = new Container();
+            Container container = new();
 
             RegisterHttpClient(container);
 
@@ -45,11 +48,11 @@ namespace NuKeeper
 
         private static void RegisterHttpClient(Container container)
         {
-            var services = new ServiceCollection();
-            services.AddHttpClient(Options.DefaultName)
+            ServiceCollection services = new();
+            _ = services.AddHttpClient(Options.DefaultName)
                 .ConfigurePrimaryHttpMessageHandler(serviceProvider =>
                 {
-                    var httpMessageHandler = new HttpClientHandler();
+                    HttpClientHandler httpMessageHandler = new();
                     if (httpMessageHandler.SupportsAutomaticDecompression)
                     {
                         // TODO: change to All when moving to .NET 5.0
@@ -59,7 +62,7 @@ namespace NuKeeper
 
                     return httpMessageHandler;
                 });
-            services
+            _ = services
                 .AddSimpleInjector(container)
                 .BuildServiceProvider(validateScopes: true)
                 .UseSimpleInjector(container);
@@ -97,7 +100,7 @@ namespace NuKeeper
 
             container.RegisterSingleton<ICollaborationFactory, CollaborationFactory>();
 
-            var settingsRegistration = RegisterMultipleSingletons<ISettingsReader>(container, new[]
+            Registration[] settingsRegistration = RegisterMultipleSingletons<ISettingsReader>(container, new[]
             {
                 typeof(GitHubSettingsReader).Assembly,
                 typeof(AzureDevOpsSettingsReader).Assembly,
@@ -113,7 +116,7 @@ namespace NuKeeper
 
         private static Registration[] RegisterMultipleSingletons<T>(Container container, Assembly[] assemblies)
         {
-            var types = container.GetTypesToRegister(typeof(T), assemblies);
+            System.Collections.Generic.IEnumerable<System.Type> types = container.GetTypesToRegister(typeof(T), assemblies);
 
             return (from type in types
                     select Lifestyle.Singleton.CreateRegistration(type, container)

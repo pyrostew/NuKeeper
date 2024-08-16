@@ -1,11 +1,12 @@
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.Logging;
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.Logging;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.RepositoryInspection
 {
@@ -22,13 +23,11 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         public IReadOnlyCollection<PackageInProject> ReadFile(string baseDirectory, string relativePath)
         {
-            var packagePath = new PackagePath(baseDirectory, relativePath, PackageReferenceType.DirectoryBuildTargets);
+            PackagePath packagePath = new(baseDirectory, relativePath, PackageReferenceType.DirectoryBuildTargets);
             try
             {
-                using (var fileContents = File.OpenRead(packagePath.FullName))
-                {
-                    return Read(fileContents, packagePath);
-                }
+                using FileStream fileContents = File.OpenRead(packagePath.FullName);
+                return Read(fileContents, packagePath);
             }
             catch (IOException ex)
             {
@@ -43,17 +42,17 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         public IReadOnlyCollection<PackageInProject> Read(Stream fileContents, PackagePath path)
         {
-            var xml = XDocument.Load(fileContents);
+            XDocument xml = XDocument.Load(fileContents);
 
-            var packagesNode = xml.Element("Project")?.Elements("ItemGroup");
+            IEnumerable<XElement> packagesNode = xml.Element("Project")?.Elements("ItemGroup");
             if (packagesNode == null)
             {
                 return Array.Empty<PackageInProject>();
             }
 
-            var packageRefs = packagesNode.Elements("PackageReference");
-            var packageDownloads = packagesNode.Elements("PackageDownload");
-            var packageVersions = packagesNode.Elements("PackageVersion");
+            IEnumerable<XElement> packageRefs = packagesNode.Elements("PackageReference");
+            IEnumerable<XElement> packageDownloads = packagesNode.Elements("PackageDownload");
+            IEnumerable<XElement> packageVersions = packagesNode.Elements("PackageVersion");
 
             return packageRefs
                 .Concat(packageDownloads)
@@ -65,12 +64,9 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         private PackageInProject XmlToPackage(XElement el, PackagePath path)
         {
-            var id = el.Attribute("Include")?.Value;
-            if (id == null)
-            {
-                id = el.Attribute("Update")?.Value;
-            }
-            var version = GetVersion(el);
+            string id = el.Attribute("Include")?.Value;
+            id ??= el.Attribute("Update")?.Value;
+            string version = GetVersion(el);
             return _packageInProjectReader.Read(id, version, path, null);
         }
 

@@ -1,10 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Abstractions.RepositoryInspection;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Inspection.Report.Formats
 {
@@ -26,7 +28,7 @@ namespace NuKeeper.Inspection.Report.Formats
 
             WriteHeading();
 
-            foreach (var update in updates)
+            foreach (PackageUpdateSet update in updates)
             {
                 WriteLine(update);
             }
@@ -45,19 +47,19 @@ namespace NuKeeper.Inspection.Report.Formats
 
         private void WriteLine(PackageUpdateSet update)
         {
-            var occurrences = update.CurrentPackages.Count;
-            var versionsInUse = update.CurrentPackages
+            int occurrences = update.CurrentPackages.Count;
+            List<NuGetVersion> versionsInUse = update.CurrentPackages
                 .Select(p => p.Version)
                 .ToList();
 
-            var lowest = versionsInUse.Min();
-            var highest = versionsInUse.Max();
+            NuGetVersion lowest = versionsInUse.Min();
+            NuGetVersion highest = versionsInUse.Max();
 
-            var packageSource = update.Selected.Source;
+            NuGet.Configuration.PackageSource packageSource = update.Selected.Source;
 
-            var majorData = PackageVersionAndDate(lowest, update.Packages.Major);
-            var minorData = PackageVersionAndDate(lowest, update.Packages.Minor);
-            var patchData = PackageVersionAndDate(lowest, update.Packages.Patch);
+            string majorData = PackageVersionAndDate(lowest, update.Packages.Major);
+            string minorData = PackageVersionAndDate(lowest, update.Packages.Minor);
+            string patchData = PackageVersionAndDate(lowest, update.Packages.Patch);
 
             _writer.WriteLine(
                 $"{update.SelectedId},{packageSource}," +
@@ -79,8 +81,8 @@ namespace NuKeeper.Inspection.Report.Formats
                 return none;
             }
 
-            var version = packageVersion.Identity.Version;
-            var date = DateFormat.AsUtcIso8601(packageVersion.Published);
+            NuGetVersion version = packageVersion.Identity.Version;
+            string date = DateFormat.AsUtcIso8601(packageVersion.Published);
             return $"{version},{date}";
         }
     }

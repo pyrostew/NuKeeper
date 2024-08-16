@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using NuKeeper.Abstractions.RepositoryInspection;
+
+using System.Collections.Generic;
 
 namespace NuKeeper.Inspection.Report.Formats
 {
@@ -14,7 +15,7 @@ namespace NuKeeper.Inspection.Report.Formats
 
         public void Write(string name, IReadOnlyCollection<PackageUpdateSet> updates)
         {
-            var totalAge = Age.Sum(updates);
+            System.TimeSpan totalAge = Age.Sum(updates);
             _writer.WriteLine(Age.AsLibYears(totalAge));
         }
     }

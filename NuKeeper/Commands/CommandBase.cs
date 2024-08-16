@@ -1,4 +1,5 @@
 using McMaster.Extensions.CommandLineUtils;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
@@ -7,6 +8,7 @@ using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.Output;
 using NuKeeper.Engine;
 using NuKeeper.Inspection.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,12 +97,12 @@ namespace NuKeeper.Commands
         {
             InitialiseLogging();
 
-            var settings = MakeSettings();
+            SettingsContainer settings = MakeSettings();
 
-            var validationResult = await PopulateSettings(settings);
+            ValidationResult validationResult = await PopulateSettings(settings);
             if (!validationResult.IsSuccess)
             {
-                var logger = _configureLogger as INuKeeperLogger;
+                INuKeeperLogger logger = _configureLogger as INuKeeperLogger;
                 logger?.Error(validationResult.ErrorMessage);
                 return -1;
             }
@@ -110,30 +112,30 @@ namespace NuKeeper.Commands
 
         private void InitialiseLogging()
         {
-            var settingsFromFile = FileSettingsCache.GetSettings();
+            FileSettings settingsFromFile = FileSettingsCache.GetSettings();
 
-            var defaultLogDestination = string.IsNullOrWhiteSpace(LogFile)
+            LogDestination defaultLogDestination = string.IsNullOrWhiteSpace(LogFile)
                 ? Abstractions.Logging.LogDestination.Console
                 : Abstractions.Logging.LogDestination.File;
 
-            var logDest = Concat.FirstValue(LogDestination, settingsFromFile.LogDestination,
+            LogDestination logDest = Concat.FirstValue(LogDestination, settingsFromFile.LogDestination,
                 defaultLogDestination);
 
-            var logLevel = Concat.FirstValue(Verbosity, settingsFromFile.Verbosity, LogLevel.Normal);
-            var logFile = Concat.FirstValue(LogFile, settingsFromFile.LogFile, "nukeeper.log");
+            LogLevel logLevel = Concat.FirstValue(Verbosity, settingsFromFile.Verbosity, LogLevel.Normal);
+            string logFile = Concat.FirstValue(LogFile, settingsFromFile.LogFile, "nukeeper.log");
 
             _configureLogger.Initialise(logLevel, logDest, logFile);
         }
 
         private SettingsContainer MakeSettings()
         {
-            var fileSettings = FileSettingsCache.GetSettings();
-            var allowedChange = Concat.FirstValue(AllowedChange, fileSettings.Change, VersionChange.Major);
-            var usePrerelease = Concat.FirstValue(UsePrerelease, fileSettings.UsePrerelease, Abstractions.Configuration.UsePrerelease.FromPrerelease);
-            var branchNameTemplate = Concat.FirstValue(BranchNameTemplate, fileSettings.BranchNameTemplate);
-            var gitpath = Concat.FirstValue(GitCliPath, fileSettings.GitCliPath);
+            FileSettings fileSettings = FileSettingsCache.GetSettings();
+            VersionChange allowedChange = Concat.FirstValue(AllowedChange, fileSettings.Change, VersionChange.Major);
+            UsePrerelease usePrerelease = Concat.FirstValue(UsePrerelease, fileSettings.UsePrerelease, Abstractions.Configuration.UsePrerelease.FromPrerelease);
+            string branchNameTemplate = Concat.FirstValue(BranchNameTemplate, fileSettings.BranchNameTemplate);
+            string gitpath = Concat.FirstValue(GitCliPath, fileSettings.GitCliPath);
 
-            var settings = new SettingsContainer
+            SettingsContainer settings = new()
             {
                 SourceControlServerSettings = new SourceControlServerSettings(),
                 PackageFilters = new FilterSettings(),
@@ -155,7 +157,7 @@ namespace NuKeeper.Commands
 
         protected virtual async Task<ValidationResult> PopulateSettings(SettingsContainer settings)
         {
-            var minPackageAge = ReadMinPackageAge();
+            TimeSpan? minPackageAge = ReadMinPackageAge();
             if (!minPackageAge.HasValue)
             {
                 return await Task.FromResult(ValidationResult.Failure($"Min package age '{MinimumPackageAge}' could not be parsed"));
@@ -163,21 +165,21 @@ namespace NuKeeper.Commands
 
             settings.PackageFilters.MinimumAge = minPackageAge.Value;
 
-            var regexIncludeValid = PopulatePackageIncludes(settings);
+            ValidationResult regexIncludeValid = PopulatePackageIncludes(settings);
             if (!regexIncludeValid.IsSuccess)
             {
                 return regexIncludeValid;
             }
 
-            var regexExcludeValid = PopulatePackageExcludes(settings);
+            ValidationResult regexExcludeValid = PopulatePackageExcludes(settings);
             if (!regexExcludeValid.IsSuccess)
             {
                 return regexExcludeValid;
             }
 
-            var settingsFromFile = FileSettingsCache.GetSettings();
+            FileSettings settingsFromFile = FileSettingsCache.GetSettings();
 
-            var defaultOutputDestination = string.IsNullOrWhiteSpace(OutputFileName)
+            OutputDestination defaultOutputDestination = string.IsNullOrWhiteSpace(OutputFileName)
                 ? Abstractions.Output.OutputDestination.Console
                 : Abstractions.Output.OutputDestination.File;
 
@@ -193,20 +195,15 @@ namespace NuKeeper.Commands
                 Concat.FirstValue(OutputFileName, settingsFromFile.OutputFileName,
                     "nukeeper.out");
 
-            var branchNameTemplateValid = PopulateBranchNameTemplate(settings);
-            if (!branchNameTemplateValid.IsSuccess)
-            {
-                return branchNameTemplateValid;
-            }
-
-            return await Task.FromResult(ValidationResult.Success);
+            ValidationResult branchNameTemplateValid = PopulateBranchNameTemplate(settings);
+            return !branchNameTemplateValid.IsSuccess ? branchNameTemplateValid : await Task.FromResult(ValidationResult.Success);
         }
 
         private TimeSpan? ReadMinPackageAge()
         {
             const string defaultMinPackageAge = "7d";
-            var settingsFromFile = FileSettingsCache.GetSettings();
-            var valueWithFallback = Concat.FirstValue(MinimumPackageAge, settingsFromFile.Age, defaultMinPackageAge);
+            FileSettings settingsFromFile = FileSettingsCache.GetSettings();
+            string valueWithFallback = Concat.FirstValue(MinimumPackageAge, settingsFromFile.Age, defaultMinPackageAge);
 
             return DurationParser.Parse(valueWithFallback);
         }
@@ -214,8 +211,8 @@ namespace NuKeeper.Commands
         private ValidationResult PopulatePackageIncludes(
             SettingsContainer settings)
         {
-            var settingsFromFile = FileSettingsCache.GetSettings();
-            var value = Concat.FirstValue(Include, settingsFromFile.Include);
+            FileSettings settingsFromFile = FileSettingsCache.GetSettings();
+            string value = Concat.FirstValue(Include, settingsFromFile.Include);
 
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -241,8 +238,8 @@ namespace NuKeeper.Commands
         private ValidationResult PopulatePackageExcludes(
             SettingsContainer settings)
         {
-            var settingsFromFile = FileSettingsCache.GetSettings();
-            var value = Concat.FirstValue(Exclude, settingsFromFile.Exclude);
+            FileSettings settingsFromFile = FileSettingsCache.GetSettings();
+            string value = Concat.FirstValue(Exclude, settingsFromFile.Exclude);
 
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -268,8 +265,8 @@ namespace NuKeeper.Commands
         private ValidationResult PopulateBranchNameTemplate(
             SettingsContainer settings)
         {
-            var settingsFromFile = FileSettingsCache.GetSettings();
-            var value = Concat.FirstValue(BranchNameTemplate, settingsFromFile.BranchNameTemplate);
+            FileSettings settingsFromFile = FileSettingsCache.GetSettings();
+            string value = Concat.FirstValue(BranchNameTemplate, settingsFromFile.BranchNameTemplate);
 
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -281,13 +278,13 @@ namespace NuKeeper.Commands
             // We validate the user defined branch name prefix in combination with a actual branch name that NuKeeper could create.
             // We want to validate the combination since the prefix doesn't need to fully comply with the rules (E.G. 'nukeeper/' is not allowed soley as a branch name).
 
-            var tokenErrors = new StringBuilder();
-            var tokenSet = Regex.Matches(value, @"{(\w+)}").Select(match => match.Groups[1].Value);
-            foreach (var token in tokenSet)
+            StringBuilder tokenErrors = new();
+            IEnumerable<string> tokenSet = Regex.Matches(value, @"{(\w+)}").Select(match => match.Groups[1].Value);
+            foreach (string token in tokenSet)
             {
                 if (!BranchNamer.IsValidTemplateToken(token))
                 {
-                    tokenErrors.Append($",{token}");
+                    _ = tokenErrors.Append($",{token}");
                 }
             }
 
@@ -300,13 +297,13 @@ namespace NuKeeper.Commands
 
             // Test if the generated branchname would be ok.
             // We assume tokens will be generated in valid values, so we use dummy values here
-            var tokenValues = new Dictionary<string, string>();
-            foreach (var token in BranchNamer.TemplateTokens)
+            Dictionary<string, string> tokenValues = [];
+            foreach (string token in BranchNamer.TemplateTokens)
             {
                 tokenValues.Add(token, "dummy");
             }
 
-            var validationValue = BranchNamer.MakeName(tokenValues, value);
+            string validationValue = BranchNamer.MakeName(tokenValues, value);
             if (!Regex.IsMatch(validationValue, @"^(?!@$|build-|/|.*([/.]\.|//|@\{|\\))[^\000-\037\177 ~^:?*[]+/[^\000-\037\177 ~^:?*[]+(?<!\.lock|[/.])$"))
             {
                 return ValidationResult.Failure(

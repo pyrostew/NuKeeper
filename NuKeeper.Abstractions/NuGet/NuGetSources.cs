@@ -1,9 +1,12 @@
+using McMaster.Extensions.CommandLineUtils;
+
+using NuGet.Configuration;
+
+using NuKeeper.Abstractions.Formats;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using McMaster.Extensions.CommandLineUtils;
-using NuGet.Configuration;
-using NuKeeper.Abstractions.Formats;
 
 namespace NuKeeper.Abstractions.NuGet
 {
@@ -28,7 +31,7 @@ namespace NuKeeper.Abstractions.NuGet
                 throw new ArgumentNullException(nameof(sources));
             }
 
-            var items = sources.ToList();
+            List<PackageSource> items = sources.ToList();
 
             if (!items.Any())
             {
@@ -38,7 +41,7 @@ namespace NuKeeper.Abstractions.NuGet
             Items = items;
         }
 
-        public static NuGetSources GlobalFeed => new NuGetSources(NuGetConstants.V3FeedUrl);
+        public static NuGetSources GlobalFeed => new(NuGetConstants.V3FeedUrl);
 
         public IReadOnlyCollection<PackageSource> Items { get; }
 

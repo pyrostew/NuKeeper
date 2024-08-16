@@ -1,12 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Sort;
 using NuKeeper.Update.Process;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Update
 {
@@ -45,14 +46,14 @@ namespace NuKeeper.Update
                 throw new ArgumentNullException(nameof(updateSet));
             }
 
-            var sortedUpdates = Sort(updateSet.CurrentPackages);
+            IReadOnlyCollection<PackageInProject> sortedUpdates = Sort(updateSet.CurrentPackages);
 
             _logger.Detailed($"Updating '{updateSet.SelectedId}' to {updateSet.SelectedVersion} in {sortedUpdates.Count} projects");
 
-            foreach (var current in sortedUpdates)
+            foreach (PackageInProject current in sortedUpdates)
             {
-                var updateCommands = GetUpdateCommands(current.Path.PackageReferenceType);
-                foreach (var updateCommand in updateCommands)
+                IReadOnlyCollection<IPackageCommand> updateCommands = GetUpdateCommands(current.Path.PackageReferenceType);
+                foreach (IPackageCommand updateCommand in updateCommands)
                 {
                     await updateCommand.Invoke(current,
                         updateSet.SelectedVersion, updateSet.Selected.Source,
@@ -63,7 +64,7 @@ namespace NuKeeper.Update
 
         private IReadOnlyCollection<PackageInProject> Sort(IReadOnlyCollection<PackageInProject> packages)
         {
-            var sorter = new PackageInProjectTopologicalSort(_logger);
+            PackageInProjectTopologicalSort sorter = new(_logger);
             return sorter.Sort(packages)
                 .ToList();
         }
@@ -71,35 +72,24 @@ namespace NuKeeper.Update
         private IReadOnlyCollection<IPackageCommand> GetUpdateCommands(
             PackageReferenceType packageReferenceType)
         {
-            switch (packageReferenceType)
+            return packageReferenceType switch
             {
-                case PackageReferenceType.PackagesConfig:
-                    return new IPackageCommand[]
-                    {
+                PackageReferenceType.PackagesConfig => new IPackageCommand[]
+                                    {
                         _fileRestoreCommand,
                         _nuGetUpdatePackageCommand
-                    };
-
-                case PackageReferenceType.ProjectFileOldStyle:
-                    return new IPackageCommand[]
+                                    },
+                PackageReferenceType.ProjectFileOldStyle => new IPackageCommand[]
                     {
                         _updateProjectImportsCommand,
                         _fileRestoreCommand,
                         _dotNetUpdatePackageCommand
-                    };
-
-                case PackageReferenceType.ProjectFile:
-                    return new[] { _dotNetUpdatePackageCommand };
-
-                case PackageReferenceType.Nuspec:
-                    return new[] { _updateNuspecCommand };
-
-                case PackageReferenceType.DirectoryBuildTargets:
-                    return new[] { _updateDirectoryBuildTargetsCommand };
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(packageReferenceType));
-            }
+                    },
+                PackageReferenceType.ProjectFile => new[] { _dotNetUpdatePackageCommand },
+                PackageReferenceType.Nuspec => new[] { _updateNuspecCommand },
+                PackageReferenceType.DirectoryBuildTargets => new[] { _updateDirectoryBuildTargetsCommand },
+                _ => throw new ArgumentOutOfRangeException(nameof(packageReferenceType)),
+            };
         }
     }
 }

@@ -1,11 +1,13 @@
+using NuGet.Packaging.Core;
+
+using NuKeeper.Abstractions.Configuration;
+using NuKeeper.Abstractions.NuGet;
+using NuKeeper.Abstractions.NuGetApi;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NuGet.Packaging.Core;
-using NuKeeper.Abstractions.Configuration;
-using NuKeeper.Abstractions.NuGet;
-using NuKeeper.Abstractions.NuGetApi;
 
 namespace NuKeeper.Inspection.NuGetApi
 {
@@ -36,9 +38,9 @@ namespace NuKeeper.Inspection.NuGetApi
                 .Select(id => new { Package = id, Update = _packageLookup.FindVersionUpdate(id, sources, allowedChange, usePrerelease) })
                 .ToList();
 
-            await Task.WhenAll(lookupTasks.Select(l => l.Update));
+            _ = await Task.WhenAll(lookupTasks.Select(l => l.Update));
 
-            var result = new Dictionary<PackageIdentity, PackageLookupResult>();
+            Dictionary<PackageIdentity, PackageLookupResult> result = [];
 
             foreach (var lookupTask in lookupTasks)
             {
@@ -66,7 +68,7 @@ namespace NuKeeper.Inspection.NuGetApi
             IDictionary<PackageIdentity, PackageLookupResult> result
         )
         {
-            var selectedVersion = packageLookup.Selected();
+            PackageSearchMetadata selectedVersion = packageLookup.Selected();
 
             if (selectedVersion?.Identity?.Version != null)
             {

@@ -1,9 +1,12 @@
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Inspection.NuGetApi;
+
 using NUnit.Framework;
+
 using System;
 using System.Threading.Tasks;
 
@@ -15,9 +18,9 @@ namespace NuKeeper.Integration.Tests.NuGet.Api
         [Test]
         public async Task AmbiguousPackageName_ShouldReturnCorrectResult()
         {
-            var lookup = BuildPackageLookup();
+            IApiPackageLookup lookup = BuildPackageLookup();
 
-            var package = await lookup.FindVersionUpdate(Current("AWSSDK"),
+            Abstractions.NuGetApi.PackageLookupResult package = await lookup.FindVersionUpdate(Current("AWSSDK"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
                 UsePrerelease.FromPrerelease);
@@ -25,7 +28,7 @@ namespace NuKeeper.Integration.Tests.NuGet.Api
             Assert.That(package, Is.Not.Null);
             Assert.That(package.Major, Is.Not.Null);
 
-            var selected = package.Selected();
+            Abstractions.NuGetApi.PackageSearchMetadata selected = package.Selected();
 
             Assert.That(selected, Is.Not.Null);
             Assert.That(selected.Identity, Is.Not.Null);
@@ -35,9 +38,9 @@ namespace NuKeeper.Integration.Tests.NuGet.Api
         [Test]
         public async Task UnknownPackageName_ShouldNotReturnResult()
         {
-            var lookup = BuildPackageLookup();
+            IApiPackageLookup lookup = BuildPackageLookup();
 
-            var package = await lookup.FindVersionUpdate(
+            Abstractions.NuGetApi.PackageLookupResult package = await lookup.FindVersionUpdate(
                 Current(Guid.NewGuid().ToString()),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -51,9 +54,9 @@ namespace NuKeeper.Integration.Tests.NuGet.Api
         [Test]
         public async Task WellKnownPackageName_ShouldReturnResult()
         {
-            var lookup = BuildPackageLookup();
+            IApiPackageLookup lookup = BuildPackageLookup();
 
-            var package = await lookup.FindVersionUpdate(
+            Abstractions.NuGetApi.PackageLookupResult package = await lookup.FindVersionUpdate(
                 Current("Newtonsoft.Json"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -62,7 +65,7 @@ namespace NuKeeper.Integration.Tests.NuGet.Api
             Assert.That(package, Is.Not.Null);
             Assert.That(package.Major, Is.Not.Null);
 
-            var selected = package.Selected();
+            Abstractions.NuGetApi.PackageSearchMetadata selected = package.Selected();
 
             Assert.That(selected, Is.Not.Null);
             Assert.That(selected.Identity, Is.Not.Null);
@@ -72,12 +75,12 @@ namespace NuKeeper.Integration.Tests.NuGet.Api
         [Test]
         public async Task MinorUpdateToWellKnownPackage()
         {
-            var lookup = BuildPackageLookup();
+            IApiPackageLookup lookup = BuildPackageLookup();
 
             // when we ask for updates for newtonsoft 8.0.1
             // we know that there is a later patch (8.0.3)
             // and later major versions 9.0.1, 10.0.3 etc
-            var package = await lookup.FindVersionUpdate(
+            Abstractions.NuGetApi.PackageLookupResult package = await lookup.FindVersionUpdate(
                 new PackageIdentity("Newtonsoft.Json", new NuGetVersion(8, 0, 1)),
                 NuGetSources.GlobalFeed,
                 VersionChange.Minor,

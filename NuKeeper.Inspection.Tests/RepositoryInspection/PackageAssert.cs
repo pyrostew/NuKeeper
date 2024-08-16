@@ -1,4 +1,5 @@
 using NuKeeper.Abstractions.RepositoryInspection;
+
 using NUnit.Framework;
 
 namespace NuKeeper.Inspection.Tests.RepositoryInspection

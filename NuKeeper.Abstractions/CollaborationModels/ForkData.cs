@@ -6,11 +6,6 @@ namespace NuKeeper.Abstractions.CollaborationModels
     {
         public ForkData(Uri uri, string owner, string name)
         {
-            if (uri == null)
-            {
-                throw new ArgumentNullException(nameof(uri));
-            }
-
             if (string.IsNullOrWhiteSpace(owner))
             {
                 throw new ArgumentNullException(nameof(owner));
@@ -21,7 +16,7 @@ namespace NuKeeper.Abstractions.CollaborationModels
                 throw new ArgumentNullException(nameof(name));
             }
 
-            Uri = uri;
+            Uri = uri ?? throw new ArgumentNullException(nameof(uri));
             Owner = owner;
             Name = name;
         }

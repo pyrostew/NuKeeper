@@ -1,13 +1,16 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.Process;
+
 using NUnit.Framework;
+
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Engine
 {
@@ -17,12 +20,12 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task WhenThereAreNoSolutionsTheCommandIsNotCalled()
         {
-            var cmd = Substitute.For<IFileRestoreCommand>();
-            var folder = Substitute.For<IFolder>();
+            IFileRestoreCommand cmd = Substitute.For<IFileRestoreCommand>();
+            IFolder folder = Substitute.For<IFolder>();
 
-            var packages = new List<PackageUpdateSet>();
+            List<PackageUpdateSet> packages = [];
 
-            var solutionRestore = new SolutionRestore(cmd);
+            SolutionRestore solutionRestore = new(cmd);
 
             await solutionRestore.CheckRestore(packages, folder, NuGetSources.GlobalFeed);
 
@@ -33,16 +36,16 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task WhenThereAreNoMatchingPackagesTheCommandIsNotCalled()
         {
-            var packages = PackageUpdates.ForPackageRefType(PackageReferenceType.ProjectFile)
+            List<PackageUpdateSet> packages = PackageUpdates.ForPackageRefType(PackageReferenceType.ProjectFile)
                 .InList();
 
-            var sln = new FileInfo("foo.sln");
+            FileInfo sln = new("foo.sln");
 
-            var cmd = Substitute.For<IFileRestoreCommand>();
-            var folder = Substitute.For<IFolder>();
-            folder.Find(Arg.Any<string>()).Returns(new[] { sln });
+            IFileRestoreCommand cmd = Substitute.For<IFileRestoreCommand>();
+            IFolder folder = Substitute.For<IFolder>();
+            _ = folder.Find(Arg.Any<string>()).Returns(new[] { sln });
 
-            var solutionRestore = new SolutionRestore(cmd);
+            SolutionRestore solutionRestore = new(cmd);
 
             await solutionRestore.CheckRestore(packages, folder, NuGetSources.GlobalFeed);
 
@@ -53,16 +56,16 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task WhenThereIsOneSolutionsTheCommandIsCalled()
         {
-            var packages = PackageUpdates.ForPackageRefType(PackageReferenceType.PackagesConfig)
+            List<PackageUpdateSet> packages = PackageUpdates.ForPackageRefType(PackageReferenceType.PackagesConfig)
                 .InList();
 
-            var sln = new FileInfo("foo.sln");
+            FileInfo sln = new("foo.sln");
 
-            var cmd = Substitute.For<IFileRestoreCommand>();
-            var folder = Substitute.For<IFolder>();
-            folder.Find(Arg.Any<string>()).Returns(new[] { sln });
+            IFileRestoreCommand cmd = Substitute.For<IFileRestoreCommand>();
+            IFolder folder = Substitute.For<IFolder>();
+            _ = folder.Find(Arg.Any<string>()).Returns(new[] { sln });
 
-            var solutionRestore = new SolutionRestore(cmd);
+            SolutionRestore solutionRestore = new(cmd);
 
             await solutionRestore.CheckRestore(packages, folder, NuGetSources.GlobalFeed);
 
@@ -73,17 +76,17 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public async Task WhenThereAreTwoSolutionsTheCommandIsCalledForEachOfThem()
         {
-            var packages = PackageUpdates.ForPackageRefType(PackageReferenceType.PackagesConfig)
+            List<PackageUpdateSet> packages = PackageUpdates.ForPackageRefType(PackageReferenceType.PackagesConfig)
                 .InList();
 
-            var sln1 = new FileInfo("foo.sln");
-            var sln2 = new FileInfo("bar.sln");
+            FileInfo sln1 = new("foo.sln");
+            FileInfo sln2 = new("bar.sln");
 
-            var cmd = Substitute.For<IFileRestoreCommand>();
-            var folder = Substitute.For<IFolder>();
-            folder.Find(Arg.Any<string>()).Returns(new[] { sln1, sln2 });
+            IFileRestoreCommand cmd = Substitute.For<IFileRestoreCommand>();
+            IFolder folder = Substitute.For<IFolder>();
+            _ = folder.Find(Arg.Any<string>()).Returns(new[] { sln1, sln2 });
 
-            var solutionRestore = new SolutionRestore(cmd);
+            SolutionRestore solutionRestore = new(cmd);
 
             await solutionRestore.CheckRestore(packages, folder, NuGetSources.GlobalFeed);
 

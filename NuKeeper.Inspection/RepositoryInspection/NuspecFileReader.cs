@@ -1,11 +1,12 @@
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.Logging;
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.Logging;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.RepositoryInspection
 {
@@ -22,13 +23,11 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         public IReadOnlyCollection<PackageInProject> ReadFile(string baseDirectory, string relativePath)
         {
-            var packagePath = new PackagePath(baseDirectory, relativePath, PackageReferenceType.Nuspec);
+            PackagePath packagePath = new(baseDirectory, relativePath, PackageReferenceType.Nuspec);
             try
             {
-                using (var fileContents = File.OpenRead(packagePath.FullName))
-                {
-                    return Read(fileContents, packagePath);
-                }
+                using FileStream fileContents = File.OpenRead(packagePath.FullName);
+                return Read(fileContents, packagePath);
             }
             catch (IOException ex)
             {
@@ -43,15 +42,15 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         public IReadOnlyCollection<PackageInProject> Read(Stream fileContents, PackagePath path)
         {
-            var xml = XDocument.Load(fileContents);
+            XDocument xml = XDocument.Load(fileContents);
 
-            var packagesNode = xml.Element("package")?.Element("metadata")?.Element("dependencies");
+            XElement packagesNode = xml.Element("package")?.Element("metadata")?.Element("dependencies");
             if (packagesNode == null)
             {
                 return Array.Empty<PackageInProject>();
             }
 
-            var packageNodeList = packagesNode.Elements()
+            IEnumerable<XElement> packageNodeList = packagesNode.Elements()
                 .Where(x => x.Name == "dependency");
 
             return packageNodeList
@@ -62,8 +61,8 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         private PackageInProject XmlToPackage(XElement el, PackagePath path)
         {
-            var id = el.Attribute("id")?.Value;
-            var version = el.Attribute("version")?.Value;
+            string id = el.Attribute("id")?.Value;
+            string version = el.Attribute("version")?.Value;
 
             return _packageInProjectReader.Read(id, version, path, null);
         }

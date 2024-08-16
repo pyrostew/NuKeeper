@@ -1,7 +1,8 @@
-using System.Threading.Tasks;
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Git;
+
+using System.Threading.Tasks;
 
 namespace NuKeeper.Engine
 {

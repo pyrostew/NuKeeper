@@ -1,6 +1,8 @@
-using System;
 using NuKeeper.Abstractions.Formats;
+
 using NUnit.Framework;
+
+using System;
 
 namespace NuKeeper.Abstractions.Tests.Formats
 {
@@ -10,21 +12,21 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void NullStringIsNotParsed()
         {
-            var value = DurationParser.Parse(null);
+            TimeSpan? value = DurationParser.Parse(null);
             Assert.That(value, Is.Null);
         }
 
         [Test]
         public void EmptyStringIsNotParsed()
         {
-            var value = DurationParser.Parse(string.Empty);
+            TimeSpan? value = DurationParser.Parse(string.Empty);
             Assert.That(value, Is.Null);
         }
 
         [Test]
         public void BadStringIsNotParsed()
         {
-            var value = DurationParser.Parse("ghoti");
+            TimeSpan? value = DurationParser.Parse("ghoti");
             Assert.That(value, Is.Null);
         }
 
@@ -32,14 +34,14 @@ namespace NuKeeper.Abstractions.Tests.Formats
         public void ZeroIsParsed()
         {
             // when you send a zero, no point in specifying the units
-            var value = DurationParser.Parse("0");
+            TimeSpan? value = DurationParser.Parse("0");
             Assert.That(value, Is.EqualTo(TimeSpan.Zero));
         }
 
         [Test]
         public void UnknownUnitsIsNotParsed()
         {
-            var value = DurationParser.Parse("37x");
+            TimeSpan? value = DurationParser.Parse("37x");
             Assert.That(value, Is.Null);
         }
 
@@ -49,7 +51,7 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [TestCase("123d", 123)]
         public void DaysAreParsed(string input, int expectedDays)
         {
-            var parsed = DurationParser.Parse(input);
+            TimeSpan? parsed = DurationParser.Parse(input);
             Assert.That(parsed, Is.Not.Null);
             Assert.That(parsed.Value, Is.EqualTo(TimeSpan.FromDays(expectedDays)));
         }
@@ -60,7 +62,7 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [TestCase("123h", 123)]
         public void HoursAreParsed(string input, int expectedHours)
         {
-            var parsed = DurationParser.Parse(input);
+            TimeSpan? parsed = DurationParser.Parse(input);
             Assert.That(parsed, Is.Not.Null);
             Assert.That(parsed.Value, Is.EqualTo(TimeSpan.FromHours(expectedHours)));
         }
@@ -71,7 +73,7 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [TestCase("123w", 123)]
         public void WeeksAreParsed(string input, int expectedWeeks)
         {
-            var parsed = DurationParser.Parse(input);
+            TimeSpan? parsed = DurationParser.Parse(input);
             Assert.That(parsed, Is.Not.Null);
             Assert.That(parsed.Value, Is.EqualTo(TimeSpan.FromDays(expectedWeeks * 7)));
         }

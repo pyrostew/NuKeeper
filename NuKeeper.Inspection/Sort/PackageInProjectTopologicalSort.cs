@@ -1,7 +1,8 @@
-using System.Collections.Generic;
-using System.Linq;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.RepositoryInspection;
+
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Inspection.Sort
 {
@@ -16,13 +17,13 @@ namespace NuKeeper.Inspection.Sort
 
         public IEnumerable<PackageInProject> Sort(IReadOnlyCollection<PackageInProject> input)
         {
-            var topo = new TopologicalSort<PackageInProject>(_logger, Match);
+            TopologicalSort<PackageInProject> topo = new(_logger, Match);
 
-            var inputMap = input.Select(p =>
+            List<SortItemData<PackageInProject>> inputMap = input.Select(p =>
                     new SortItemData<PackageInProject>(p, ProjectDeps(p, input)))
                 .ToList();
 
-            var sorted = topo.Sort(inputMap)
+            List<PackageInProject> sorted = topo.Sort(inputMap)
                 .ToList();
 
             sorted.Reverse();
@@ -40,7 +41,7 @@ namespace NuKeeper.Inspection.Sort
         private static IReadOnlyCollection<PackageInProject> ProjectDeps(PackageInProject selected,
             IReadOnlyCollection<PackageInProject> all)
         {
-            var deps = selected.ProjectReferences;
+            IReadOnlyCollection<string> deps = selected.ProjectReferences;
             return all.Where(i => deps.Any(d => d == i.Path.FullName)).ToList();
         }
 
@@ -53,8 +54,8 @@ namespace NuKeeper.Inspection.Sort
                 if (input[i] != output[i])
                 {
                     hasChange = true;
-                    var firstChange = output[i];
-                    var originalIndex = input.IndexOf(firstChange);
+                    PackageInProject firstChange = output[i];
+                    int originalIndex = input.IndexOf(firstChange);
                     _logger.Detailed($"Resorted {output.Count} projects by dependencies, first change is {firstChange.Path.RelativePath} moved to position {i} from {originalIndex}.");
                     break;
                 }

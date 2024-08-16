@@ -1,21 +1,25 @@
+using Newtonsoft.Json;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.Logging;
+
 using Octokit;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Organization = NuKeeper.Abstractions.CollaborationModels.Organization;
 using PullRequestRequest = NuKeeper.Abstractions.CollaborationModels.PullRequestRequest;
 using Repository = NuKeeper.Abstractions.CollaborationModels.Repository;
 using SearchCodeRequest = NuKeeper.Abstractions.CollaborationModels.SearchCodeRequest;
 using SearchCodeResult = NuKeeper.Abstractions.CollaborationModels.SearchCodeResult;
 using User = NuKeeper.Abstractions.CollaborationModels.User;
-using Newtonsoft.Json;
 
 namespace NuKeeper.GitHub
 {
@@ -40,16 +44,7 @@ namespace NuKeeper.GitHub
             }
 
             _apiBase = settings.ApiBase;
-            Credentials creds;
-            if (string.IsNullOrWhiteSpace(settings.Token))
-            {
-                creds = Credentials.Anonymous;
-            }
-            else
-            {
-                creds = new Credentials(settings.Token, AuthenticationType.Oauth);
-            }
-
+            Credentials creds = string.IsNullOrWhiteSpace(settings.Token) ? Credentials.Anonymous : new Credentials(settings.Token, AuthenticationType.Oauth);
             _client = new GitHubClient(new ProductHeaderValue("NuKeeper"), _apiBase)
             {
                 Credentials = creds
@@ -71,10 +66,10 @@ namespace NuKeeper.GitHub
 
             return await ExceptionHandler(async () =>
             {
-                var user = await _client.User.Current();
+                Octokit.User user = await _client.User.Current();
 
-                var emails = await _client.User.Email.GetAll();
-                var primaryEmail = emails.FirstOrDefault(e => e.Primary);
+                IReadOnlyList<EmailAddress> emails = await _client.User.Email.GetAll();
+                EmailAddress primaryEmail = emails.FirstOrDefault(e => e.Primary);
 
                 _logger.Detailed($"Read github user '{user?.Login}'");
                 return new User(user?.Login, user?.Name, primaryEmail?.Email ?? user?.Email);
@@ -87,7 +82,7 @@ namespace NuKeeper.GitHub
 
             return await ExceptionHandler(async () =>
             {
-                var githubOrgs = await _client.Organization.GetAll();
+                IReadOnlyList<Octokit.Organization> githubOrgs = await _client.Organization.GetAll();
                 _logger.Normal($"Read {githubOrgs.Count} organisations");
 
                 return githubOrgs
@@ -102,7 +97,7 @@ namespace NuKeeper.GitHub
 
             return await ExceptionHandler(async () =>
             {
-                var repos = await _client.Repository.GetAllForOrg(organisationName);
+                IReadOnlyList<Octokit.Repository> repos = await _client.Repository.GetAllForOrg(organisationName);
                 _logger.Normal($"Read {repos.Count} repos for org '{organisationName}'");
                 return repos.Select(repo => new GitHubRepository(repo)).ToList();
             });
@@ -118,7 +113,7 @@ namespace NuKeeper.GitHub
             {
                 try
                 {
-                    var result = await _client.Repository.Get(userName, repositoryName);
+                    Octokit.Repository result = await _client.Repository.Get(userName, repositoryName);
                     _logger.Normal($"User fork found at {result.GitUrl} for {result.Owner.Login}");
                     return new GitHubRepository(result);
                 }
@@ -138,7 +133,7 @@ namespace NuKeeper.GitHub
 
             return await ExceptionHandler(async () =>
             {
-                var result = await _client.Repository.Forks.Create(owner, repositoryName, new NewRepositoryFork());
+                Octokit.Repository result = await _client.Repository.Forks.Create(owner, repositoryName, new NewRepositoryFork());
                 _logger.Normal($"User fork created at {result.GitUrl} for {result.Owner.Login}");
                 return new GitHubRepository(result);
             });
@@ -152,7 +147,7 @@ namespace NuKeeper.GitHub
             {
                 try
                 {
-                    await _client.Repository.Branch.Get(userName, repositoryName, branchName);
+                    _ = await _client.Repository.Branch.Get(userName, repositoryName, branchName);
                     _logger.Detailed($"Branch found for {userName} / {repositoryName} / {branchName}");
                     return true;
                 }
@@ -172,7 +167,7 @@ namespace NuKeeper.GitHub
             {
                 _logger.Normal($"Checking if PR exists onto '{_apiBase} {target.Owner}/{target.Name}: {baseBranch} <= {headBranch}");
 
-                var prRequest = new Octokit.PullRequestRequest
+                Octokit.PullRequestRequest prRequest = new()
                 {
                     State = ItemStateFilter.Open,
                     SortDirection = SortDirection.Descending,
@@ -180,7 +175,7 @@ namespace NuKeeper.GitHub
                     Head = $"{target.Owner}:{headBranch}",
                 };
 
-                var pullReqList = await _client.PullRequest.GetAllForRepository(target.Owner, target.Name, prRequest).ConfigureAwait(false);
+                IReadOnlyList<PullRequest> pullReqList = await _client.PullRequest.GetAllForRepository(target.Owner, target.Name, prRequest).ConfigureAwait(false);
 
                 return pullReqList.Any(pr => pr.Base.Ref.EndsWith(baseBranch, StringComparison.InvariantCultureIgnoreCase));
             });
@@ -190,12 +185,12 @@ namespace NuKeeper.GitHub
         {
             CheckInitialised();
 
-            await ExceptionHandler(async () =>
+            _ = await ExceptionHandler(async () =>
             {
                 _logger.Normal($"Making PR onto '{_apiBase} {target.Owner}/{target.Name} from {request.Head}");
                 _logger.Detailed($"PR title: {request.Title}");
 
-                var createdPullRequest = await _client.PullRequest.Create(target.Owner, target.Name, new NewPullRequest(request.Title, request.Head, request.BaseRef) { Body = request.Body });
+                PullRequest createdPullRequest = await _client.PullRequest.Create(target.Owner, target.Name, new NewPullRequest(request.Title, request.Head, request.BaseRef) { Body = request.Body });
 
                 await AddLabelsToIssue(target, createdPullRequest.Number, labels);
 
@@ -209,12 +204,12 @@ namespace NuKeeper.GitHub
 
             return await ExceptionHandler(async () =>
             {
-                var repos = new RepositoryCollection();
-                foreach (var repo in search.Repos)
+                RepositoryCollection repos = [];
+                foreach (SearchRepo repo in search.Repos)
                 {
                     repos.Add(repo.Owner, repo.Name);
                 }
-                var result = await _client.Search.SearchCode(
+                Octokit.SearchCodeResult result = await _client.Search.SearchCode(
                     new Octokit.SearchCodeRequest()
                     {
                         Repos = repos,
@@ -228,7 +223,7 @@ namespace NuKeeper.GitHub
 
         private async Task AddLabelsToIssue(ForkData target, int issueNumber, IEnumerable<string> labels)
         {
-            var labelsToApply = labels?
+            string[] labelsToApply = labels?
             .Where(l => !string.IsNullOrWhiteSpace(l))
             .ToArray();
 
@@ -240,7 +235,7 @@ namespace NuKeeper.GitHub
 
                 try
                 {
-                    await _client.Issue.Labels.AddToIssue(target.Owner, target.Name, issueNumber,
+                    _ = await _client.Issue.Labels.AddToIssue(target.Owner, target.Name, issueNumber,
                         labelsToApply);
 
                 }

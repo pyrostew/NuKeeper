@@ -1,11 +1,14 @@
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Git;
+
 using NUnit.Framework;
+
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Gitea.Tests
 {
@@ -21,17 +24,17 @@ namespace NuKeeper.Gitea.Tests
         {
             _environmentVariablesProvider = Substitute.For<IEnvironmentVariablesProvider>();
             _gitDiscovery = Substitute.For<IGitDiscoveryDriver>();
-            var httpClientFactory = Substitute.For<IHttpClientFactory>();
-            httpClientFactory.CreateClient().Returns(new HttpClient());
+            IHttpClientFactory httpClientFactory = Substitute.For<IHttpClientFactory>();
+            _ = httpClientFactory.CreateClient().Returns(new HttpClient());
             _giteaSettingsReader = new GiteaSettingsReader(_gitDiscovery, _environmentVariablesProvider, httpClientFactory);
         }
 
         [Test]
         public void ReturnsCorrectPlatform()
         {
-            var platform = _giteaSettingsReader.Platform;
+            Platform platform = _giteaSettingsReader.Platform;
 
-            Assert.AreEqual(Platform.Gitea, platform);
+            Assert.That(Platform.Gitea, Is.EqualTo(platform));
         }
 
         /// <summary>
@@ -46,47 +49,47 @@ namespace NuKeeper.Gitea.Tests
         [Test]
         public void UpdatesAuthenticationTokenFromTheEnvironment()
         {
-            _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_gitea_token").Returns("envToken");
+            _ = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_gitea_token").Returns("envToken");
 
-            var settings = new CollaborationPlatformSettings
+            CollaborationPlatformSettings settings = new()
             {
                 Token = "accessToken",
             };
 
             _giteaSettingsReader.UpdateCollaborationPlatformSettings(settings);
 
-            Assert.AreEqual("envToken", settings.Token);
+            Assert.That("envToken", Is.EqualTo(settings.Token));
         }
 
         [Test]
         public async Task AssumesItCanReadGiteaUrls()
         {
-            var canRead = await _giteaSettingsReader.CanRead(new Uri("https://try.gitea.io/SharpSteff/NuKeeper-TestFork"));
-            Assert.AreEqual(true, canRead);
+            bool canRead = await _giteaSettingsReader.CanRead(new Uri("https://try.gitea.io/SharpSteff/NuKeeper-TestFork"));
+            Assert.That(canRead);
         }
 
         [Test]
         public void AssumesItCanNotReadGitHubUrls()
         {
-            var canRead = _giteaSettingsReader.CanRead(new Uri("https://github.com/SharpSteff/NuKeeper-TestFork"));
+            Task<bool> canRead = _giteaSettingsReader.CanRead(new Uri("https://github.com/SharpSteff/NuKeeper-TestFork"));
 
-            Assert.AreNotEqual(true, canRead);
+            Assert.That(canRead, Is.Not.True);
         }
 
         [TestCase(null)]
         [TestCase("master")]
         public async Task GetsCorrectSettingsFromTheUrl(string targetBranch)
         {
-            var repositoryUri = new Uri("https://try.gitea.io/SharpSteff/NuKeeper-TestFork");
-            var repositorySettings = await _giteaSettingsReader.RepositorySettings(repositoryUri, true, targetBranch);
+            Uri repositoryUri = new("https://try.gitea.io/SharpSteff/NuKeeper-TestFork");
+            RepositorySettings repositorySettings = await _giteaSettingsReader.RepositorySettings(repositoryUri, true, targetBranch);
 
-            Assert.IsNotNull(repositorySettings);
-            Assert.AreEqual(new Uri("https://try.gitea.io/api/v1/"), repositorySettings.ApiUri);
-            Assert.AreEqual(repositoryUri, repositorySettings.RepositoryUri);
-            Assert.AreEqual("SharpSteff", repositorySettings.RepositoryOwner);
-            Assert.AreEqual("NuKeeper-TestFork", repositorySettings.RepositoryName);
-            Assert.AreEqual(targetBranch, repositorySettings.RemoteInfo?.BranchName);
-            Assert.AreEqual(false, repositorySettings.SetAutoMerge);
+            Assert.That(repositorySettings, Is.Not.Null);
+            Assert.That(new Uri("https://try.gitea.io/api/v1/"), Is.EqualTo(repositorySettings.ApiUri));
+            Assert.That(repositoryUri, Is.EqualTo(repositorySettings.RepositoryUri));
+            Assert.That("SharpSteff", Is.EqualTo(repositorySettings.RepositoryOwner));
+            Assert.That("NuKeeper-TestFork", Is.EqualTo(repositorySettings.RepositoryName));
+            Assert.That(targetBranch, Is.EqualTo(repositorySettings.RemoteInfo?.BranchName));
+            Assert.That(repositorySettings.SetAutoMerge, Is.False);
         }
     }
 }

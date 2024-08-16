@@ -1,7 +1,8 @@
+using NuKeeper.Abstractions.Git;
+
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions.Git;
 
 namespace NuKeeper.Abstractions.Formats
 {
@@ -14,14 +15,9 @@ namespace NuKeeper.Abstractions.Formats
                 return null;
             }
 
-            var path = uri.ToString();
+            string path = uri.ToString();
 
-            if (path.EndsWith("/", StringComparison.OrdinalIgnoreCase))
-            {
-                return uri;
-            }
-
-            return new Uri(path + "/");
+            return path.EndsWith("/", StringComparison.OrdinalIgnoreCase) ? uri : new Uri(path + "/");
         }
 
         public static async Task<Uri> GetRemoteUriFromLocalRepo(this Uri repositoryUri, IGitDiscoveryDriver discoveryDriver, string shouldMatchTo)
@@ -34,7 +30,7 @@ namespace NuKeeper.Abstractions.Formats
             if (await discoveryDriver.IsGitRepo(repositoryUri))
             {
                 // Check the origin remotes
-                var origin = await discoveryDriver.GetRemoteForPlatform(repositoryUri, shouldMatchTo);
+                GitRemote origin = await discoveryDriver.GetRemoteForPlatform(repositoryUri, shouldMatchTo);
 
                 if (origin != null)
                 {
@@ -47,19 +43,16 @@ namespace NuKeeper.Abstractions.Formats
 
         public static Uri ToUri(this string repositoryString)
         {
-            var repositoryUri = new Uri(repositoryString, UriKind.RelativeOrAbsolute);
+            Uri repositoryUri = new(repositoryString, UriKind.RelativeOrAbsolute);
             if (repositoryUri.IsAbsoluteUri)
             {
                 return repositoryUri;
             }
 
-            var absoluteUri = Path.Combine(Environment.CurrentDirectory, repositoryUri.OriginalString);
-            if (!Directory.Exists(absoluteUri))
-            {
-                throw new NuKeeperException($"Local uri doesn't exist: {absoluteUri}");
-            }
-
-            return new Uri(absoluteUri);
+            string absoluteUri = Path.Combine(Environment.CurrentDirectory, repositoryUri.OriginalString);
+            return !Directory.Exists(absoluteUri)
+                ? throw new NuKeeperException($"Local uri doesn't exist: {absoluteUri}")
+                : new Uri(absoluteUri);
         }
     }
 }

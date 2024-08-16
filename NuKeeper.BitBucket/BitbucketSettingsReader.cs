@@ -1,10 +1,10 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
-using NuKeeper.Abstractions.Formats;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.BitBucket
 {
@@ -34,9 +34,9 @@ namespace NuKeeper.BitBucket
             }
 
             settings.Username = Username;
-            var envToken = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_bitbucket_token");
+            string envToken = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_bitbucket_token");
             settings.Token = Concat.FirstValue(envToken, settings.Token);
-            settings.ForkMode = settings.ForkMode ?? ForkMode.SingleRepositoryOnly;
+            settings.ForkMode ??= ForkMode.SingleRepositoryOnly;
         }
 
         public Task<RepositorySettings> RepositorySettings(Uri repositoryUri, bool setAutoMerge, string targetBranch = null)
@@ -46,8 +46,8 @@ namespace NuKeeper.BitBucket
                 return Task.FromResult<RepositorySettings>(null);
             }
 
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
@@ -56,21 +56,14 @@ namespace NuKeeper.BitBucket
                 throw new NuKeeperException($"The provided uri was is not in the correct format. Provided {repositoryUri} and format should be https://username_@bitbucket.org/projectname/repositoryname.git");
             }
 
-            if (string.IsNullOrWhiteSpace(repositoryUri.UserInfo))
-            {
-                Username = pathParts[0];
-            }
-            else
-            {
-                Username = repositoryUri.UserInfo.Split(':').First();
-            }
+            Username = string.IsNullOrWhiteSpace(repositoryUri.UserInfo) ? pathParts[0] : repositoryUri.UserInfo.Split(':').First();
 
-            var repoName = pathParts[1];
+            string repoName = pathParts[1];
             //Trim off any .git extension from repo name
             repoName = repoName.EndsWith(".git", StringComparison.InvariantCultureIgnoreCase) ?
-                repoName.Substring(0, repoName.LastIndexOf(".git", StringComparison.InvariantCultureIgnoreCase))
+                repoName[..repoName.LastIndexOf(".git", StringComparison.InvariantCultureIgnoreCase)]
                 : repoName;
-            var owner = pathParts[0];
+            string owner = pathParts[0];
 
             return Task.FromResult(new RepositorySettings
             {

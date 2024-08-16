@@ -1,5 +1,6 @@
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,11 +32,11 @@ namespace NuKeeper.Engine
                 throw new ArgumentNullException(nameof(updates));
             }
 
-            var tokenValues = new Dictionary<string, string>();
+            Dictionary<string, string> tokenValues = [];
 
-            foreach (var token in TemplateTokens)
+            foreach (string token in TemplateTokens)
             {
-                var value = "";
+                string value = "";
                 switch (token)
                 {
                     case "Default":
@@ -46,7 +47,7 @@ namespace NuKeeper.Engine
                         break;
                     case "Version":
                         //Multiple nugets, same version?
-                        var versions = updates.Select(u => u.SelectedVersion).Distinct();
+                        IEnumerable<NuGet.Versioning.NuGetVersion> versions = updates.Select(u => u.SelectedVersion).Distinct();
                         value = versions.Count() > 1 ? "Multiple-Versions" : $"{versions.First()}";
                         break;
                     case "Count":
@@ -70,7 +71,7 @@ namespace NuKeeper.Engine
         /// <returns></returns>
         internal static string MakeName(Dictionary<string, string> tokenValuePairs, string branchTemplate)
         {
-            var branchName = branchTemplate ?? "{default}";
+            string branchName = branchTemplate ?? "{default}";
 
             foreach (KeyValuePair<string, string> kvp in tokenValuePairs)
             {

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.Logging;
@@ -11,6 +7,11 @@ using NuKeeper.Inspection.Report.Formats;
 using NuKeeper.Update;
 using NuKeeper.Update.Process;
 using NuKeeper.Update.Selection;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Local
 {
@@ -49,7 +50,7 @@ namespace NuKeeper.Local
                 return;
             }
 
-            var filtered = _selection
+            IReadOnlyCollection<PackageUpdateSet> filtered = _selection
                 .Filter(updates, settings.PackageFilters);
 
             if (!filtered.Any())
@@ -65,7 +66,7 @@ namespace NuKeeper.Local
         {
             await _solutionRestore.CheckRestore(updates, workingFolder, sources);
 
-            foreach (var update in updates)
+            foreach (PackageUpdateSet update in updates)
             {
                 _logger.Minimal("Updating " + Description.ForUpdateSet(update));
 

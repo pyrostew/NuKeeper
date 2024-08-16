@@ -1,7 +1,8 @@
+using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.IO;
 using System.Linq;
-using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Update.Process
 {
@@ -13,27 +14,22 @@ namespace NuKeeper.Update.Process
         public NuGetPath(INuKeeperLogger logger)
         {
             _logger = logger;
-            this._executablePath = new Lazy<string>(FindExecutable);
+            _executablePath = new Lazy<string>(FindExecutable);
         }
 
         public string Executable => _executablePath.Value;
 
         private string FindExecutable()
         {
-            var localNugetPath = FindLocalNuget();
+            string localNugetPath = FindLocalNuget();
 
-            if (!string.IsNullOrEmpty(localNugetPath))
-            {
-                return localNugetPath;
-            }
-
-            return FindNugetInPackagesUnderProfile();
+            return !string.IsNullOrEmpty(localNugetPath) ? localNugetPath : FindNugetInPackagesUnderProfile();
         }
 
         private string FindLocalNuget()
         {
-            var appDir = AppDomain.CurrentDomain.BaseDirectory;
-            var fullPath = Path.Combine(appDir, "NuGet.exe");
+            string appDir = AppDomain.CurrentDomain.BaseDirectory;
+            string fullPath = Path.Combine(appDir, "NuGet.exe");
             if (File.Exists(fullPath))
             {
                 _logger.Detailed("Found NuGet.exe: " + fullPath);
@@ -45,7 +41,7 @@ namespace NuKeeper.Update.Process
 
         private string FindNugetInPackagesUnderProfile()
         {
-            var profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string profile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
             if (string.IsNullOrWhiteSpace(profile))
             {
@@ -53,7 +49,7 @@ namespace NuKeeper.Update.Process
                 return string.Empty;
             }
 
-            var commandlinePackageDir = Path.Combine(profile, ".nuget", "packages", "nuget.commandline");
+            string commandlinePackageDir = Path.Combine(profile, ".nuget", "packages", "nuget.commandline");
             _logger.Detailed("Checking for NuGet.exe in packages directory: " + commandlinePackageDir);
 
             if (!Directory.Exists(commandlinePackageDir))
@@ -62,7 +58,7 @@ namespace NuKeeper.Update.Process
                 return string.Empty;
             }
 
-            var highestVersion = Directory.GetDirectories(commandlinePackageDir)
+            string highestVersion = Directory.GetDirectories(commandlinePackageDir)
                 .OrderByDescending(n => n)
                 .FirstOrDefault();
 
@@ -72,8 +68,8 @@ namespace NuKeeper.Update.Process
                 return string.Empty;
             }
 
-            var nugetProgramPath = Path.Combine(highestVersion, "tools", "NuGet.exe");
-            var fullPath = Path.GetFullPath(nugetProgramPath);
+            string nugetProgramPath = Path.Combine(highestVersion, "tools", "NuGet.exe");
+            string fullPath = Path.GetFullPath(nugetProgramPath);
             _logger.Detailed("Found NuGet.exe: " + fullPath);
 
             return fullPath;

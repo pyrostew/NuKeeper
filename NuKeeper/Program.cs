@@ -1,5 +1,7 @@
 using McMaster.Extensions.CommandLineUtils;
+
 using NuKeeper.Commands;
+
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -8,7 +10,6 @@ using System.Threading.Tasks;
 [assembly: InternalsVisibleTo("NuKeeper.Tests")]
 
 #pragma warning disable CA1822
-#pragma warning disable CA1031
 
 namespace NuKeeper
 {
@@ -25,10 +26,10 @@ namespace NuKeeper
     {
         public static async Task<int> Main(string[] args)
         {
-            var container = ContainerRegistration.Init();
+            SimpleInjector.Container container = ContainerRegistration.Init();
 
-            var app = new CommandLineApplication<Program> { UnrecognizedArgumentHandling = UnrecognizedArgumentHandling.StopParsingAndCollect };
-            app.Conventions.UseDefaultConventions().UseConstructorInjection(container);
+            CommandLineApplication<Program> app = new() { UnrecognizedArgumentHandling = UnrecognizedArgumentHandling.StopParsingAndCollect };
+            _ = app.Conventions.UseDefaultConventions().UseConstructorInjection(container);
 
             try
             {
@@ -59,9 +60,12 @@ namespace NuKeeper
             return 1;
         }
 
-        private static string GetVersion() => typeof(Program)
+        private static string GetVersion()
+        {
+            return typeof(Program)
             .Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             .InformationalVersion;
+        }
     }
 }

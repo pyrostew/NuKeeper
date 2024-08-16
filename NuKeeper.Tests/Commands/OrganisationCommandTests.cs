@@ -1,19 +1,21 @@
 using NSubstitute;
+
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
+using NuKeeper.Abstractions.Git;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.Output;
+using NuKeeper.AzureDevOps;
 using NuKeeper.Collaboration;
 using NuKeeper.Commands;
 using NuKeeper.GitHub;
 using NuKeeper.Inspection.Logging;
+
 using NUnit.Framework;
+
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions.Git;
-using NuKeeper.AzureDevOps;
 
 namespace NuKeeper.Tests.Commands
 {
@@ -22,10 +24,10 @@ namespace NuKeeper.Tests.Commands
     {
         private static CollaborationFactory GetCollaborationFactory(Func<IGitDiscoveryDriver, IEnvironmentVariablesProvider, ISettingsReader> createSettingsReader)
         {
-            var environmentVariablesProvider = Substitute.For<IEnvironmentVariablesProvider>();
+            IEnvironmentVariablesProvider environmentVariablesProvider = Substitute.For<IEnvironmentVariablesProvider>();
 
-            var httpClientFactory = Substitute.For<IHttpClientFactory>();
-            httpClientFactory.CreateClient().Returns(new HttpClient());
+            IHttpClientFactory httpClientFactory = Substitute.For<IHttpClientFactory>();
+            _ = httpClientFactory.CreateClient().Returns(new HttpClient());
 
             return new CollaborationFactory(
                 new ISettingsReader[] { createSettingsReader(new MockedGitDiscoveryDriver(), environmentVariablesProvider) },
@@ -37,18 +39,18 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldCallEngineAndNotSucceedWithoutParams()
         {
-            var engine = Substitute.For<ICollaborationEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
-            fileSettings.GetSettings().Returns(FileSettings.Empty());
-            var collaborationFactory = GetCollaborationFactory((d, e) => new GitHubSettingsReader(d, e));
+            ICollaborationEngine engine = Substitute.For<ICollaborationEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
+            _ = fileSettings.GetSettings().Returns(FileSettings.Empty());
+            CollaborationFactory collaborationFactory = GetCollaborationFactory((d, e) => new GitHubSettingsReader(d, e));
 
-            var command = new OrganisationCommand(engine, logger, fileSettings, collaborationFactory);
+            OrganisationCommand command = new(engine, logger, fileSettings, collaborationFactory);
 
-            var status = await command.OnExecute();
+            int status = await command.OnExecute();
 
             Assert.That(status, Is.EqualTo(-1));
-            await engine
+            _ = await engine
                 .DidNotReceive()
                 .Run(Arg.Any<SettingsContainer>());
         }
@@ -56,21 +58,23 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldCallEngineAndSucceedWithRequiredGithubParams()
         {
-            var engine = Substitute.For<ICollaborationEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
-            fileSettings.GetSettings().Returns(FileSettings.Empty());
+            ICollaborationEngine engine = Substitute.For<ICollaborationEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
+            _ = fileSettings.GetSettings().Returns(FileSettings.Empty());
 
-            var collaborationFactory = GetCollaborationFactory((d, e) => new GitHubSettingsReader(d, e));
+            CollaborationFactory collaborationFactory = GetCollaborationFactory((d, e) => new GitHubSettingsReader(d, e));
 
-            var command = new OrganisationCommand(engine, logger, fileSettings, collaborationFactory);
-            command.PersonalAccessToken = "abc";
-            command.OrganisationName = "testOrg";
+            OrganisationCommand command = new(engine, logger, fileSettings, collaborationFactory)
+            {
+                PersonalAccessToken = "abc",
+                OrganisationName = "testOrg"
+            };
 
-            var status = await command.OnExecute();
+            int status = await command.OnExecute();
 
             Assert.That(status, Is.EqualTo(0));
-            await engine
+            _ = await engine
                 .Received(1)
                 .Run(Arg.Any<SettingsContainer>());
         }
@@ -78,22 +82,24 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldCallEngineAndSucceedWithRequiredAzureDevOpsParams()
         {
-            var engine = Substitute.For<ICollaborationEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
-            fileSettings.GetSettings().Returns(FileSettings.Empty());
+            ICollaborationEngine engine = Substitute.For<ICollaborationEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
+            _ = fileSettings.GetSettings().Returns(FileSettings.Empty());
 
-            var collaborationFactory = GetCollaborationFactory((d, e) => new AzureDevOpsSettingsReader(d, e));
+            CollaborationFactory collaborationFactory = GetCollaborationFactory((d, e) => new AzureDevOpsSettingsReader(d, e));
 
-            var command = new OrganisationCommand(engine, logger, fileSettings, collaborationFactory);
-            command.PersonalAccessToken = "abc";
-            command.OrganisationName = "testOrg";
-            command.ApiEndpoint = "https://dev.azure.com/org";
+            OrganisationCommand command = new(engine, logger, fileSettings, collaborationFactory)
+            {
+                PersonalAccessToken = "abc",
+                OrganisationName = "testOrg",
+                ApiEndpoint = "https://dev.azure.com/org"
+            };
 
-            var status = await command.OnExecute();
+            int status = await command.OnExecute();
 
             Assert.That(status, Is.EqualTo(0));
-            await engine
+            _ = await engine
                 .Received(1)
                 .Run(Arg.Any<SettingsContainer>());
         }
@@ -101,9 +107,9 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldPopulateSettings()
         {
-            var fileSettings = FileSettings.Empty();
+            FileSettings fileSettings = FileSettings.Empty();
 
-            var (settings, platformSettings) = await CaptureSettings(fileSettings);
+            (SettingsContainer settings, CollaborationPlatformSettings platformSettings) = await CaptureSettings(fileSettings);
 
             Assert.That(platformSettings, Is.Not.Null);
             Assert.That(platformSettings.Token, Is.Not.Null);
@@ -119,9 +125,9 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task EmptyFileResultsInDefaultSettings()
         {
-            var fileSettings = FileSettings.Empty();
+            FileSettings fileSettings = FileSettings.Empty();
 
-            var (settings, _) = await CaptureSettings(fileSettings);
+            (SettingsContainer settings, CollaborationPlatformSettings _) = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings, Is.Not.Null);
@@ -152,12 +158,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadApiFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 Api = "http://github.contoso.com/"
             };
 
-            var (_, platformSettings) = await CaptureSettings(fileSettings);
+            (SettingsContainer _, CollaborationPlatformSettings platformSettings) = await CaptureSettings(fileSettings);
 
             Assert.That(platformSettings, Is.Not.Null);
             Assert.That(platformSettings.BaseApiUrl, Is.Not.Null);
@@ -167,12 +173,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadLabelFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
-                Label = new List<string> { "testLabel" }
+                Label = ["testLabel"]
             };
 
-            var (settings, _) = await CaptureSettings(fileSettings);
+            (SettingsContainer settings, CollaborationPlatformSettings _) = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.SourceControlServerSettings, Is.Not.Null);
@@ -184,13 +190,13 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadRepoFiltersFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 IncludeRepos = "foo",
                 ExcludeRepos = "bar"
             };
 
-            var (settings, _) = await CaptureSettings(fileSettings);
+            (SettingsContainer settings, CollaborationPlatformSettings _) = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.SourceControlServerSettings, Is.Not.Null);
@@ -203,12 +209,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadMaxPackageUpdatesFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 MaxPackageUpdates = 42
             };
 
-            var (settings, _) = await CaptureSettings(fileSettings);
+            (SettingsContainer settings, CollaborationPlatformSettings _) = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -218,12 +224,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadMaxRepoFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 MaxRepo = 42
             };
 
-            var (settings, _) = await CaptureSettings(fileSettings);
+            (SettingsContainer settings, CollaborationPlatformSettings _) = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -233,14 +239,14 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadBranchNamePrefixFromFile()
         {
-            var testTemplate = "nukeeper/MyBranch";
+            string testTemplate = "nukeeper/MyBranch";
 
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 BranchNameTemplate = testTemplate
             };
 
-            var (settings, _) = await CaptureSettings(fileSettings);
+            (SettingsContainer settings, CollaborationPlatformSettings _) = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.BranchSettings, Is.Not.Null);
@@ -250,13 +256,13 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task CommandLineWillOverrideIncludeRepo()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 IncludeRepos = "foo",
                 ExcludeRepos = "bar"
             };
 
-            var (settings, _) = await CaptureSettings(fileSettings, true);
+            (SettingsContainer settings, CollaborationPlatformSettings _) = await CaptureSettings(fileSettings, true);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.SourceControlServerSettings, Is.Not.Null);
@@ -269,13 +275,13 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task CommandLineWillOverrideExcludeRepo()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 IncludeRepos = "foo",
                 ExcludeRepos = "bar"
             };
 
-            var (settings, _) = await CaptureSettings(fileSettings, false, true);
+            (SettingsContainer settings, CollaborationPlatformSettings _) = await CaptureSettings(fileSettings, false, true);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.SourceControlServerSettings, Is.Not.Null);
@@ -288,7 +294,7 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task CommandLineWillOverrideForkMode()
         {
-            var (_, platformSettings) = await CaptureSettings(FileSettings.Empty(), false, false, null, ForkMode.PreferSingleRepository);
+            (SettingsContainer _, CollaborationPlatformSettings platformSettings) = await CaptureSettings(FileSettings.Empty(), false, false, null, ForkMode.PreferSingleRepository);
 
             Assert.That(platformSettings, Is.Not.Null);
             Assert.That(platformSettings.ForkMode, Is.Not.Null);
@@ -298,12 +304,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task CommandLineWillOverrideMaxRepo()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 MaxRepo = 12,
             };
 
-            var (settings, _) = await CaptureSettings(fileSettings, false, true, 22);
+            (SettingsContainer settings, CollaborationPlatformSettings _) = await CaptureSettings(fileSettings, false, true, 22);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.UserSettings.MaxRepositoriesChanged, Is.EqualTo(22));
@@ -316,20 +322,22 @@ namespace NuKeeper.Tests.Commands
             int? maxRepo = null,
             ForkMode? forkMode = null)
         {
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
             SettingsContainer settingsOut = null;
-            var engine = Substitute.For<ICollaborationEngine>();
-            await engine.Run(Arg.Do<SettingsContainer>(x => settingsOut = x));
+            ICollaborationEngine engine = Substitute.For<ICollaborationEngine>();
+            _ = await engine.Run(Arg.Do<SettingsContainer>(x => settingsOut = x));
 
-            fileSettings.GetSettings().Returns(settingsIn);
+            _ = fileSettings.GetSettings().Returns(settingsIn);
 
-            var collaborationFactory = GetCollaborationFactory((d, e) => new GitHubSettingsReader(d, e));
+            CollaborationFactory collaborationFactory = GetCollaborationFactory((d, e) => new GitHubSettingsReader(d, e));
 
-            var command = new OrganisationCommand(engine, logger, fileSettings, collaborationFactory);
-            command.PersonalAccessToken = "testToken";
-            command.OrganisationName = "testOrg";
+            OrganisationCommand command = new(engine, logger, fileSettings, collaborationFactory)
+            {
+                PersonalAccessToken = "testToken",
+                OrganisationName = "testOrg"
+            };
 
             if (addCommandRepoInclude)
             {
@@ -348,7 +356,7 @@ namespace NuKeeper.Tests.Commands
 
             command.MaxRepositoriesChanged = maxRepo;
 
-            await command.OnExecute();
+            _ = await command.OnExecute();
 
             return (settingsOut, collaborationFactory.Settings);
         }

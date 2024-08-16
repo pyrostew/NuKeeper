@@ -1,10 +1,11 @@
+using NuKeeper.Abstractions.Logging;
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using NuKeeper.Abstractions.Logging;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.RepositoryInspection
 {
@@ -22,13 +23,11 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         public IReadOnlyCollection<PackageInProject> ReadFile(string baseDirectory, string relativePath)
         {
-            var filePath = Path.Combine(baseDirectory, relativePath);
+            string filePath = Path.Combine(baseDirectory, relativePath);
             try
             {
-                using (var fileContents = File.OpenRead(filePath))
-                {
-                    return Read(fileContents, baseDirectory, relativePath);
-                }
+                using FileStream fileContents = File.OpenRead(filePath);
+                return Read(fileContents, baseDirectory, relativePath);
             }
             catch (IOException ex)
             {
@@ -43,30 +42,30 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         public IReadOnlyCollection<PackageInProject> Read(Stream fileContents, string baseDirectory, string relativePath)
         {
-            var xml = XDocument.Load(fileContents);
-            var ns = xml.Root.GetDefaultNamespace();
+            XDocument xml = XDocument.Load(fileContents);
+            XNamespace ns = xml.Root.GetDefaultNamespace();
 
-            var path = CreatePackagePath(ns, baseDirectory, relativePath);
+            PackagePath path = CreatePackagePath(ns, baseDirectory, relativePath);
 
-            var project = xml.Element(ns + "Project");
+            XElement project = xml.Element(ns + "Project");
 
             if (project == null)
             {
                 return Array.Empty<PackageInProject>();
             }
 
-            var projectFileResults = new List<PackageInProject>();
+            List<PackageInProject> projectFileResults = [];
 
-            var itemGroups = project
+            List<XElement> itemGroups = project
                 .Elements(ns + "ItemGroup")
                 .ToList();
 
-            var projectRefs = itemGroups
+            List<string> projectRefs = itemGroups
                 .SelectMany(ig => ig.Elements(ns + "ProjectReference"))
                 .Select(el => MakeProjectPath(el, path.FullName))
                 .ToList();
 
-            var packageRefs = itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference"));
+            IEnumerable<XElement> packageRefs = itemGroups.SelectMany(ig => ig.Elements(ns + "PackageReference"));
             projectFileResults.AddRange(
                 packageRefs
                 .Select(el => XmlToPackage(ns, el, path, projectRefs))
@@ -92,10 +91,10 @@ namespace NuKeeper.Inspection.RepositoryInspection
 
         private static string MakeProjectPath(XElement el, string currentPath)
         {
-            var relativePath = el.Attribute("Include")?.Value;
+            string relativePath = el.Attribute("Include")?.Value;
 
-            var currentDir = Path.GetDirectoryName(currentPath);
-            var combinedPath = Path.Combine(currentDir, relativePath);
+            string currentDir = Path.GetDirectoryName(currentPath);
+            string combinedPath = Path.Combine(currentDir, relativePath);
 
             // combined path can still have "\..\" parts to it, need to canonicalise
             return Path.GetFullPath(combinedPath);
@@ -111,8 +110,8 @@ namespace NuKeeper.Inspection.RepositoryInspection
         private PackageInProject XmlToPackage(XNamespace ns, XElement el,
             PackagePath path, IEnumerable<string> projectReferences)
         {
-            var id = el.Attribute("Include")?.Value;
-            var version = GetVersion(el, ns);
+            string id = el.Attribute("Include")?.Value;
+            string version = GetVersion(el, ns);
             return _packageInProjectReader.Read(id, version, path, projectReferences);
         }
 

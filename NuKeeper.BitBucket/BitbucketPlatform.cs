@@ -1,13 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.BitBucket.Models;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+
 using Repository = NuKeeper.Abstractions.CollaborationModels.Repository;
 using User = NuKeeper.Abstractions.CollaborationModels.User;
 
@@ -44,7 +46,7 @@ namespace NuKeeper.BitBucket
                 throw new ArgumentNullException(nameof(target));
             }
 
-            var result = await _client.GetPullRequests(target.Owner, target.Name, headBranch, baseBranch);
+            PullRequestsInfo result = await _client.GetPullRequests(target.Owner, target.Name, headBranch, baseBranch);
 
             return result.values.Any();
         }
@@ -61,8 +63,8 @@ namespace NuKeeper.BitBucket
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var repo = await _client.GetGitRepository(target.Owner, target.Name);
-            var req = new PullRequest
+            Models.Repository repo = await _client.GetGitRepository(target.Owner, target.Name);
+            PullRequest req = new()
             {
                 title = request.Title,
                 source = new Source
@@ -83,12 +85,12 @@ namespace NuKeeper.BitBucket
                 close_source_branch = request.DeleteBranchAfterMerge
             };
 
-            await _client.CreatePullRequest(target.Owner, repo.name, req);
+            _ = await _client.CreatePullRequest(target.Owner, repo.name, req);
         }
 
         public async Task<IReadOnlyList<Organization>> GetOrganizations()
         {
-            var projects = await _client.GetProjects(_settings.Username);
+            IEnumerable<ProjectInfo> projects = await _client.GetProjects(_settings.Username);
             return projects
                 .Select(project => new Organization(project.name))
                 .ToList();
@@ -96,16 +98,15 @@ namespace NuKeeper.BitBucket
 
         public async Task<IReadOnlyList<Repository>> GetRepositoriesForOrganisation(string projectName)
         {
-            var repos = await _client.GetGitRepositories(projectName);
+            IEnumerable<Models.Repository> repos = await _client.GetGitRepositories(projectName);
             return repos.Select(MapRepository)
                 .ToList();
         }
 
         public async Task<Repository> GetUserRepository(string projectName, string repositoryName)
         {
-            var repo = await _client.GetGitRepository(projectName, repositoryName);
-            if (repo == null) return default;
-            return MapRepository(repo);
+            Models.Repository repo = await _client.GetGitRepository(projectName, repositoryName);
+            return repo == null ? default : MapRepository(repo);
         }
 
         public Task<Repository> MakeUserFork(string owner, string repositoryName)
@@ -115,9 +116,9 @@ namespace NuKeeper.BitBucket
 
         public async Task<bool> RepositoryBranchExists(string projectName, string repositoryName, string branchName)
         {
-            var repo = await _client.GetGitRepository(projectName, repositoryName);
-            var refs = await _client.GetRepositoryRefs(projectName, repo.name);
-            var count = refs.Count(x => x.Name.Equals(branchName, StringComparison.OrdinalIgnoreCase));
+            Models.Repository repo = await _client.GetGitRepository(projectName, repositoryName);
+            IEnumerable<Ref> refs = await _client.GetRepositoryRefs(projectName, repo.name);
+            int count = refs.Count(x => x.Name.Equals(branchName, StringComparison.OrdinalIgnoreCase));
             if (count > 0)
             {
                 _logger.Detailed($"Branch found for {projectName} / {repositoryName} / {branchName}");

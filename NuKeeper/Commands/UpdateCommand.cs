@@ -1,9 +1,11 @@
-using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Inspection.Logging;
 using NuKeeper.Local;
+
+using System.Threading.Tasks;
 
 namespace NuKeeper.Commands
 {
@@ -24,16 +26,16 @@ namespace NuKeeper.Commands
 
         protected override async Task<ValidationResult> PopulateSettings(SettingsContainer settings)
         {
-            var baseResult = await base.PopulateSettings(settings);
+            ValidationResult baseResult = await base.PopulateSettings(settings);
             if (!baseResult.IsSuccess)
             {
                 return baseResult;
             }
 
             const int defaultMaxPackageUpdates = 1;
-            var fileSettings = FileSettingsCache.GetSettings();
+            FileSettings fileSettings = FileSettingsCache.GetSettings();
 
-            var maxUpdates = Concat.FirstValue(
+            int maxUpdates = Concat.FirstValue(
                 MaxPackageUpdates,
                 fileSettings.MaxPackageUpdates,
                 defaultMaxPackageUpdates);

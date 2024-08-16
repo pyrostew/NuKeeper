@@ -1,11 +1,14 @@
-using System;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Tests;
+
 using NUnit.Framework;
+
+using System;
+using System.Threading.Tasks;
 
 namespace NuKeeper.GitHub.Tests
 {
@@ -25,85 +28,85 @@ namespace NuKeeper.GitHub.Tests
         [Test]
         public void ReturnsCorrectPlatform()
         {
-            var platform = _gitHubSettingsReader.Platform;
-            Assert.IsNotNull(platform);
-            Assert.AreEqual(platform, Platform.GitHub);
+            Platform platform = _gitHubSettingsReader.Platform;
+            Assert.That(platform, Is.Not.Null);
+            Assert.That(platform, Is.EqualTo(Platform.GitHub));
         }
 
         [Test]
         public void UpdateSettings_UpdatesSettings()
         {
-            var settings = new CollaborationPlatformSettings
+            CollaborationPlatformSettings settings = new()
             {
                 Token = "accessToken",
                 BaseApiUrl = new Uri("https://github.custom.com/")
             };
             _gitHubSettingsReader.UpdateCollaborationPlatformSettings(settings);
 
-            Assert.IsNotNull(settings);
-            Assert.AreEqual(new Uri("https://github.custom.com/"), settings.BaseApiUrl);
-            Assert.AreEqual("accessToken", settings.Token);
-            Assert.AreEqual(ForkMode.PreferFork, settings.ForkMode);
+            Assert.That(settings, Is.Not.Null);
+            Assert.That(settings.BaseApiUrl, Is.EqualTo(new Uri("https://github.custom.com/")));
+            Assert.That(settings.Token, Is.EqualTo("accessToken"));
+            Assert.That(settings.ForkMode, Is.EqualTo(ForkMode.PreferFork));
         }
 
         [Test]
         public void AuthSettings_GetsCorrectSettingsFromEnvironment()
         {
-            _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_github_token").Returns("envToken");
+            _ = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_github_token").Returns("envToken");
 
-            var settings = new CollaborationPlatformSettings
+            CollaborationPlatformSettings settings = new()
             {
                 Token = "accessToken",
             };
 
             _gitHubSettingsReader.UpdateCollaborationPlatformSettings(settings);
 
-            Assert.AreEqual("envToken", settings.Token);
+            Assert.That(settings.Token, Is.EqualTo("envToken"));
         }
 
         [TestCase(null)]
         [TestCase("htps://missingt.com")]
         public async Task InvalidUrlReturnsNull(string value)
         {
-            var testUri = value == null ? null : new Uri(value);
-            var canRead = await _gitHubSettingsReader.CanRead(testUri);
+            Uri testUri = value == null ? null : new Uri(value);
+            bool canRead = await _gitHubSettingsReader.CanRead(testUri);
 
-            Assert.IsFalse(canRead);
+            Assert.That(canRead, Is.False);
         }
 
         [Test]
         public async Task RepositorySettings_GetsCorrectSettings()
         {
-            var settings = await _gitHubSettingsReader.RepositorySettings(new Uri("https://github.com/owner/reponame.git"), true);
+            RepositorySettings settings = await _gitHubSettingsReader.RepositorySettings(new Uri("https://github.com/owner/reponame.git"), true);
 
-            Assert.IsNotNull(settings);
-            Assert.AreEqual(new Uri("https://github.com/owner/reponame.git"), settings.RepositoryUri);
-            Assert.AreEqual("reponame", settings.RepositoryName);
-            Assert.AreEqual("owner", settings.RepositoryOwner);
-            Assert.AreEqual(false, settings.SetAutoMerge);
+            Assert.That(settings, Is.Not.Null);
+            Assert.That(settings.RepositoryUri, Is.EqualTo(new Uri("https://github.com/owner/reponame.git")));
+            Assert.That(settings.RepositoryName, Is.EqualTo("reponame"));
+            Assert.That(settings.RepositoryOwner, Is.EqualTo("owner"));
+            Assert.That(settings.SetAutoMerge, Is.EqualTo(false));
         }
 
         [Test]
         public async Task RepositorySettings_GetsCorrectSettingsWithTargetBranch()
         {
-            var settings =
-                await _gitHubSettingsReader.RepositorySettings(new Uri("https://github.com/owner/reponame.git"), true,"Feature1");
+            RepositorySettings settings =
+                await _gitHubSettingsReader.RepositorySettings(new Uri("https://github.com/owner/reponame.git"), true, "Feature1");
 
-            Assert.IsNotNull(settings);
-            Assert.AreEqual(new Uri("https://github.com/owner/reponame.git"), settings.RepositoryUri);
-            Assert.AreEqual("reponame", settings.RepositoryName);
-            Assert.AreEqual("owner", settings.RepositoryOwner);
-            Assert.NotNull(settings.RemoteInfo);
-            Assert.AreEqual("Feature1", settings.RemoteInfo.BranchName);
-            Assert.AreEqual(false, settings.SetAutoMerge);
+            Assert.That(settings, Is.Not.Null);
+            Assert.That(settings.RepositoryUri, Is.EqualTo(new Uri("https://github.com/owner/reponame.git")));
+            Assert.That(settings.RepositoryName, Is.EqualTo("reponame"));
+            Assert.That(settings.RepositoryOwner, Is.EqualTo("owner"));
+            Assert.That(settings.RemoteInfo, Is.Not.Null);
+            Assert.That(settings.RemoteInfo.BranchName, Is.EqualTo("Feature1"));
+            Assert.That(settings.SetAutoMerge, Is.False);
         }
 
         [TestCase(null)]
         [TestCase("https://github.com/owner/badpart/reponame.git")]
         public void RepositorySettings_InvalidUrlReturnsNull(string value)
         {
-            var testUri = value == null ? null : new Uri(value);
-            Assert.ThrowsAsync<NuKeeperException>(() => _gitHubSettingsReader.RepositorySettings(testUri, true));
+            Uri testUri = value == null ? null : new Uri(value);
+            _ = Assert.ThrowsAsync<NuKeeperException>(() => _gitHubSettingsReader.RepositorySettings(testUri, true));
         }
     }
 }

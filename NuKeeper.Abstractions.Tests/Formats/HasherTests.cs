@@ -1,4 +1,5 @@
 using NuKeeper.Abstractions.Formats;
+
 using NUnit.Framework;
 
 namespace NuKeeper.Abstractions.Tests.Formats
@@ -9,7 +10,7 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void CanHash()
         {
-            var output = Hasher.Hash("test");
+            string output = Hasher.Hash("test");
 
             AssertHashFormat(output);
             Assert.That(output, Is.EqualTo("098F6BCD4621D373CADE4E832627B4F6"));
@@ -19,8 +20,8 @@ namespace NuKeeper.Abstractions.Tests.Formats
         public void HashIsSameTwice()
         {
             const string input = "testabcd1234";
-            var output1 = Hasher.Hash(input);
-            var output2 = Hasher.Hash(input);
+            string output1 = Hasher.Hash(input);
+            string output2 = Hasher.Hash(input);
 
             AssertHashFormat(output1);
             AssertHashFormat(output2);

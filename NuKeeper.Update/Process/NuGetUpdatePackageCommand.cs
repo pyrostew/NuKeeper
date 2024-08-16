@@ -1,12 +1,14 @@
-using System;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using NuGet.Configuration;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.ProcessRunner;
+
+using System;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Update.Process
 {
@@ -42,23 +44,23 @@ namespace NuKeeper.Update.Process
                 throw new ArgumentNullException(nameof(allSources));
             }
 
-            var projectPath = currentPackage.Path.Info.DirectoryName;
+            string projectPath = currentPackage.Path.Info.DirectoryName;
 
-            var nuget = _nuGetPath.Executable;
+            string nuget = _nuGetPath.Executable;
             if (string.IsNullOrWhiteSpace(nuget))
             {
                 _logger.Normal("Cannot find NuGet.exe for package update");
                 return;
             }
 
-            var sources = allSources.CommandLine("-Source");
-            var updateCommand = $"update packages.config -Id {currentPackage.Id} -Version {newVersion} {sources} -NonInteractive";
+            string sources = allSources.CommandLine("-Source");
+            string updateCommand = $"update packages.config -Id {currentPackage.Id} -Version {newVersion} {sources} -NonInteractive";
 
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (await _monoExecutor.CanRun())
                 {
-                    await _monoExecutor.Run(projectPath, nuget, updateCommand, true);
+                    _ = await _monoExecutor.Run(projectPath, nuget, updateCommand, true);
                 }
                 else
                 {
@@ -67,7 +69,7 @@ namespace NuKeeper.Update.Process
             }
             else
             {
-                await _externalProcess.Run(projectPath, nuget, updateCommand, true);
+                _ = await _externalProcess.Run(projectPath, nuget, updateCommand, true);
             }
         }
     }

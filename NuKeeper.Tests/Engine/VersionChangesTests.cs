@@ -1,12 +1,15 @@
-using System;
-using System.Collections.Generic;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Inspection.NuGetApi;
+
 using NUnit.Framework;
+
+using System;
+using System.Collections.Generic;
 
 namespace NuKeeper.Tests.Engine
 {
@@ -16,10 +19,10 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenThereAreNoCandidates()
         {
-            var current = new NuGetVersion(1, 2, 3);
-            var candidates = new List<PackageSearchMetadata>();
+            NuGetVersion current = new(1, 2, 3);
+            List<PackageSearchMetadata> candidates = [];
 
-            var result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
+            PackageLookupResult result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
 
             Assert.That(result, Is.Not.Null);
             Assert.That(result.AllowedChange, Is.EqualTo(VersionChange.Major));
@@ -32,11 +35,11 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenThereIsANewMajorVersion()
         {
-            var current = new NuGetVersion(1, 2, 3);
-            var candidates = MetadataForVersion(2, 3, 4)
+            NuGetVersion current = new(1, 2, 3);
+            List<PackageSearchMetadata> candidates = MetadataForVersion(2, 3, 4)
                 .InList();
 
-            var result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
+            PackageLookupResult result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
 
             Assert.That(result.Major, Is.Not.Null);
             Assert.That(result.Selected(), Is.EqualTo(result.Major));
@@ -49,15 +52,15 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenThereAreNewMajorMinorAndPatchVersion()
         {
-            var current = new NuGetVersion(1, 2, 3);
-            var candidates = new List<PackageSearchMetadata>
-            {
+            NuGetVersion current = new(1, 2, 3);
+            List<PackageSearchMetadata> candidates =
+            [
                 MetadataForVersion(2, 3, 4),
                 MetadataForVersion(1, 3, 4),
                 MetadataForVersion(1, 2, 4)
-            };
+            ];
 
-            var result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
+            PackageLookupResult result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
 
             Assert.That(result.AllowedChange, Is.EqualTo(VersionChange.Major));
             Assert.That(result.Major, Is.Not.Null);
@@ -76,17 +79,17 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenThereAreOnlyNewPatchVersion()
         {
-            var current = new NuGetVersion(1, 2, 3);
-            var candidates = new List<PackageSearchMetadata>
-            {
+            NuGetVersion current = new(1, 2, 3);
+            List<PackageSearchMetadata> candidates =
+            [
                 MetadataForVersion(1, 2, 7),
                 MetadataForVersion(1, 2, 5),
                 MetadataForVersion(1, 2, 4),
                 MetadataForVersion(1, 2, 6),
                 MetadataForVersion(1, 2, 8)
-            };
+            ];
 
-            var result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
+            PackageLookupResult result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
 
             Assert.That(result.AllowedChange, Is.EqualTo(VersionChange.Major));
             Assert.That(result.Major.Identity.Version, Is.EqualTo(new NuGetVersion(1, 2, 8)));
@@ -101,9 +104,9 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenThereAreOnlyNewMinorAndPatchVersion()
         {
-            var current = new NuGetVersion(1, 2, 3);
-            var candidates = new List<PackageSearchMetadata>
-            {
+            NuGetVersion current = new(1, 2, 3);
+            List<PackageSearchMetadata> candidates =
+            [
                 MetadataForVersion(1, 2, 7),
                 MetadataForVersion(1, 3, 5),
                 MetadataForVersion(1, 2, 4),
@@ -111,9 +114,9 @@ namespace NuKeeper.Tests.Engine
                 MetadataForVersion(1, 2, 6),
                 MetadataForVersion(1, 2, 8),
                 MetadataForVersion(1, 3, 7)
-            };
+            ];
 
-            var result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
+            PackageLookupResult result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
 
             Assert.That(result.AllowedChange, Is.EqualTo(VersionChange.Major));
             Assert.That(result.Major.Identity.Version, Is.EqualTo(new NuGetVersion(1, 4, 1)));
@@ -131,15 +134,15 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenMinorChangesAreAllowed()
         {
-            var current = new NuGetVersion(1, 2, 3);
-            var candidates = new List<PackageSearchMetadata>
-            {
+            NuGetVersion current = new(1, 2, 3);
+            List<PackageSearchMetadata> candidates =
+            [
                 MetadataForVersion(2, 3, 4),
                 MetadataForVersion(1, 3, 4),
                 MetadataForVersion(1, 2, 4)
-            };
+            ];
 
-            var result = VersionChanges.MakeVersions(current, candidates, VersionChange.Minor);
+            PackageLookupResult result = VersionChanges.MakeVersions(current, candidates, VersionChange.Minor);
 
             Assert.That(result.AllowedChange, Is.EqualTo(VersionChange.Minor));
             Assert.That(result.Major, Is.Not.Null);
@@ -153,15 +156,15 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenPatchChangesAreAllowed()
         {
-            var current = new NuGetVersion(1, 2, 3);
-            var candidates = new List<PackageSearchMetadata>
-            {
+            NuGetVersion current = new(1, 2, 3);
+            List<PackageSearchMetadata> candidates =
+            [
                 MetadataForVersion(2, 3, 4),
                 MetadataForVersion(1, 3, 4),
                 MetadataForVersion(1, 2, 4)
-            };
+            ];
 
-            var result = VersionChanges.MakeVersions(current, candidates, VersionChange.Patch);
+            PackageLookupResult result = VersionChanges.MakeVersions(current, candidates, VersionChange.Patch);
 
             Assert.That(result.AllowedChange, Is.EqualTo(VersionChange.Patch));
             Assert.That(result.Major, Is.Not.Null);
@@ -175,9 +178,9 @@ namespace NuKeeper.Tests.Engine
         [Test]
         public void WhenThereAreMultipleVersionsOutOfOrder()
         {
-            var current = new NuGetVersion(1, 2, 3);
-            var candidates = new List<PackageSearchMetadata>
-            {
+            NuGetVersion current = new(1, 2, 3);
+            List<PackageSearchMetadata> candidates =
+            [
                 MetadataForVersion(1, 3, 4),
                 MetadataForVersion(2, 3, 4),
                 MetadataForVersion(1, 2, 4),
@@ -188,9 +191,9 @@ namespace NuKeeper.Tests.Engine
                 MetadataForVersion(1, 1, 1),
                 MetadataForVersion(1, 2, 9),
                 MetadataForVersion(0, 1, 1)
-            };
+            ];
 
-            var result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
+            PackageLookupResult result = VersionChanges.MakeVersions(current, candidates, VersionChange.Major);
 
             Assert.That(result.AllowedChange, Is.EqualTo(VersionChange.Major));
             Assert.That(result.Selected(), Is.EqualTo(result.Major));
@@ -202,8 +205,8 @@ namespace NuKeeper.Tests.Engine
 
         private static PackageSearchMetadata MetadataForVersion(int major, int minor, int patch)
         {
-            var version = new NuGetVersion(major, minor, patch);
-            var packageId = new PackageIdentity("foo", version);
+            NuGetVersion version = new(major, minor, patch);
+            PackageIdentity packageId = new("foo", version);
             return new PackageSearchMetadata(packageId, PackageUpdates.OfficialPackageSource(), DateTimeOffset.Now, null);
         }
     }

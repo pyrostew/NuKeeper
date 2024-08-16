@@ -1,10 +1,11 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.Git;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.AzureDevOps
 {
@@ -44,7 +45,7 @@ namespace NuKeeper.AzureDevOps
                 return null;
             }
 
-            var settings = repositoryUri.IsFile
+            RepositorySettings settings = repositoryUri.IsFile
                 ? await CreateSettingsFromLocal(repositoryUri, targetBranch)
                 : CreateSettingsFromRemote(repositoryUri);
             if (settings == null)
@@ -61,12 +62,12 @@ namespace NuKeeper.AzureDevOps
         {
             // URL pattern is
             // https://{org}.visualstudio.com/{project}/_git/{repo} or
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
-            var org = repositoryUri.Host.Split('.')[0];
+            string org = repositoryUri.Host.Split('.')[0];
             string repoName, project;
 
             if (pathParts.Count == 3)
@@ -85,13 +86,13 @@ namespace NuKeeper.AzureDevOps
 
         private async Task<RepositorySettings> CreateSettingsFromLocal(Uri repositoryUri, string targetBranch)
         {
-            var remoteInfo = new RemoteInfo();
+            RemoteInfo remoteInfo = new();
 
-            var localFolder = repositoryUri;
+            Uri localFolder = repositoryUri;
             if (await _gitDriver.IsGitRepo(repositoryUri))
             {
                 // Check the origin remotes
-                var origin = await _gitDriver.GetRemoteForPlatform(repositoryUri, PlatformHost);
+                GitRemote origin = await _gitDriver.GetRemoteForPlatform(repositoryUri, PlatformHost);
 
                 if (origin != null)
                 {
@@ -110,12 +111,12 @@ namespace NuKeeper.AzureDevOps
             // URL pattern is
             // https://{org}.visualstudio.com/{project}/_git/{repo} or
             // https://{org}.visualstudio.com/_git/{repo} for the default repo
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
-            var org = repositoryUri.Host.Split('.')[0];
+            string org = repositoryUri.Host.Split('.')[0];
             string repoName, project;
 
             if (pathParts.Count == 3)
@@ -141,13 +142,16 @@ namespace NuKeeper.AzureDevOps
             return RepositorySettings(org, project, repoName, remoteInfo);
         }
 
-        private static RepositorySettings RepositorySettings(string org, string project, string repoName, RemoteInfo remoteInfo = null) => new RepositorySettings
+        private static RepositorySettings RepositorySettings(string org, string project, string repoName, RemoteInfo remoteInfo = null)
         {
-            ApiUri = new Uri($"https://{org}.visualstudio.com/"),
-            RepositoryUri = new Uri($"https://{org}.visualstudio.com/{project}/_git/{repoName}/"),
-            RepositoryName = repoName,
-            RepositoryOwner = project,
-            RemoteInfo = remoteInfo
-        };
+            return new()
+            {
+                ApiUri = new Uri($"https://{org}.visualstudio.com/"),
+                RepositoryUri = new Uri($"https://{org}.visualstudio.com/{project}/_git/{repoName}/"),
+                RepositoryName = repoName,
+                RepositoryOwner = project,
+                RemoteInfo = remoteInfo
+            };
+        }
     }
 }

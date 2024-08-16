@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using NuKeeper.Abstractions.RepositoryInspection;
+
+using System.Collections.Generic;
 
 namespace NuKeeper.Inspection.RepositoryInspection
 {

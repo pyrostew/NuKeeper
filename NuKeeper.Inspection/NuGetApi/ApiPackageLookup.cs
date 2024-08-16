@@ -1,10 +1,12 @@
-using System;
-using System.Threading.Tasks;
 using NuGet.Packaging.Core;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.NuGetApi;
+
+using System;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Inspection.NuGetApi
 {
@@ -28,28 +30,21 @@ namespace NuKeeper.Inspection.NuGetApi
                 throw new ArgumentNullException(nameof(package));
             }
 
-            var includePrerelease = ShouldAllowPrerelease(package, usePrerelease);
+            bool includePrerelease = ShouldAllowPrerelease(package, usePrerelease);
 
-            var foundVersions = await _packageVersionsLookup.Lookup(package.Id, includePrerelease, sources);
+            System.Collections.Generic.IReadOnlyCollection<PackageSearchMetadata> foundVersions = await _packageVersionsLookup.Lookup(package.Id, includePrerelease, sources);
             return VersionChanges.MakeVersions(package.Version, foundVersions, allowedChange);
         }
 
         private static bool ShouldAllowPrerelease(PackageIdentity package, UsePrerelease usePrerelease)
         {
-            switch (usePrerelease)
+            return usePrerelease switch
             {
-                case UsePrerelease.Always:
-                    return true;
-
-                case UsePrerelease.Never:
-                    return false;
-
-                case UsePrerelease.FromPrerelease:
-                    return package.Version.IsPrerelease;
-
-                default:
-                    throw new NuKeeperException($"Invalid UsePrerelease value: {usePrerelease}");
-            }
+                UsePrerelease.Always => true,
+                UsePrerelease.Never => false,
+                UsePrerelease.FromPrerelease => package.Version.IsPrerelease,
+                _ => throw new NuKeeperException($"Invalid UsePrerelease value: {usePrerelease}"),
+            };
         }
     }
 }

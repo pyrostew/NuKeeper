@@ -6,8 +6,8 @@ namespace NuKeeper.Inspection.Tests
     {
         public static string GenerateBaseDirectory()
         {
-            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            var baseDirectory = isWindows ? "c:\\temp\\somewhere" : "/temp/somewhere";
+            bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            string baseDirectory = isWindows ? "c:\\temp\\somewhere" : "/temp/somewhere";
             return baseDirectory;
         }
     }

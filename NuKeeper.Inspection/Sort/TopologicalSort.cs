@@ -1,7 +1,8 @@
+using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Inspection.Sort
 {
@@ -13,7 +14,7 @@ namespace NuKeeper.Inspection.Sort
         private readonly INuKeeperLogger _logger;
         private readonly Func<T, T, bool> _match;
 
-        private readonly List<T> _sortedList = new List<T>();
+        private readonly List<T> _sortedList = [];
         private List<SortItemData<T>> _data;
         private bool _cycleFound;
 
@@ -31,7 +32,7 @@ namespace NuKeeper.Inspection.Sort
                 throw new ArgumentNullException(nameof(inputMap));
             }
 
-            var inputItems = inputMap
+            List<T> inputItems = inputMap
                 .Select(i => i.Item)
                 .ToList();
 
@@ -53,7 +54,7 @@ namespace NuKeeper.Inspection.Sort
 
         private IReadOnlyCollection<T> DoSortVisits(IReadOnlyCollection<T> input)
         {
-            foreach (var item in _data)
+            foreach (SortItemData<T> item in _data)
             {
                 if (item.Mark == Mark.None)
                 {
@@ -61,12 +62,7 @@ namespace NuKeeper.Inspection.Sort
                 }
             }
 
-            if (_cycleFound)
-            {
-                return input;
-            }
-
-            return _sortedList;
+            return _cycleFound ? input : _sortedList;
         }
 
         private void Visit(SortItemData<T> item)
@@ -90,7 +86,7 @@ namespace NuKeeper.Inspection.Sort
 
             item.Mark = Mark.Temporary;
 
-            foreach (var dep in NodesDependedOn(item))
+            foreach (SortItemData<T> dep in NodesDependedOn(item))
             {
                 Visit(dep);
             }

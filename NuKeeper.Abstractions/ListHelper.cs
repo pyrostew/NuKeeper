@@ -6,10 +6,10 @@ namespace NuKeeper.Abstractions
     {
         public static List<T> InList<T>(this T item)
         {
-            return new List<T>
-            {
+            return
+            [
                 item
-            };
+            ];
         }
     }
 }

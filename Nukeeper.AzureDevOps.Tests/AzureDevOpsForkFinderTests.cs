@@ -1,12 +1,15 @@
-using System;
 using NSubstitute;
-using NUnit.Framework;
-using System.Threading.Tasks;
+
 using NuKeeper.Abstractions.CollaborationModels;
-using NuKeeper.AzureDevOps;
 using NuKeeper.Abstractions.CollaborationPlatform;
-using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.Configuration;
+using NuKeeper.Abstractions.Logging;
+using NuKeeper.AzureDevOps;
+
+using NUnit.Framework;
+
+using System;
+using System.Threading.Tasks;
 
 namespace Nukeeper.AzureDevOps.Tests
 {
@@ -16,11 +19,11 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task ThrowsWhenNoPushableForkCanBeFound()
         {
-            var fallbackFork = DefaultFork();
+            ForkData fallbackFork = DefaultFork();
 
-            var forkFinder = new AzureDevOpsForkFinder(Substitute.For<ICollaborationPlatform>(), Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
+            AzureDevOpsForkFinder forkFinder = new(Substitute.For<ICollaborationPlatform>(), Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
 
-            var fork = await forkFinder.FindPushFork("testUser", fallbackFork);
+            ForkData fork = await forkFinder.FindPushFork("testUser", fallbackFork);
 
             Assert.That(fork, Is.Null);
         }
@@ -28,33 +31,33 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public void ThrowsWhenPreferFork()
         {
-            var fallbackFork = DefaultFork();
+            ForkData fallbackFork = DefaultFork();
 
-            var argument = Assert.Throws<ArgumentOutOfRangeException>(() => new AzureDevOpsForkFinder(Substitute.For<ICollaborationPlatform>(), Substitute.For<INuKeeperLogger>(), ForkMode.PreferFork));
+            ArgumentOutOfRangeException argument = Assert.Throws<ArgumentOutOfRangeException>(() => new AzureDevOpsForkFinder(Substitute.For<ICollaborationPlatform>(), Substitute.For<INuKeeperLogger>(), ForkMode.PreferFork));
         }
 
 
         [Test]
         public void ThrowsWhenPreferSingleRepository()
         {
-            var fallbackFork = DefaultFork();
+            ForkData fallbackFork = DefaultFork();
 
-            var argument = Assert.Throws<ArgumentOutOfRangeException>(() => new AzureDevOpsForkFinder(Substitute.For<ICollaborationPlatform>(), Substitute.For<INuKeeperLogger>(), ForkMode.PreferSingleRepository));
+            ArgumentOutOfRangeException argument = Assert.Throws<ArgumentOutOfRangeException>(() => new AzureDevOpsForkFinder(Substitute.For<ICollaborationPlatform>(), Substitute.For<INuKeeperLogger>(), ForkMode.PreferSingleRepository));
         }
 
         [Test]
         public async Task FallbackForkIsUsedWhenItIsFound()
         {
-            var fallbackFork = DefaultFork();
-            var fallbackRepoData = RepositoryBuilder.MakeRepository();
+            ForkData fallbackFork = DefaultFork();
+            Repository fallbackRepoData = RepositoryBuilder.MakeRepository();
 
-            var collaborationPlatform = Substitute.For<ICollaborationPlatform>();
-            collaborationPlatform.GetUserRepository(fallbackFork.Owner, fallbackFork.Name)
+            ICollaborationPlatform collaborationPlatform = Substitute.For<ICollaborationPlatform>();
+            _ = collaborationPlatform.GetUserRepository(fallbackFork.Owner, fallbackFork.Name)
                 .Returns(fallbackRepoData);
 
-            var forkFinder = new AzureDevOpsForkFinder(collaborationPlatform, Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
+            AzureDevOpsForkFinder forkFinder = new(collaborationPlatform, Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
 
-            var fork = await forkFinder.FindPushFork("testUser", fallbackFork);
+            ForkData fork = await forkFinder.FindPushFork("testUser", fallbackFork);
 
             Assert.That(fork, Is.Not.Null);
             Assert.That(fork, Is.EqualTo(fallbackFork));
@@ -63,16 +66,16 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task FallbackForkIsNotUsedWhenItIsNotPushable()
         {
-            var fallbackFork = DefaultFork();
-            var fallbackRepoData = RepositoryBuilder.MakeRepository(true, false);
+            ForkData fallbackFork = DefaultFork();
+            Repository fallbackRepoData = RepositoryBuilder.MakeRepository(true, false);
 
-            var collaborationPlatform = Substitute.For<ICollaborationPlatform>();
-            collaborationPlatform.GetUserRepository(fallbackFork.Owner, fallbackFork.Name)
+            ICollaborationPlatform collaborationPlatform = Substitute.For<ICollaborationPlatform>();
+            _ = collaborationPlatform.GetUserRepository(fallbackFork.Owner, fallbackFork.Name)
                 .Returns(fallbackRepoData);
 
-            var forkFinder = new AzureDevOpsForkFinder(Substitute.For<ICollaborationPlatform>(), Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
+            AzureDevOpsForkFinder forkFinder = new(Substitute.For<ICollaborationPlatform>(), Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
 
-            var fork = await forkFinder.FindPushFork("testUser", fallbackFork);
+            ForkData fork = await forkFinder.FindPushFork("testUser", fallbackFork);
 
             Assert.That(fork, Is.Null);
         }
@@ -80,17 +83,17 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task SingleRepoOnlyModeWillNotPreferFork()
         {
-            var fallbackFork = DefaultFork();
+            ForkData fallbackFork = DefaultFork();
 
-            var userRepo = RepositoryBuilder.MakeRepository();
+            Repository userRepo = RepositoryBuilder.MakeRepository();
 
-            var collaborationPlatform = Substitute.For<ICollaborationPlatform>();
-            collaborationPlatform.GetUserRepository(Arg.Any<string>(), Arg.Any<string>())
+            ICollaborationPlatform collaborationPlatform = Substitute.For<ICollaborationPlatform>();
+            _ = collaborationPlatform.GetUserRepository(Arg.Any<string>(), Arg.Any<string>())
                 .Returns(userRepo);
 
-            var forkFinder = new AzureDevOpsForkFinder(collaborationPlatform, Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
+            AzureDevOpsForkFinder forkFinder = new(collaborationPlatform, Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
 
-            var fork = await forkFinder.FindPushFork("testUser", fallbackFork);
+            ForkData fork = await forkFinder.FindPushFork("testUser", fallbackFork);
 
             Assert.That(fork, Is.EqualTo(fallbackFork));
         }
@@ -99,22 +102,22 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task SingleRepoOnlyModeWillNotUseForkWhenUpstreamIsUnsuitable()
         {
-            var fallbackFork = DefaultFork();
+            ForkData fallbackFork = DefaultFork();
 
-            var collaborationPlatform = Substitute.For<ICollaborationPlatform>();
+            ICollaborationPlatform collaborationPlatform = Substitute.For<ICollaborationPlatform>();
 
-            var defaultRepo = RepositoryBuilder.MakeRepository(true, false);
-            collaborationPlatform.GetUserRepository(fallbackFork.Owner, fallbackFork.Name)
+            Repository defaultRepo = RepositoryBuilder.MakeRepository(true, false);
+            _ = collaborationPlatform.GetUserRepository(fallbackFork.Owner, fallbackFork.Name)
                 .Returns(defaultRepo);
 
-            var userRepo = RepositoryBuilder.MakeRepository();
+            Repository userRepo = RepositoryBuilder.MakeRepository();
 
-            collaborationPlatform.GetUserRepository("testUser", fallbackFork.Name)
+            _ = collaborationPlatform.GetUserRepository("testUser", fallbackFork.Name)
                 .Returns(userRepo);
 
-            var forkFinder = new AzureDevOpsForkFinder(collaborationPlatform, Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
+            AzureDevOpsForkFinder forkFinder = new(collaborationPlatform, Substitute.For<INuKeeperLogger>(), ForkMode.SingleRepositoryOnly);
 
-            var fork = await forkFinder.FindPushFork("testUser", fallbackFork);
+            ForkData fork = await forkFinder.FindPushFork("testUser", fallbackFork);
 
             Assert.That(fork, Is.Null);
         }

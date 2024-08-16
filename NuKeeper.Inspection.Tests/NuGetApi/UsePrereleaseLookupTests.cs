@@ -1,14 +1,18 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Inspection.NuGetApi;
+
 using NUnit.Framework;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Inspection.Tests.NuGetApi
 {
@@ -28,18 +32,18 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
             VersionChange dataRange,
             int expectedMajor, int expectedMinor, int expectedPatch, string expectedReleaseLabel)
         {
-            var expectedUpdate = new NuGetVersion(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
-            var resultPackages = PackageVersionTestData.VersionsFor(dataRange);
+            NuGetVersion expectedUpdate = new(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
+            List<PackageSearchMetadata> resultPackages = PackageVersionTestData.VersionsFor(dataRange);
             if (latestPackageIsPrerelease)
             {
                 // Only grab updated prerelease packages for this test - otherwise we'll upgrade to 2.3.4 instead of 2.3.4-prerelease
                 resultPackages = resultPackages.Where(x => x.Identity.Version.IsPrerelease).ToList();
             }
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123Prerelease("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -57,13 +61,13 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         public async Task WhenFromPrereleaseIsAllowedFromPrereleaseAndCurrentVersionIsStable(VersionChange dataRange,
             int expectedMajor, int expectedMinor, int expectedPatch, string expectedReleaseLabel)
         {
-            var expectedUpdate = new NuGetVersion(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
-            var resultPackages = PackageVersionTestData.VersionsFor(dataRange);
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            NuGetVersion expectedUpdate = new(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
+            List<PackageSearchMetadata> resultPackages = PackageVersionTestData.VersionsFor(dataRange);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -87,18 +91,18 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
             VersionChange dataRange,
             int expectedMajor, int expectedMinor, int expectedPatch, string expectedReleaseLabel)
         {
-            var expectedUpdate = new NuGetVersion(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
-            var resultPackages = PackageVersionTestData.VersionsFor(dataRange);
+            NuGetVersion expectedUpdate = new(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
+            List<PackageSearchMetadata> resultPackages = PackageVersionTestData.VersionsFor(dataRange);
             if (latestPackageIsPrerelease)
             {
                 // Only grab updated prerelease packages for this test - otherwise we'll upgrade to 2.3.4 instead of 2.3.4-prerelease
                 resultPackages = resultPackages.Where(x => x.Identity.Version.IsPrerelease).ToList();
             }
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123Prerelease("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -122,18 +126,18 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
             VersionChange dataRange,
             int expectedMajor, int expectedMinor, int expectedPatch, string expectedReleaseLabel)
         {
-            var expectedUpdate = new NuGetVersion(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
-            var resultPackages = PackageVersionTestData.VersionsFor(dataRange);
+            NuGetVersion expectedUpdate = new(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
+            List<PackageSearchMetadata> resultPackages = PackageVersionTestData.VersionsFor(dataRange);
             if (latestPackageIsPrerelease)
             {
                 // Only grab updated prerelease packages for this test - otherwise we'll upgrade to 2.3.4 instead of 2.3.4-prerelease
                 resultPackages = resultPackages.Where(x => x.Identity.Version.IsPrerelease).ToList();
             }
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -152,13 +156,13 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
             VersionChange dataRange,
             int expectedMajor, int expectedMinor, int expectedPatch, string expectedReleaseLabel)
         {
-            var expectedUpdate = new NuGetVersion(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
-            var resultPackages = PackageVersionTestData.VersionsFor(dataRange);
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            NuGetVersion expectedUpdate = new(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
+            List<PackageSearchMetadata> resultPackages = PackageVersionTestData.VersionsFor(dataRange);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123Prerelease("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -177,13 +181,13 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
             VersionChange dataRange,
             int expectedMajor, int expectedMinor, int expectedPatch, string expectedReleaseLabel)
         {
-            var expectedUpdate = new NuGetVersion(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
-            var resultPackages = PackageVersionTestData.VersionsFor(dataRange);
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            NuGetVersion expectedUpdate = new(expectedMajor, expectedMinor, expectedPatch, expectedReleaseLabel);
+            List<PackageSearchMetadata> resultPackages = PackageVersionTestData.VersionsFor(dataRange);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -196,10 +200,10 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
 
         private static IPackageVersionsLookup MockVersionLookup(List<PackageSearchMetadata> actualResults)
         {
-            var allVersions = Substitute.For<IPackageVersionsLookup>();
-            allVersions.Lookup(Arg.Any<string>(), false, Arg.Any<NuGetSources>())
+            IPackageVersionsLookup allVersions = Substitute.For<IPackageVersionsLookup>();
+            _ = allVersions.Lookup(Arg.Any<string>(), false, Arg.Any<NuGetSources>())
                 .Returns(actualResults.Where(x => !x.Identity.Version.IsPrerelease).ToList());
-            allVersions.Lookup(Arg.Any<string>(), true, Arg.Any<NuGetSources>())
+            _ = allVersions.Lookup(Arg.Any<string>(), true, Arg.Any<NuGetSources>())
                 .Returns(actualResults);
             return allVersions;
         }

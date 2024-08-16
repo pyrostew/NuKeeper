@@ -15,19 +15,19 @@ namespace NuKeeper.Inspection.NuGetApi
 
         public void Report(PackageLookupResult lookupResult)
         {
-            var highestVersion = lookupResult?.Major?.Identity?.Version;
+            NuGet.Versioning.NuGetVersion highestVersion = lookupResult?.Major?.Identity?.Version;
             if (highestVersion == null)
             {
                 return;
             }
 
-            var allowing = lookupResult.AllowedChange == VersionChange.Major
+            string allowing = lookupResult.AllowedChange == VersionChange.Major
                 ? string.Empty
                 : $" Allowing {lookupResult.AllowedChange} version updates.";
 
-            var highestMatchVersion = lookupResult.Selected()?.Identity?.Version;
+            NuGet.Versioning.NuGetVersion highestMatchVersion = lookupResult.Selected()?.Identity?.Version;
 
-            var packageId = lookupResult.Major.Identity.Id;
+            string packageId = lookupResult.Major.Identity.Id;
 
             if (highestMatchVersion == null)
             {

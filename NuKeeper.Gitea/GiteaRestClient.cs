@@ -1,7 +1,9 @@
 using Newtonsoft.Json;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Gitea.Model;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,7 +50,7 @@ namespace NuKeeper.Gitea
         /// <returns></returns>
         public async Task<Repository> GetRepository(string ownerName, string repositoryName)
         {
-            var encodedProjectName = $"{ownerName}/{repositoryName}";
+            string encodedProjectName = $"{ownerName}/{repositoryName}";
             return await GetResource<Repository>($"repos/{encodedProjectName}");
         }
 
@@ -80,8 +82,8 @@ namespace NuKeeper.Gitea
         public async Task<BranchInfo> GetRepositoryBranch(string userName, string repositoryName,
             string branchName)
         {
-            var encodedProjectName = $"{userName}/{repositoryName}";
-            var encodedBranchName = HttpUtility.UrlEncode(branchName);
+            string encodedProjectName = $"{userName}/{repositoryName}";
+            string encodedBranchName = HttpUtility.UrlEncode(branchName);
 
             return await GetResource<BranchInfo>(
                 $"repos/{encodedProjectName}/branches/{encodedBranchName}",
@@ -98,8 +100,8 @@ namespace NuKeeper.Gitea
         /// <returns></returns>
         public Task<Repository> ForkRepository(string ownerName, string repositoryName, string organizationName)
         {
-            var encodedProjectName = $"{ownerName}/{repositoryName}";
-            var content = new StringContent(JsonConvert.SerializeObject(new ForkInfo(organizationName)), Encoding.UTF8,
+            string encodedProjectName = $"{ownerName}/{repositoryName}";
+            StringContent content = new(JsonConvert.SerializeObject(new ForkInfo(organizationName)), Encoding.UTF8,
                 "application/json");
 
             return PostResource<Repository>($"repos/{encodedProjectName}/forks", content);
@@ -119,13 +121,13 @@ namespace NuKeeper.Gitea
             string baseBranch)
         {
             // we cannot filter on branch so we have to get them all and find the branches
-            var encodedProjectName = $"{owner}/{repositoryName}";
-            var response = new List<PullRequest>();
-            var prReceived = 0;
-            var page = 1;
+            string encodedProjectName = $"{owner}/{repositoryName}";
+            List<PullRequest> response = [];
+            int prReceived = 0;
+            int page = 1;
             do
             {
-                var result = await GetResource<List<PullRequest>>($"repos/{encodedProjectName}/pulls?state=open&page={page}");
+                List<PullRequest> result = await GetResource<List<PullRequest>>($"repos/{encodedProjectName}/pulls?state=open&page={page}");
                 response.AddRange(result);
                 prReceived = result.Count;
                 page++;
@@ -145,9 +147,9 @@ namespace NuKeeper.Gitea
         /// <returns></returns>
         public async Task<PullRequest> OpenPullRequest(string owner, string repositoryName, CreatePullRequestOption pullRequest)
         {
-            var encodedProjectName = $"{owner}/{repositoryName}";
+            string encodedProjectName = $"{owner}/{repositoryName}";
 
-            var content = new StringContent(JsonConvert.SerializeObject(pullRequest), Encoding.UTF8,
+            StringContent content = new(JsonConvert.SerializeObject(pullRequest), Encoding.UTF8,
                 "application/json");
             return await PostResource<PullRequest>($"repos/{encodedProjectName}/pulls", content);
         }
@@ -155,10 +157,10 @@ namespace NuKeeper.Gitea
         private async Task<T> GetResource<T>(string url, Func<HttpStatusCode, Result<T>> customErrorHandling = null, [CallerMemberName] string caller = null)
             where T : class
         {
-            var fullUrl = new Uri(url, UriKind.Relative);
+            Uri fullUrl = new(url, UriKind.Relative);
             _logger.Detailed($"{caller}: Requesting {fullUrl}");
 
-            var response = await _client.GetAsync(fullUrl);
+            HttpResponseMessage response = await _client.GetAsync(fullUrl);
             return await HandleResponse<T>(response, customErrorHandling, caller);
         }
 
@@ -167,7 +169,7 @@ namespace NuKeeper.Gitea
         {
             _logger.Detailed($"{caller}: Requesting {url}");
 
-            var response = await _client.PostAsync(url, content);
+            HttpResponseMessage response = await _client.PostAsync(url, content);
             return await HandleResponse<T>(response, customErrorHandling, caller);
         }
 
@@ -177,7 +179,7 @@ namespace NuKeeper.Gitea
         {
             string msg;
 
-            var responseBody = await response.Content.ReadAsStringAsync();
+            string responseBody = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
@@ -185,10 +187,12 @@ namespace NuKeeper.Gitea
 
                 if (customErrorHandling != null)
                 {
-                    var result = customErrorHandling(response.StatusCode);
+                    Result<T> result = customErrorHandling(response.StatusCode);
 
                     if (result.IsSuccessful)
+                    {
                         return result.Value;
+                    }
                 }
 
                 switch (response.StatusCode)

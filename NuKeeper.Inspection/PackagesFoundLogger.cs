@@ -1,9 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Logging;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Inspection
 {
@@ -16,18 +17,18 @@ namespace NuKeeper.Inspection
                 throw new ArgumentNullException(nameof(packages));
             }
 
-            var projectPathCount = packages
+            int projectPathCount = packages
                 .Select(p => p.Path)
                 .Distinct()
                 .Count();
 
-            var packageIds = packages
+            List<string> packageIds = packages
                 .OrderBy(p => p.Id)
                 .Select(p => p.Id)
                 .Distinct()
                 .ToList();
 
-            var headline = $"Found {packages.Count} packages in use, {packageIds.Count} distinct, in {projectPathCount} projects.";
+            string headline = $"Found {packages.Count} packages in use, {packageIds.Count} distinct, in {projectPathCount} projects.";
 
             return new LogData
             {

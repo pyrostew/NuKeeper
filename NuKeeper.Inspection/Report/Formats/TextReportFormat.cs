@@ -1,6 +1,7 @@
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.Report.Formats
 {
@@ -22,7 +23,7 @@ namespace NuKeeper.Inspection.Report.Formats
 
             _writer.WriteLine(MessageForCount(updates.Count));
 
-            foreach (var update in updates)
+            foreach (PackageUpdateSet update in updates)
             {
                 _writer.WriteLine(Description.ForUpdateSet(update));
             }
@@ -30,16 +31,7 @@ namespace NuKeeper.Inspection.Report.Formats
 
         private static string MessageForCount(int count)
         {
-            if (count == 0)
-            {
-                return "Found no package updates";
-            }
-            if (count == 1)
-            {
-                return "Found 1 package update";
-            }
-
-            return $"Found {count} package updates";
+            return count == 0 ? "Found no package updates" : count == 1 ? "Found 1 package update" : $"Found {count} package updates";
         }
     }
 }

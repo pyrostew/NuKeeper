@@ -1,6 +1,8 @@
 using Newtonsoft.Json;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,19 +35,19 @@ namespace NuKeeper.AzureDevOps
 
         private async Task<T> PostResource<T>(string url, HttpContent content, bool previewApi = false, [CallerMemberName] string caller = null)
         {
-            var fullUrl = BuildAzureDevOpsUri(url, previewApi);
+            Uri fullUrl = BuildAzureDevOpsUri(url, previewApi);
             _logger.Detailed($"{caller}: Requesting {fullUrl}");
 
-            var response = await _client.PostAsync(fullUrl, content);
+            HttpResponseMessage response = await _client.PostAsync(fullUrl, content);
             return await HandleResponse<T>(response, caller);
         }
 
         private async Task<T> PatchResource<T>(string url, HttpContent content, bool previewApi = false, [CallerMemberName] string caller = null)
         {
-            var fullUrl = BuildAzureDevOpsUri(url, previewApi);
+            Uri fullUrl = BuildAzureDevOpsUri(url, previewApi);
             _logger.Detailed($"{caller}: Requesting {fullUrl}");
 
-            var response = await _client.SendAsync(new HttpRequestMessage(new HttpMethod("PATCH"), fullUrl)
+            HttpResponseMessage response = await _client.SendAsync(new HttpRequestMessage(new HttpMethod("PATCH"), fullUrl)
             {
                 Content = content
             });
@@ -54,10 +56,10 @@ namespace NuKeeper.AzureDevOps
 
         private async Task<T> GetResource<T>(string url, bool previewApi = false, [CallerMemberName] string caller = null)
         {
-            var fullUrl = BuildAzureDevOpsUri(url, previewApi);
+            Uri fullUrl = BuildAzureDevOpsUri(url, previewApi);
             _logger.Detailed($"{caller}: Requesting {fullUrl}");
 
-            var response = await _client.GetAsync(fullUrl);
+            HttpResponseMessage response = await _client.GetAsync(fullUrl);
             return await HandleResponse<T>(response, caller);
         }
 
@@ -65,7 +67,7 @@ namespace NuKeeper.AzureDevOps
         {
             string msg;
 
-            var responseBody = await response.Content.ReadAsStringAsync();
+            string responseBody = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
@@ -109,7 +111,7 @@ namespace NuKeeper.AzureDevOps
                 throw new ArgumentNullException(nameof(relativePath));
             }
 
-            var separator = relativePath.Contains("?") ? "&" : "?";
+            string separator = relativePath.Contains("?") ? "&" : "?";
             return previewApi
                 ? new Uri($"{relativePath}{separator}api-version=4.1-preview.1", UriKind.Relative)
                 : new Uri($"{relativePath}{separator}api-version=4.1", UriKind.Relative);
@@ -124,25 +126,25 @@ namespace NuKeeper.AzureDevOps
 
         public Task<Resource<Account>> GetUserByMail(string email)
         {
-            var encodedEmail = HttpUtility.UrlEncode(email);
+            string encodedEmail = HttpUtility.UrlEncode(email);
             return GetResource<Resource<Account>>($"/_apis/identities?searchFilter=MailAddress&filterValue={encodedEmail}");
         }
 
         public async Task<IEnumerable<Project>> GetProjects()
         {
-            var response = await GetResource<ProjectResource>("/_apis/projects");
+            ProjectResource response = await GetResource<ProjectResource>("/_apis/projects");
             return response?.value.AsEnumerable();
         }
 
         public async Task<IEnumerable<AzureRepository>> GetGitRepositories(string projectName)
         {
-            var response = await GetResource<GitRepositories>($"{projectName}/_apis/git/repositories");
+            GitRepositories response = await GetResource<GitRepositories>($"{projectName}/_apis/git/repositories");
             return response?.value.AsEnumerable();
         }
 
         public async Task<IEnumerable<GitRefs>> GetRepositoryRefs(string projectName, string repositoryId)
         {
-            var response = await GetResource<GitRefsResource>($"{projectName}/_apis/git/repositories/{repositoryId}/refs");
+            GitRefsResource response = await GetResource<GitRefsResource>($"{projectName}/_apis/git/repositories/{repositoryId}/refs");
             return response?.value.AsEnumerable();
         }
 
@@ -153,17 +155,17 @@ namespace NuKeeper.AzureDevOps
              string headBranch,
              string baseBranch)
         {
-            var encodedBaseBranch = HttpUtility.UrlEncode(baseBranch);
-            var encodedHeadBranch = HttpUtility.UrlEncode(headBranch);
+            string encodedBaseBranch = HttpUtility.UrlEncode(baseBranch);
+            string encodedHeadBranch = HttpUtility.UrlEncode(headBranch);
 
-            var response = await GetResource<PullRequestResource>($"{projectName}/_apis/git/repositories/{azureRepositoryId}/pullrequests?searchCriteria.sourceRefName={encodedHeadBranch}&searchCriteria.targetRefName={encodedBaseBranch}");
+            PullRequestResource response = await GetResource<PullRequestResource>($"{projectName}/_apis/git/repositories/{azureRepositoryId}/pullrequests?searchCriteria.sourceRefName={encodedHeadBranch}&searchCriteria.targetRefName={encodedBaseBranch}");
 
             return response?.value.AsEnumerable();
         }
 
         public async Task<IEnumerable<PullRequest>> GetPullRequests(string projectName, string repositoryName, string user)
         {
-            var response = await GetResource<PullRequestResource>(
+            PullRequestResource response = await GetResource<PullRequestResource>(
                 $"{projectName}/_apis/git/repositories/{repositoryName}/pullrequests?searchCriteria.creatorId={user}"
             );
 
@@ -172,25 +174,25 @@ namespace NuKeeper.AzureDevOps
 
         public async Task<PullRequest> CreatePullRequest(PRRequest request, string projectName, string azureRepositoryId)
         {
-            var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+            StringContent content = new(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
             return await PostResource<PullRequest>($"{projectName}/_apis/git/repositories/{azureRepositoryId}/pullrequests", content);
         }
 
         public async Task<LabelResource> CreatePullRequestLabel(LabelRequest request, string projectName, string azureRepositoryId, int pullRequestId)
         {
-            var labelContent = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+            StringContent labelContent = new(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
             return await PostResource<LabelResource>($"{projectName}/_apis/git/repositories/{azureRepositoryId}/pullRequests/{pullRequestId}/labels", labelContent, true);
         }
 
         public async Task<PullRequest> SetAutoComplete(PRRequest request, string projectName, string azureRepositoryId, int pullRequestId)
         {
-            var autoCompleteContent = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+            StringContent autoCompleteContent = new(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
             return await PatchResource<PullRequest>($"{projectName}/_apis/git/repositories/{azureRepositoryId}/pullRequests/{pullRequestId}", autoCompleteContent);
         }
-        
+
         public async Task<IEnumerable<string>> GetGitRepositoryFileNames(string projectName, string azureRepositoryId)
         {
-            var response = await GetResource<GitItemResource>($"{projectName}/_apis/git/repositories/{azureRepositoryId}/items?recursionLevel=Full");
+            GitItemResource response = await GetResource<GitItemResource>($"{projectName}/_apis/git/repositories/{azureRepositoryId}/items?recursionLevel=Full");
             return response?.value.Select(v => v.path).AsEnumerable();
         }
     }

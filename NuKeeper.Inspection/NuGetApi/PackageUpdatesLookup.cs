@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Inspection.NuGetApi
 {
@@ -23,27 +23,27 @@ namespace NuKeeper.Inspection.NuGetApi
             VersionChange allowedChange,
             UsePrerelease usePrerelease)
         {
-            var packageIds = packages
+            IEnumerable<NuGet.Packaging.Core.PackageIdentity> packageIds = packages
                 .Select(p => p.Identity)
                 .Distinct();
 
-            var latestVersions = await _bulkPackageLookup.FindVersionUpdates(
+            IDictionary<NuGet.Packaging.Core.PackageIdentity, Abstractions.NuGetApi.PackageLookupResult> latestVersions = await _bulkPackageLookup.FindVersionUpdates(
                 packageIds, sources, allowedChange, usePrerelease);
 
-            var results = new List<PackageUpdateSet>();
+            List<PackageUpdateSet> results = [];
 
-            foreach (var packageId in latestVersions.Keys)
+            foreach (NuGet.Packaging.Core.PackageIdentity packageId in latestVersions.Keys)
             {
-                var latestPackage = latestVersions[packageId];
-                var matchVersion = latestPackage.Selected().Identity.Version;
+                Abstractions.NuGetApi.PackageLookupResult latestPackage = latestVersions[packageId];
+                NuGet.Versioning.NuGetVersion matchVersion = latestPackage.Selected().Identity.Version;
 
-                var updatesForThisPackage = packages
+                List<PackageInProject> updatesForThisPackage = packages
                     .Where(p => p.Identity.Equals(packageId) && p.Version < matchVersion)
                     .ToList();
 
                 if (updatesForThisPackage.Count > 0)
                 {
-                    var updateSet = new PackageUpdateSet(latestPackage, updatesForThisPackage);
+                    PackageUpdateSet updateSet = new(latestPackage, updatesForThisPackage);
                     results.Add(updateSet);
                 }
             }

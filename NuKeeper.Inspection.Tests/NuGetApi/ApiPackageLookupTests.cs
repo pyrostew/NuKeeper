@@ -1,14 +1,18 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Inspection.NuGetApi;
+
 using NUnit.Framework;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Inspection.Tests.NuGetApi
 {
@@ -18,10 +22,10 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         [Test]
         public async Task WhenNoPackagesAreFound()
         {
-            var allVersionsLookup = MockVersionLookup(new List<PackageSearchMetadata>());
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup([]);
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -35,16 +39,16 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         [Test]
         public async Task WhenThereIsOnlyOneVersion()
         {
-            var resultPackages = new List<PackageSearchMetadata>
-            {
+            List<PackageSearchMetadata> resultPackages =
+            [
                 PackageVersionTestData.PackageVersion(2, 3, 4)
-            };
+            ];
 
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -64,13 +68,13 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         public async Task WhenMajorVersionChangesAreAllowed(VersionChange dataRange,
             int expectedMajor, int expectedMinor, int expectedPatch)
         {
-            var expectedUpdate = new NuGetVersion(expectedMajor, expectedMinor, expectedPatch);
-            var resultPackages = PackageVersionTestData.VersionsFor(dataRange);
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            NuGetVersion expectedUpdate = new(expectedMajor, expectedMinor, expectedPatch);
+            List<PackageSearchMetadata> resultPackages = PackageVersionTestData.VersionsFor(dataRange);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Major,
@@ -88,13 +92,13 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         public async Task WhenMinorVersionChangesAreAllowed(VersionChange dataRange,
             int expectedMajor, int expectedMinor, int expectedPatch)
         {
-            var expectedUpdate = new NuGetVersion(expectedMajor, expectedMinor, expectedPatch);
-            var resultPackages = PackageVersionTestData.VersionsFor(dataRange);
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            NuGetVersion expectedUpdate = new(expectedMajor, expectedMinor, expectedPatch);
+            List<PackageSearchMetadata> resultPackages = PackageVersionTestData.VersionsFor(dataRange);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Minor,
@@ -112,13 +116,13 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         public async Task WhenPatchVersionChangesAreAllowed(VersionChange dataRange,
             int expectedMajor, int expectedMinor, int expectedPatch)
         {
-            var expectedUpdate = new NuGetVersion(expectedMajor, expectedMinor, expectedPatch);
-            var resultPackages = PackageVersionTestData.VersionsFor(dataRange);
-            var allVersionsLookup = MockVersionLookup(resultPackages);
+            NuGetVersion expectedUpdate = new(expectedMajor, expectedMinor, expectedPatch);
+            List<PackageSearchMetadata> resultPackages = PackageVersionTestData.VersionsFor(dataRange);
+            IPackageVersionsLookup allVersionsLookup = MockVersionLookup(resultPackages);
 
             IApiPackageLookup lookup = new ApiPackageLookup(allVersionsLookup);
 
-            var updates = await lookup.FindVersionUpdate(
+            PackageLookupResult updates = await lookup.FindVersionUpdate(
                 CurrentVersion123("TestPackage"),
                 NuGetSources.GlobalFeed,
                 VersionChange.Patch,
@@ -131,8 +135,8 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
 
         private static IPackageVersionsLookup MockVersionLookup(List<PackageSearchMetadata> actualResults)
         {
-            var allVersions = Substitute.For<IPackageVersionsLookup>();
-            allVersions.Lookup(Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<NuGetSources>())
+            IPackageVersionsLookup allVersions = Substitute.For<IPackageVersionsLookup>();
+            _ = allVersions.Lookup(Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<NuGetSources>())
                 .Returns(actualResults);
             return allVersions;
         }

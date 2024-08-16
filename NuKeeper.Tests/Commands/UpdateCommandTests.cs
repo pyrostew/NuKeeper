@@ -1,12 +1,15 @@
-using System;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Output;
 using NuKeeper.Commands;
 using NuKeeper.Inspection.Logging;
 using NuKeeper.Local;
+
 using NUnit.Framework;
+
+using System;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Commands
 {
@@ -16,15 +19,15 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task ShouldCallEngineAndSucceed()
         {
-            var engine = Substitute.For<ILocalEngine>();
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
-            fileSettings.GetSettings().Returns(FileSettings.Empty());
+            _ = fileSettings.GetSettings().Returns(FileSettings.Empty());
 
-            var command = new UpdateCommand(engine, logger, fileSettings);
+            UpdateCommand command = new(engine, logger, fileSettings);
 
-            var status = await command.OnExecute();
+            int status = await command.OnExecute();
 
             Assert.That(status, Is.EqualTo(0));
             await engine
@@ -35,9 +38,9 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task EmptyFileResultsInDefaultSettings()
         {
-            var fileSettings = FileSettings.Empty();
+            FileSettings fileSettings = FileSettings.Empty();
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -60,12 +63,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadMaxAgeFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 Age = "8d"
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -75,13 +78,13 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadIncludeExcludeFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 Include = "foo",
                 Exclude = "bar"
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -92,12 +95,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadVersionChangeFromCommandLineOverFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 Change = VersionChange.Patch
             };
 
-            var settings = await CaptureSettings(fileSettings, VersionChange.Minor);
+            SettingsContainer settings = await CaptureSettings(fileSettings, VersionChange.Minor);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.UserSettings, Is.Not.Null);
@@ -107,12 +110,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadVersionChangeFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 Change = VersionChange.Patch
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.UserSettings, Is.Not.Null);
@@ -122,12 +125,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadMaxPackageUpdatesFromFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 MaxPackageUpdates = 1234
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -137,12 +140,12 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadMaxPackageUpdatesFromCommandLineOverFile()
         {
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 MaxPackageUpdates = 123
             };
 
-            var settings = await CaptureSettings(fileSettings, null, 23456);
+            SettingsContainer settings = await CaptureSettings(fileSettings, null, 23456);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.PackageFilters, Is.Not.Null);
@@ -152,14 +155,14 @@ namespace NuKeeper.Tests.Commands
         [Test]
         public async Task WillReadBranchNameTemplateFromCommandLineOverFile()
         {
-            var testTemplate = "nukeeper/MyBranch";
+            string testTemplate = "nukeeper/MyBranch";
 
-            var fileSettings = new FileSettings
+            FileSettings fileSettings = new()
             {
                 BranchNameTemplate = testTemplate
             };
 
-            var settings = await CaptureSettings(fileSettings);
+            SettingsContainer settings = await CaptureSettings(fileSettings);
 
             Assert.That(settings, Is.Not.Null);
             Assert.That(settings.BranchSettings, Is.Not.Null);
@@ -170,21 +173,23 @@ namespace NuKeeper.Tests.Commands
             VersionChange? change = null,
             int? maxPackageUpdates = null)
         {
-            var logger = Substitute.For<IConfigureLogger>();
-            var fileSettings = Substitute.For<IFileSettingsCache>();
+            IConfigureLogger logger = Substitute.For<IConfigureLogger>();
+            IFileSettingsCache fileSettings = Substitute.For<IFileSettingsCache>();
 
             SettingsContainer settingsOut = null;
-            var engine = Substitute.For<ILocalEngine>();
+            ILocalEngine engine = Substitute.For<ILocalEngine>();
             await engine.Run(Arg.Do<SettingsContainer>(x => settingsOut = x), true);
 
 
-            fileSettings.GetSettings().Returns(settingsIn);
+            _ = fileSettings.GetSettings().Returns(settingsIn);
 
-            var command = new UpdateCommand(engine, logger, fileSettings);
-            command.AllowedChange = change;
-            command.MaxPackageUpdates = maxPackageUpdates;
+            UpdateCommand command = new(engine, logger, fileSettings)
+            {
+                AllowedChange = change,
+                MaxPackageUpdates = maxPackageUpdates
+            };
 
-            await command.OnExecute();
+            _ = await command.OnExecute();
 
             return settingsOut;
         }

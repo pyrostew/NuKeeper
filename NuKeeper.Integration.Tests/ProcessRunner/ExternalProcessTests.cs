@@ -1,5 +1,7 @@
 using NuKeeper.Update.ProcessRunner;
+
 using NUnit.Framework;
+
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -12,7 +14,7 @@ namespace NuKeeper.Integration.Tests.ProcessRunner
         [Test]
         public async Task ValidCommandShouldSucceed()
         {
-            var result = await RunExternalProcess("whoami", false);
+            ProcessOutput result = await RunExternalProcess("whoami", false);
 
             AssertSuccess(result);
         }
@@ -20,7 +22,7 @@ namespace NuKeeper.Integration.Tests.ProcessRunner
         [Test]
         public async Task DotNetCanRun()
         {
-            var result = await RunExternalProcess("dotnet", "--version", true);
+            ProcessOutput result = await RunExternalProcess("dotnet", "--version", true);
 
             AssertSuccess(result);
         }
@@ -28,7 +30,7 @@ namespace NuKeeper.Integration.Tests.ProcessRunner
         [Test]
         public async Task InvalidCommandShouldFail()
         {
-            var result = await RunExternalProcess(Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture), false);
+            ProcessOutput result = await RunExternalProcess(Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture), false);
 
             Assert.That(result.ExitCode, Is.Not.EqualTo(0));
             Assert.That(result.ErrorOutput, Is.Not.Empty);
@@ -38,7 +40,7 @@ namespace NuKeeper.Integration.Tests.ProcessRunner
         [Test]
         public void InvalidCommandShouldThrowWhenSuccessIsEnsured()
         {
-            Assert.ThrowsAsync(Is.AssignableTo<Exception>(),
+            _ = Assert.ThrowsAsync(Is.AssignableTo<Exception>(),
                 () => RunExternalProcess(Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture), true));
         }
 

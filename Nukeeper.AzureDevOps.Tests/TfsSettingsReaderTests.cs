@@ -1,10 +1,13 @@
 using NSubstitute;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.AzureDevOps;
 using NuKeeper.Tests;
+
 using NUnit.Framework;
+
 using System;
 using System.Threading.Tasks;
 
@@ -27,83 +30,82 @@ namespace Nukeeper.AzureDevOps.Tests
         [TestCase("https://internalserver/tfs/")]
         public async Task ReturnsTrueIfCanRead(string value)
         {
-            var canRead = await _azureSettingsReader.CanRead(new Uri(value));
-            Assert.IsTrue(canRead);
+            bool canRead = await _azureSettingsReader.CanRead(new Uri(value));
+            Assert.That(canRead);
         }
 
         [Test]
         public void ReturnsCorrectPlatform()
         {
-            var platform = _azureSettingsReader.Platform;
-            Assert.IsNotNull(platform);
-            Assert.AreEqual(platform, Platform.AzureDevOps);
+            Platform platform = _azureSettingsReader.Platform;
+            Assert.That(platform == Platform.AzureDevOps);
         }
 
         [Test]
         public void UpdateSettings_UpdatesSettings()
         {
-            var settings = new CollaborationPlatformSettings
+            CollaborationPlatformSettings settings = new()
             {
                 Token = "accessToken",
                 BaseApiUrl = new Uri("https://internalserver/tfs/")
             };
             _azureSettingsReader.UpdateCollaborationPlatformSettings(settings);
 
-            Assert.IsNotNull(settings);
-            Assert.AreEqual(settings.BaseApiUrl, "https://internalserver/tfs/");
-            Assert.AreEqual(settings.Token, "accessToken");
-            Assert.AreEqual(settings.ForkMode, ForkMode.SingleRepositoryOnly);
+            Assert.That(settings, Is.Not.Null);
+            Assert.That(settings.BaseApiUrl.ToString() == "https://internalserver/tfs/");
+            Assert.That(settings.Token == "accessToken");
+            Assert.That(settings.ForkMode == ForkMode.SingleRepositoryOnly);
         }
 
         [Test]
         public void AuthSettings_GetsCorrectSettingsFromEnvironment()
         {
-            _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_azure_devops_token").Returns("envToken");
+            _ = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_azure_devops_token").Returns("envToken");
 
-            var settings = new CollaborationPlatformSettings
+            CollaborationPlatformSettings settings = new()
             {
                 Token = "accessToken",
             };
 
             _azureSettingsReader.UpdateCollaborationPlatformSettings(settings);
 
-            Assert.AreEqual(settings.Token, "envToken");
+            Assert.That(settings.Token == "envToken");
         }
 
         [TestCase(null)]
         [TestCase("htps://dev.azure.com")]
         public async Task InvalidUrlReturnsNull(string value)
         {
-            var uriToTest = value == null ? null : new Uri(value);
-            var canRead = await _azureSettingsReader.CanRead(uriToTest);
+            Uri uriToTest = value == null ? null : new Uri(value);
+            bool canRead = await _azureSettingsReader.CanRead(uriToTest);
 
-            Assert.IsFalse(canRead);
+            Assert.That(!canRead);
         }
 
         [Test]
         public async Task RepositorySettings_GetsCorrectSettings()
         {
-            var settings = await _azureSettingsReader.RepositorySettings(new Uri("https://internalserver/tfs/project/_git/reponame"), true);
+            RepositorySettings settings = await _azureSettingsReader.RepositorySettings(new Uri("https://internalserver/tfs/project/_git/reponame"), true);
 
-            Assert.IsNotNull(settings);
-            Assert.AreEqual("https://internalserver/tfs", settings.ApiUri.ToString());
-            Assert.AreEqual("https://user:--PasswordToReplace--@internalserver/tfs/project/_git/reponame/", settings.RepositoryUri.ToString());
-            Assert.AreEqual(settings.RepositoryName, "reponame");
-            Assert.AreEqual(settings.RepositoryOwner, "project");
-            Assert.AreEqual(settings.SetAutoMerge, true);
+            Assert.That(settings, Is.Not.Null);
+            Assert.That("https://internalserver/tfs" == settings.ApiUri.ToString());
+            Assert.That("https://user:--PasswordToReplace--@internalserver/tfs/project/_git/reponame/" == settings.RepositoryUri.ToString());
+            Assert.That(settings.RepositoryName == "reponame");
+            Assert.That(settings.RepositoryOwner == "project");
+            Assert.That(settings.SetAutoMerge);
         }
 
         [Test]
         public async Task RepositorySettings_ReturnsNull()
         {
-            var settings = await _azureSettingsReader.RepositorySettings(null, true);
-            Assert.IsNull(settings);
+            RepositorySettings settings = await _azureSettingsReader.RepositorySettings(null, true);
+            Assert.That(settings is null);
         }
 
         [Test]
         public void RepositorySettings_InvalidFormat()
         {
-            Assert.ThrowsAsync<NuKeeperException>(() =>
+            _ = Assert.ThrowsAsync<NuKeeperException>(() =>
                 _azureSettingsReader.RepositorySettings(
                     new Uri("https://org.visualstudio.com/project/isnot_git/reponame/"), true));
         }
@@ -111,24 +113,24 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task RepositorySettings_HandlesSpaces()
         {
-            var settings = await _azureSettingsReader.RepositorySettings(new Uri("https://internalserver/tfs/project%20name/_git/repo%20name"), true);
+            RepositorySettings settings = await _azureSettingsReader.RepositorySettings(new Uri("https://internalserver/tfs/project%20name/_git/repo%20name"), true);
 
-            Assert.IsNotNull(settings);
-            Assert.AreEqual("https://internalserver/tfs", settings.ApiUri.ToString());
-            Assert.AreEqual("https://user:--PasswordToReplace--@internalserver/tfs/project%20name/_git/repo%20name/", settings.RepositoryUri.AbsoluteUri);
-            Assert.AreEqual("repo name", settings.RepositoryName);
-            Assert.AreEqual("project name", settings.RepositoryOwner);
+            Assert.That(settings, Is.Not.Null);
+            Assert.That("https://internalserver/tfs" == settings.ApiUri.ToString());
+            Assert.That("https://user:--PasswordToReplace--@internalserver/tfs/project%20name/_git/repo%20name/" == settings.RepositoryUri.AbsoluteUri);
+            Assert.That("repo name" == settings.RepositoryName);
+            Assert.That("project name" == settings.RepositoryOwner);
         }
 
         [Test]
         public async Task RepositorySettings_WithRemoteUrlAndTargetBranch_ReturnsRemoteInfoWithSpecifiedBranchName()
         {
-            var uri = new Uri("https://internalserver/tfs/project%20name/_git/repo%20name");
-            var targetBranch = "myTargetBranch";
+            Uri uri = new("https://internalserver/tfs/project%20name/_git/repo%20name");
+            string targetBranch = "myTargetBranch";
 
-            var settings = await _azureSettingsReader.RepositorySettings(uri, false, targetBranch);
+            RepositorySettings settings = await _azureSettingsReader.RepositorySettings(uri, false, targetBranch);
 
-            Assert.AreEqual("myTargetBranch", settings.RemoteInfo.BranchName);
+            Assert.That("myTargetBranch" == settings.RemoteInfo.BranchName);
         }
     }
 }

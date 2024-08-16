@@ -1,12 +1,15 @@
-using System;
-using System.Collections.Generic;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Tests;
+
 using NUnit.Framework;
+
+using System;
+using System.Collections.Generic;
 
 namespace NuKeeper.AzureDevOps.Tests
 {
@@ -14,7 +17,7 @@ namespace NuKeeper.AzureDevOps.Tests
     public class AzureDevOpsCommitWorderTests
     {
         private const string CommitEmoji = "📦";
-        
+
         // Azure DevOps allows a maximum of 4000 characters to be used in a pull request description:
         // https://visualstudio.uservoice.com/forums/330519-azure-devops-formerly-visual-studio-team-services/suggestions/20217283-raise-the-character-limit-for-pull-request-descrip
         private const int MaxCharacterCount = 4000;
@@ -30,10 +33,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void MarkPullRequestTitle_UpdateIsCorrect()
         {
-            var updates = PackageUpdates.For(MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakePullRequestTitle(updates);
+            string report = _sut.MakePullRequestTitle(updates);
 
             Assert.That(report, Is.Not.Null);
             Assert.That(report, Is.Not.Empty);
@@ -43,9 +46,9 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void MakeCommitMessage_OneUpdateIsCorrect()
         {
-            var updates = PackageUpdates.For(MakePackageForV110());
+            PackageUpdateSet updates = PackageUpdates.For(MakePackageForV110());
 
-            var report = _sut.MakeCommitMessage(updates);
+            string report = _sut.MakeCommitMessage(updates);
 
             Assert.That(report, Is.Not.Null);
             Assert.That(report, Is.Not.Empty);
@@ -55,9 +58,9 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void MakeCommitMessage_TwoUpdatesIsCorrect()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100());
+            PackageUpdateSet updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100());
 
-            var report = _sut.MakeCommitMessage(updates);
+            string report = _sut.MakeCommitMessage(updates);
 
             Assert.That(report, Is.Not.Null);
             Assert.That(report, Is.Not.Empty);
@@ -67,9 +70,9 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void MakeCommitMessage_TwoUpdatesSameVersionIsCorrect()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3());
+            PackageUpdateSet updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3());
 
-            var report = _sut.MakeCommitMessage(updates);
+            string report = _sut.MakeCommitMessage(updates);
 
             Assert.That(report, Is.Not.Null);
             Assert.That(report, Is.Not.Empty);
@@ -79,10 +82,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdate_MakeCommitDetails_IsNotEmpty()
         {
-            var updates = PackageUpdates.For(MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Is.Not.Null);
             Assert.That(report, Is.Not.Empty);
@@ -91,10 +94,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdate_MakeCommitDetails_HasStandardTexts()
         {
-            var updates = PackageUpdates.For(MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             AssertContainsStandardText(report);
         }
@@ -102,10 +105,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdate_MakeCommitDetails_HasVersionInfo()
         {
-            var updates = PackageUpdates.For(MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.StartWith("NuKeeper has generated a minor update of `foo.bar` to `1.2.3` from `1.1.0`"));
         }
@@ -113,10 +116,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdate_MakeCommitDetails_HasPublishedDate()
         {
-            var updates = PackageUpdates.For(MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.Contain("`foo.bar 1.2.3` was published at `2018-02-19T11:12:07Z`"));
         }
@@ -125,10 +128,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdate_MakeCommitDetails_HasProjectDetailsAsMarkdownTable()
         {
-            var updates = PackageUpdates.For(MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.Contain("### 1 project update:"));
             Assert.That(report, Does.Contain("| Project   | Package   | From   | To   |"));
@@ -139,10 +142,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void TwoUpdates_MakeCommitDetails_NotEmpty()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Is.Not.Null);
             Assert.That(report, Is.Not.Empty);
@@ -151,10 +154,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void TwoUpdates_MakeCommitDetails_HasStandardTexts()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             AssertContainsStandardText(report);
             Assert.That(report, Does.Contain("1.0.0"));
@@ -163,10 +166,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void TwoUpdates_MakeCommitDetails_HasVersionInfo()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.StartWith("NuKeeper has generated a minor update of `foo.bar` to `1.2.3`"));
             Assert.That(report, Does.Contain("2 versions of `foo.bar` were found in use: `1.1.0`, `1.0.0`"));
@@ -175,10 +178,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void TwoUpdates_MakeCommitDetails_HasProjectList()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV100())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.Contain("2 project updates:"));
             Assert.That(report, Does.Contain("| Project   | Package   | From   | To   |"));
@@ -190,10 +193,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void TwoUpdatesSameVersion_MakeCommitDetails_NotEmpty()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Is.Not.Null);
             Assert.That(report, Is.Not.Empty);
@@ -202,10 +205,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void TwoUpdatesSameVersion_MakeCommitDetails_HasStandardTexts()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             AssertContainsStandardText(report);
         }
@@ -213,10 +216,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void TwoUpdatesSameVersion_MakeCommitDetails_HasVersionInfo()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.StartWith("NuKeeper has generated a minor update of `foo.bar` to `1.2.3` from `1.1.0`"));
         }
@@ -224,10 +227,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void TwoUpdatesSameVersion_MakeCommitDetails_HasProjectList()
         {
-            var updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3())
+            List<PackageUpdateSet> updates = PackageUpdates.For(MakePackageForV110(), MakePackageForV110InProject3())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.Contain("2 project updates:"));
             Assert.That(report, Does.Contain("| Project   | Package   | From   | To   |"));
@@ -239,10 +242,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdate_MakeCommitDetails_HasVersionLimitData()
         {
-            var updates = PackageUpdates.LimitedToMinor(MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.LimitedToMinor(MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.Contain($"There is also a higher version, `foo.bar 2.3.4`, but this was not applied as only `Minor` version changes are allowed."));
         }
@@ -250,12 +253,12 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdateWithDate_MakeCommitDetails_HasVersionLimitDataWithDate()
         {
-            var publishedAt = new DateTimeOffset(2018, 2, 20, 11, 32, 45, TimeSpan.Zero);
+            DateTimeOffset publishedAt = new(2018, 2, 20, 11, 32, 45, TimeSpan.Zero);
 
-            var updates = PackageUpdates.LimitedToMinor(publishedAt, MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.LimitedToMinor(publishedAt, MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.Contain($"There is also a higher version, `foo.bar 2.3.4` published at `2018-02-20T11:32:45Z`,"));
             Assert.That(report, Does.Contain(" ago, but this was not applied as only `Minor` version changes are allowed."));
@@ -264,11 +267,11 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void MakeCommitDetails_DoesNotExceedPullRequestBodyLimit()
         {
-            var packageNameExceedingPullRequestBodyLimit = new string('a', MaxCharacterCount + 1);
-            var updateSet = PackageUpdates.MakeUpdateSet(packageNameExceedingPullRequestBodyLimit)
+            string packageNameExceedingPullRequestBodyLimit = new('a', MaxCharacterCount + 1);
+            List<PackageUpdateSet> updateSet = PackageUpdates.MakeUpdateSet(packageNameExceedingPullRequestBodyLimit)
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updateSet);
+            string report = _sut.MakeCommitDetails(updateSet);
 
             Assert.That(report, Is.Not.Null);
             Assert.That(report, Is.Not.Empty);
@@ -279,10 +282,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdateWithMajorVersionChange()
         {
-            var updates = PackageUpdates.ForNewVersion(new PackageIdentity("foo.bar", new NuGetVersion("2.1.1")), MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.ForNewVersion(new PackageIdentity("foo.bar", new NuGetVersion("2.1.1")), MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.StartWith("NuKeeper has generated a major update of `foo.bar` to `2.1.1` from `1.1.0"));
         }
@@ -290,10 +293,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdateWithMinorVersionChange()
         {
-            var updates = PackageUpdates.ForNewVersion(new PackageIdentity("foo.bar", new NuGetVersion("1.2.1")), MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.ForNewVersion(new PackageIdentity("foo.bar", new NuGetVersion("1.2.1")), MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.StartWith("NuKeeper has generated a minor update of `foo.bar` to `1.2.1` from `1.1.0"));
         }
@@ -301,10 +304,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdateWithPatchVersionChange()
         {
-            var updates = PackageUpdates.ForNewVersion(new PackageIdentity("foo.bar", new NuGetVersion("1.1.9")), MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.ForNewVersion(new PackageIdentity("foo.bar", new NuGetVersion("1.1.9")), MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.StartWith("NuKeeper has generated a patch update of `foo.bar` to `1.1.9` from `1.1.0"));
         }
@@ -312,10 +315,10 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void OneUpdateWithInternalPackageSource()
         {
-            var updates = PackageUpdates.ForInternalSource(MakePackageForV110())
+            List<PackageUpdateSet> updates = PackageUpdates.ForInternalSource(MakePackageForV110())
                 .InList();
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.Not.Contain("on NuGet.org"));
             Assert.That(report, Does.Not.Contain("www.nuget.org"));
@@ -324,15 +327,15 @@ namespace NuKeeper.AzureDevOps.Tests
         [Test]
         public void TwoUpdateSets()
         {
-            var packageTwo = new PackageIdentity("packageTwo", new NuGetVersion("3.4.5"));
+            PackageIdentity packageTwo = new("packageTwo", new NuGetVersion("3.4.5"));
 
-            var updates = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> updates =
+            [
                 PackageUpdates.ForNewVersion(new PackageIdentity("foo.bar", new NuGetVersion("2.1.1")), MakePackageForV110()),
                 PackageUpdates.ForNewVersion(packageTwo, MakePackageForV110("packageTwo"))
-            };
+            ];
 
-            var report = _sut.MakeCommitDetails(updates);
+            string report = _sut.MakeCommitDetails(updates);
 
             Assert.That(report, Does.StartWith("2 packages were updated in 1 project:"));
             Assert.That(report, Does.Contain("| foo.bar | packageTwo |"));
@@ -357,29 +360,29 @@ namespace NuKeeper.AzureDevOps.Tests
 
         private static PackageInProject MakePackageForV110(string packageName = "foo.bar")
         {
-            var path = new PackagePath("c:\\temp", "folder\\src\\project1\\packages.config",
+            PackagePath path = new("c:\\temp", "folder\\src\\project1\\packages.config",
                 PackageReferenceType.PackagesConfig);
             return new PackageInProject(packageName, "1.1.0", path);
         }
 
         private static PackageInProject MakePackageForV100(string packageName = "foo.bar")
         {
-            var path2 = new PackagePath("c:\\temp", "folder\\src\\project2\\packages.config",
+            PackagePath path2 = new("c:\\temp", "folder\\src\\project2\\packages.config",
                 PackageReferenceType.PackagesConfig);
-            var currentPackage2 = new PackageInProject(packageName, "1.0.0", path2);
+            PackageInProject currentPackage2 = new(packageName, "1.0.0", path2);
             return currentPackage2;
         }
 
         private static PackageInProject MakePackageForV110InProject3()
         {
-            var path = new PackagePath("c:\\temp", "folder\\src\\project3\\packages.config", PackageReferenceType.PackagesConfig);
+            PackagePath path = new("c:\\temp", "folder\\src\\project3\\packages.config", PackageReferenceType.PackagesConfig);
 
             return new PackageInProject("foo.bar", "1.1.0", path);
         }
 
         private static string NuGetVersionPackageLink(string packageId, string version)
         {
-            var url = $"https://www.nuget.org/packages/{packageId}/{version}";
+            string url = $"https://www.nuget.org/packages/{packageId}/{version}";
             return $"[{version}]({url})";
         }
     }

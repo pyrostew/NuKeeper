@@ -3,11 +3,13 @@ using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.BitBucketLocal.Models;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 using Repository = NuKeeper.Abstractions.CollaborationModels.Repository;
 
 namespace NuKeeper.BitBucketLocal
@@ -43,10 +45,10 @@ namespace NuKeeper.BitBucketLocal
                 throw new ArgumentNullException(nameof(target));
             }
 
-            var repositories = await _client.GetGitRepositories(target.Owner);
-            var targetRepository = repositories.FirstOrDefault(x => x.Name.Equals(target.Name, StringComparison.InvariantCultureIgnoreCase));
+            IEnumerable<Models.Repository> repositories = await _client.GetGitRepositories(target.Owner);
+            Models.Repository targetRepository = repositories.FirstOrDefault(x => x.Name.Equals(target.Name, StringComparison.InvariantCultureIgnoreCase));
 
-            var pullRequests = await _client.GetPullRequests(target.Owner, targetRepository.Name, headBranch, baseBranch);
+            IEnumerable<PullRequest> pullRequests = await _client.GetPullRequests(target.Owner, targetRepository.Name, headBranch, baseBranch);
 
             return pullRequests.Any();
         }
@@ -63,12 +65,12 @@ namespace NuKeeper.BitBucketLocal
                 throw new ArgumentNullException(nameof(target));
             }
 
-            var repositories = await _client.GetGitRepositories(target.Owner);
-            var targetRepository = repositories.FirstOrDefault(x => x.Name.Equals(target.Name, StringComparison.InvariantCultureIgnoreCase));
+            IEnumerable<Models.Repository> repositories = await _client.GetGitRepositories(target.Owner);
+            Models.Repository targetRepository = repositories.FirstOrDefault(x => x.Name.Equals(target.Name, StringComparison.InvariantCultureIgnoreCase));
 
-            var reviewers = await _client.GetBitBucketReviewers(target.Owner, targetRepository.Name, targetRepository.Id, request.Head, request.BaseRef);
+            IEnumerable<PullRequestReviewer> reviewers = await _client.GetBitBucketReviewers(target.Owner, targetRepository.Name, targetRepository.Id, request.Head, request.BaseRef);
 
-            var pullReq = new PullRequest
+            PullRequest pullReq = new()
             {
                 Title = request.Title,
                 Description = request.Body,
@@ -83,12 +85,12 @@ namespace NuKeeper.BitBucketLocal
                 Reviewers = reviewers.ToList()
             };
 
-            await _client.CreatePullRequest(pullReq, target.Owner, targetRepository.Name);
+            _ = await _client.CreatePullRequest(pullReq, target.Owner, targetRepository.Name);
         }
 
         public async Task<IReadOnlyList<Organization>> GetOrganizations()
         {
-            var projects = await _client.GetProjects();
+            IEnumerable<Models.Repository> projects = await _client.GetProjects();
             return projects
                 .Select(project => new Organization(project.Name))
                 .ToList();
@@ -96,7 +98,7 @@ namespace NuKeeper.BitBucketLocal
 
         public async Task<IReadOnlyList<Repository>> GetRepositoriesForOrganisation(string projectName)
         {
-            var repos = await _client.GetGitRepositories(projectName);
+            IEnumerable<Models.Repository> repos = await _client.GetGitRepositories(projectName);
 
             return repos.Select(repo =>
                     new Repository(repo.Name, false,
@@ -108,19 +110,14 @@ namespace NuKeeper.BitBucketLocal
 
         public async Task<Repository> GetUserRepository(string projectName, string repositoryName)
         {
-            var sanitisedRepositoryName = SanitizeRepositoryName(repositoryName);
-            var repos = await GetRepositoriesForOrganisation(projectName);
+            string sanitisedRepositoryName = SanitizeRepositoryName(repositoryName);
+            IReadOnlyList<Repository> repos = await GetRepositoriesForOrganisation(projectName);
             return repos.Single(x => string.Equals(SanitizeRepositoryName(x.Name), sanitisedRepositoryName, StringComparison.OrdinalIgnoreCase));
         }
 
         private static string SanitizeRepositoryName(string repositoryName)
         {
-            if (string.IsNullOrWhiteSpace(repositoryName))
-            {
-                return string.Empty;
-            }
-
-            return repositoryName.Replace("-", " ");
+            return string.IsNullOrWhiteSpace(repositoryName) ? string.Empty : repositoryName.Replace("-", " ");
         }
 
         public Task<Repository> MakeUserFork(string owner, string repositoryName)
@@ -130,9 +127,9 @@ namespace NuKeeper.BitBucketLocal
 
         public async Task<bool> RepositoryBranchExists(string projectName, string repositoryName, string branchName)
         {
-            var branches = await _client.GetGitRepositoryBranches(projectName, repositoryName);
+            IEnumerable<Branch> branches = await _client.GetGitRepositoryBranches(projectName, repositoryName);
 
-            var count = branches.Count(x => x.DisplayId.Equals(branchName, StringComparison.OrdinalIgnoreCase));
+            int count = branches.Count(x => x.DisplayId.Equals(branchName, StringComparison.OrdinalIgnoreCase));
             if (count > 0)
             {
                 _logger.Detailed($"Branch found for {projectName} / {repositoryName} / {branchName}");
@@ -149,18 +146,18 @@ namespace NuKeeper.BitBucketLocal
                 throw new ArgumentNullException(nameof(searchRequest));
             }
 
-            var totalCount = 0;
-            var repositoryFileNames = new List<string>();
-            foreach (var repo in searchRequest.Repos)
+            int totalCount = 0;
+            List<string> repositoryFileNames = [];
+            foreach (SearchRepo repo in searchRequest.Repos)
             {
                 repositoryFileNames.AddRange(await _client.GetGitRepositoryFileNames(repo.Owner, repo.Name));
             }
 
-            var searchStrings = searchRequest.Term
+            string[] searchStrings = searchRequest.Term
                 .Replace("\"", string.Empty)
                 .Split(new[] { "OR" }, StringSplitOptions.None);
 
-            foreach (var searchString in searchStrings)
+            foreach (string searchString in searchStrings)
             {
                 totalCount += repositoryFileNames.FindAll(x => x.EndsWith(searchString.Trim(), StringComparison.InvariantCultureIgnoreCase)).Count;
             }

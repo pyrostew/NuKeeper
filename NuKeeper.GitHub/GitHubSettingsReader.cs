@@ -1,10 +1,11 @@
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
-using System;
-using System.Linq;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.Git;
+
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace NuKeeper.GitHub
@@ -48,7 +49,7 @@ namespace NuKeeper.GitHub
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            var envToken = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_github_token");
+            string envToken = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_github_token");
             settings.Token = Concat.FirstValue(envToken, settings.Token);
             settings.ForkMode ??= ForkMode.PreferFork;
         }
@@ -60,24 +61,19 @@ namespace NuKeeper.GitHub
                 throw new NuKeeperException($"The provided uri was is not in the correct format. Provided null and format should be {UrlPattern}");
             }
 
-            var settings = repositoryUri.IsFile ?  await CreateSettingsFromLocal(repositoryUri, targetBranch) : CreateSettingsFromRemote(repositoryUri, targetBranch);
-            if (settings == null)
-            {
-                throw new NuKeeperException($"The provided uri was is not in the correct format. Provided {repositoryUri} and format should be {UrlPattern}");
-            }
-
-            return settings;
+            RepositorySettings settings = repositoryUri.IsFile ? await CreateSettingsFromLocal(repositoryUri, targetBranch) : CreateSettingsFromRemote(repositoryUri, targetBranch);
+            return settings ?? throw new NuKeeperException($"The provided uri was is not in the correct format. Provided {repositoryUri} and format should be {UrlPattern}");
         }
 
         private async Task<RepositorySettings> CreateSettingsFromLocal(Uri repositoryUri, string targetBranch)
         {
-            var remoteInfo = new RemoteInfo();
+            RemoteInfo remoteInfo = new();
 
-            var localFolder = repositoryUri;
+            Uri localFolder = repositoryUri;
             if (await _gitDriver.IsGitRepo(repositoryUri))
             {
                 // Check the origin remotes
-                var origin = await _gitDriver.GetRemoteForPlatform(repositoryUri, PlatformHost);
+                GitRemote origin = await _gitDriver.GetRemoteForPlatform(repositoryUri, PlatformHost);
 
                 if (origin != null)
                 {
@@ -95,13 +91,13 @@ namespace NuKeeper.GitHub
 
             // general pattern is https://github.com/owner/reponame.git
             // from this we extract owner and repo name
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
-            var repoOwner = pathParts[0];
-            var repoName = pathParts[1].Replace(".git", string.Empty);
+            string repoOwner = pathParts[0];
+            string repoName = pathParts[1].Replace(".git", string.Empty);
 
             return new RepositorySettings
             {
@@ -122,8 +118,8 @@ namespace NuKeeper.GitHub
 
             // general pattern is https://github.com/owner/reponame.git
             // from this we extract owner and repo name
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
@@ -132,8 +128,8 @@ namespace NuKeeper.GitHub
                 throw new NuKeeperException($"The provided uri was is not in the correct format. Provided {repositoryUri} and format should be {UrlPattern}");
             }
 
-            var repoOwner = pathParts[0];
-            var repoName = pathParts[1].Replace(".git", string.Empty);
+            string repoOwner = pathParts[0];
+            string repoName = pathParts[1].Replace(".git", string.Empty);
 
             return new RepositorySettings
             {

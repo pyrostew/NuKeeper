@@ -1,13 +1,15 @@
+using NuGet.Configuration;
+using NuGet.Versioning;
+
+using NuKeeper.Abstractions.Logging;
+using NuKeeper.Abstractions.NuGet;
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using NuGet.Configuration;
-using NuGet.Versioning;
-using NuKeeper.Abstractions.Logging;
-using NuKeeper.Abstractions.NuGet;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Update.Process
 {
@@ -34,12 +36,12 @@ namespace NuKeeper.Update.Process
             }
 
             XDocument xml;
-            using (var xmlInput = File.OpenRead(currentPackage.Path.FullName))
+            using (FileStream xmlInput = File.OpenRead(currentPackage.Path.FullName))
             {
                 xml = XDocument.Load(xmlInput);
             }
 
-            using (var xmlOutput = File.Open(currentPackage.Path.FullName, FileMode.Truncate))
+            using (FileStream xmlOutput = File.Open(currentPackage.Path.FullName, FileMode.Truncate))
             {
                 UpdateNuspec(xmlOutput, newVersion, currentPackage, xml);
             }
@@ -50,17 +52,17 @@ namespace NuKeeper.Update.Process
         private void UpdateNuspec(Stream fileContents, NuGetVersion newVersion,
             PackageInProject currentPackage, XDocument xml)
         {
-            var packagesNode = xml.Element("package")?.Element("metadata")?.Element("dependencies");
+            XElement packagesNode = xml.Element("package")?.Element("metadata")?.Element("dependencies");
             if (packagesNode == null)
             {
                 return;
             }
 
-            var packageNodeList = packagesNode.Elements()
+            System.Collections.Generic.IEnumerable<XElement> packageNodeList = packagesNode.Elements()
                 .Where(x => x.Name == "dependency" && x.Attributes("id")
                 .Any(a => a.Value == currentPackage.Id));
 
-            foreach (var dependencyToUpdate in packageNodeList)
+            foreach (XElement dependencyToUpdate in packageNodeList)
             {
                 _logger.Detailed($"Updating nuspec depenencies: {currentPackage.Id} in path {currentPackage.Path.FullName}");
                 dependencyToUpdate.Attribute("version").Value = newVersion.ToString();

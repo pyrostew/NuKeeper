@@ -1,9 +1,10 @@
-using System;
-using System.Collections.Generic;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.Output;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Report.Formats;
+
+using System;
+using System.Collections.Generic;
 
 namespace NuKeeper.Inspection.Report
 {
@@ -28,15 +29,15 @@ namespace NuKeeper.Inspection.Report
                 throw new ArgumentNullException(nameof(updates));
             }
 
-            var destinationDesc = destination == OutputDestination.File ?
+            string destinationDesc = destination == OutputDestination.File ?
                 $" File '{fileName}'" :
                 destination.ToString();
 
             _logger.Detailed($"Output report named {reportName}, is {format} to {destinationDesc}");
 
-            using (var writer = MakeReportWriter(destination, fileName))
+            using (IReportWriter writer = MakeReportWriter(destination, fileName))
             {
-                var reporter = MakeReporter(format, writer);
+                IReportFormat reporter = MakeReporter(format, writer);
                 reporter.Write(reportName, updates);
             }
 
@@ -47,46 +48,28 @@ namespace NuKeeper.Inspection.Report
             OutputFormat format,
             IReportWriter writer)
         {
-            switch (format)
+            return format switch
             {
-                case OutputFormat.Off:
-                    return new NullReportFormat();
-
-                case OutputFormat.Text:
-                    return new TextReportFormat(writer);
-
-                case OutputFormat.Csv:
-                    return new CsvReportFormat(writer);
-
-                case OutputFormat.Metrics:
-                    return new MetricsReportFormat(writer);
-
-                case OutputFormat.LibYears:
-                    return new LibYearsReportFormat(writer);
-
-                default:
-                    throw new ArgumentOutOfRangeException($"Invalid OutputFormat: {format}");
-            }
+                OutputFormat.Off => new NullReportFormat(),
+                OutputFormat.Text => new TextReportFormat(writer),
+                OutputFormat.Csv => new CsvReportFormat(writer),
+                OutputFormat.Metrics => new MetricsReportFormat(writer),
+                OutputFormat.LibYears => new LibYearsReportFormat(writer),
+                _ => throw new ArgumentOutOfRangeException($"Invalid OutputFormat: {format}"),
+            };
         }
 
         private static IReportWriter MakeReportWriter(
             OutputDestination destination,
             string fileName)
         {
-            switch (destination)
+            return destination switch
             {
-                case OutputDestination.Console:
-                    return new ConsoleReportWriter();
-
-                case OutputDestination.File:
-                    return new FileReportWriter(fileName);
-
-                case OutputDestination.Off:
-                    return new NullReportWriter();
-
-                default:
-                    throw new ArgumentOutOfRangeException($"Invalid OutputDestination: {destination}");
-            }
+                OutputDestination.Console => new ConsoleReportWriter(),
+                OutputDestination.File => new FileReportWriter(fileName),
+                OutputDestination.Off => new NullReportWriter(),
+                _ => throw new ArgumentOutOfRangeException($"Invalid OutputDestination: {destination}"),
+            };
         }
     }
 }

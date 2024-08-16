@@ -1,12 +1,11 @@
 using Newtonsoft.Json.Linq;
+
 using System;
 using System.Collections.Generic;
 
 namespace NuKeeper.AzureDevOps
 {
-#pragma warning disable CA1056 // Uri properties should not be strings
 #pragma warning disable CA1707 // Identifiers should not contain underscores
-#pragma warning disable CA2227 // Collection properties should be read only
 
     public class Resource<T>
     {

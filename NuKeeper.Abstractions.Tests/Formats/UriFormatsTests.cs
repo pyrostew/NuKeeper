@@ -1,6 +1,8 @@
-using System;
 using NuKeeper.Abstractions.Formats;
+
 using NUnit.Framework;
+
+using System;
 
 namespace NuKeeper.Abstractions.Tests.Formats
 {
@@ -10,9 +12,9 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TrailingSlashIsKeptWhenPresent()
         {
-            var input = new Uri("http://test.com/api/path/");
+            Uri input = new("http://test.com/api/path/");
 
-            var output = UriFormats.EnsureTrailingSlash(input);
+            Uri output = UriFormats.EnsureTrailingSlash(input);
 
             Assert.That(output.ToString(), Is.EqualTo("http://test.com/api/path/"));
         }
@@ -20,9 +22,9 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void TrailingSlashIsAddedWhenMissing()
         {
-            var input = new Uri("http://test.com/api/path");
+            Uri input = new("http://test.com/api/path");
 
-            var output = UriFormats.EnsureTrailingSlash(input);
+            Uri output = UriFormats.EnsureTrailingSlash(input);
 
             Assert.That(output.ToString(), Is.EqualTo("http://test.com/api/path/"));
         }
@@ -30,8 +32,8 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void IsLocalUri()
         {
-            var input = ".";
-            var output = input.ToUri();
+            string input = ".";
+            Uri output = input.ToUri();
 
             Assert.That(output.IsFile, Is.EqualTo(true));
         }
@@ -39,8 +41,8 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void IsRemoteUri()
         {
-            var input = "https://www.google.com";
-            var output = input.ToUri();
+            string input = "https://www.google.com";
+            Uri output = input.ToUri();
 
             Assert.That(output.Host, Is.EqualTo("www.google.com"));
         }
@@ -48,9 +50,9 @@ namespace NuKeeper.Abstractions.Tests.Formats
         [Test]
         public void IsNonExistingUri()
         {
-            var input = "../../../invalidpath/test/1234/abcde";
+            string input = "../../../invalidpath/test/1234/abcde";
 
-            Assert.That(() => input.ToUri(),
+            Assert.That(input.ToUri,
                 Throws.Exception
                     .TypeOf<NuKeeperException>());
         }

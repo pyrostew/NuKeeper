@@ -1,8 +1,9 @@
+using NuKeeper.Abstractions.Git;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions.Git;
 
 namespace NuKeeper.Tests
 {
@@ -15,8 +16,7 @@ namespace NuKeeper.Tests
 
         public Task<IEnumerable<GitRemote>> GetRemotes(Uri repositoryUri)
         {
-            return Task.FromResult<IEnumerable<GitRemote>>(new List<GitRemote>(){ new GitRemote
-            {
+            return Task.FromResult<IEnumerable<GitRemote>>(new List<GitRemote>(){ new() {
                 Name="origin",
                 Url = repositoryUri
             }});

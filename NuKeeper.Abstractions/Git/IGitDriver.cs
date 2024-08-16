@@ -1,7 +1,8 @@
+using NuKeeper.Abstractions.Inspections.Files;
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions.Inspections.Files;
 
 namespace NuKeeper.Abstractions.Git
 {

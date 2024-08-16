@@ -6,12 +6,7 @@ namespace NuKeeper.GitHub
     {
         public static Uri Normalise(Uri value)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            return Normalise(value.ToString());
+            return value == null ? throw new ArgumentNullException(nameof(value)) : Normalise(value.ToString());
         }
 
         public static Uri Normalise(string value)
@@ -23,12 +18,12 @@ namespace NuKeeper.GitHub
 
             if (value.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
             {
-                value = value.Substring(0, value.Length - 4);
+                value = value[..^4];
             }
 
             if (value.EndsWith("/", StringComparison.OrdinalIgnoreCase))
             {
-                value = value.Substring(0, value.Length - 1);
+                value = value[..^1];
             }
 
             return new Uri(value, UriKind.Absolute);

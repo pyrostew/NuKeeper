@@ -1,8 +1,9 @@
-using System;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
+
+using System;
+using System.Threading.Tasks;
 
 namespace NuKeeper.AzureDevOps
 {
@@ -26,10 +27,10 @@ namespace NuKeeper.AzureDevOps
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            var envToken = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_azure_devops_token");
+            string envToken = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_azure_devops_token");
 
             settings.Token = Concat.FirstValue(envToken, settings.Token);
-            settings.ForkMode = settings.ForkMode ?? ForkMode.SingleRepositoryOnly;
+            settings.ForkMode ??= ForkMode.SingleRepositoryOnly;
         }
 
         public abstract Task<RepositorySettings> RepositorySettings(Uri repositoryUri, bool setAutoMerge, string targetBranch = null);

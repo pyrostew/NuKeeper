@@ -1,5 +1,6 @@
-using System;
 using NuKeeper.Abstractions.Logging;
+
+using System;
 
 namespace NuKeeper.Inspection.Logging
 {
@@ -14,7 +15,7 @@ namespace NuKeeper.Inspection.Logging
 
         public void LogError(string message, Exception ex)
         {
-            var saveColor = Console.ForegroundColor;
+            ConsoleColor saveColor = Console.ForegroundColor;
             try
             {
                 Console.ForegroundColor = ConsoleColor.Red;

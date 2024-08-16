@@ -1,12 +1,13 @@
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Configuration;
+using NuKeeper.Abstractions.Git;
+
 using System;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.CollaborationPlatform;
-using NuKeeper.Abstractions.Configuration;
-using NuKeeper.Abstractions.Git;
 
 namespace NuKeeper.Gitea
 {
@@ -32,12 +33,14 @@ namespace NuKeeper.Gitea
         public async Task<bool> CanRead(Uri repositoryUri)
         {
             if (repositoryUri == null || repositoryUri.Segments == null || repositoryUri.Segments.Length < 3)
+            {
                 return false;
+            }
 
             try
             {
                 // There is no real identifier for gitea repos so try to get the gitea swagger json
-                var client = _clientFactory.CreateClient();
+                HttpClient client = _clientFactory.CreateClient();
                 client.BaseAddress = GetBaseAddress(repositoryUri);
                 client.DefaultRequestHeaders.Accept.Add(
                     new MediaTypeWithQualityHeaderValue("application/json"));
@@ -63,7 +66,7 @@ namespace NuKeeper.Gitea
                 throw new ArgumentNullException(nameof(settings));
             }
 
-            var envToken = _environmentVariablesProvider.GetEnvironmentVariable(GiteaTokenEnvironmentVariableName);
+            string envToken = _environmentVariablesProvider.GetEnvironmentVariable(GiteaTokenEnvironmentVariableName);
 
             settings.Token = Concat.FirstValue(envToken, settings.Token);
         }
@@ -76,7 +79,7 @@ namespace NuKeeper.Gitea
                     $"The provided uri was is not in the correct format. Provided null and format should be {UrlPattern}");
             }
 
-            var settings = repositoryUri.IsFile
+            RepositorySettings settings = repositoryUri.IsFile
                 ? await CreateSettingsFromLocal(repositoryUri, targetBranch)
                 : await CreateSettingsFromRemote(repositoryUri, targetBranch);
 
@@ -86,8 +89,8 @@ namespace NuKeeper.Gitea
         private static Task<RepositorySettings> CreateSettingsFromRemote(Uri repositoryUri, string targetBranch)
         {
             // Assumption - url should look like https://yourgiteaUrl/{username}/{projectname}.git";
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
@@ -97,36 +100,38 @@ namespace NuKeeper.Gitea
                     $"The provided uri was is not in the correct format. Provided {repositoryUri} and format should be {UrlPattern}");
             }
 
-            var repoOwner = pathParts[pathParts.Count - 2];
-            var repoName = pathParts[pathParts.Count - 1].Replace(".git", string.Empty);
+            string repoOwner = pathParts[^2];
+            string repoName = pathParts[^1].Replace(".git", string.Empty);
 
             // [ Base URL: /api/v1 ] https://try.gitea.io/api/swagger#
-            var baseAddress = GetBaseAddress(repositoryUri);
-            var apiUri = new Uri(baseAddress, ApiBaseAdress);
+            Uri baseAddress = GetBaseAddress(repositoryUri);
+            Uri apiUri = new(baseAddress, ApiBaseAdress);
 
             return InternalCreateRepositorySettings(apiUri, repositoryUri, repoName, repoOwner, targetBranch == null ? null : new RemoteInfo { BranchName = targetBranch });
         }
 
         private async Task<RepositorySettings> CreateSettingsFromLocal(Uri repositoryUri, string targetBranch)
         {
-            var remoteInfo = new RemoteInfo();
+            RemoteInfo remoteInfo = new();
 
-            var localFolder = repositoryUri;
+            Uri localFolder = repositoryUri;
             if (await _gitDriver.IsGitRepo(repositoryUri))
             {
                 // Check the origin remotes
-                var origin = (await _gitDriver.GetRemotes(repositoryUri)).FirstOrDefault();
+                GitRemote origin = (await _gitDriver.GetRemotes(repositoryUri)).FirstOrDefault();
 
                 if (origin != null)
                 {
-                    var repo = await _gitDriver.DiscoverRepo(repositoryUri); // Set to the folder, because we found a remote git repository
+                    Uri repo = await _gitDriver.DiscoverRepo(repositoryUri); // Set to the folder, because we found a remote git repository
                     if (repo != null && (repo.Segments.Last() == @".git/"))
                     {
-                        var newSegments = repo.Segments.Take(repo.Segments.Length - 1).ToArray();
-                        newSegments[newSegments.Length - 1] =
-                            newSegments[newSegments.Length - 1].TrimEnd('/');
-                        var ub = new UriBuilder(repo);
-                        ub.Path = string.Concat(newSegments);
+                        string[] newSegments = repo.Segments.Take(repo.Segments.Length - 1).ToArray();
+                        newSegments[^1] =
+                            newSegments[^1].TrimEnd('/');
+                        UriBuilder ub = new(repo)
+                        {
+                            Path = string.Concat(newSegments)
+                        };
                         //ub.Query=string.Empty;  //maybe?
                         repo = ub.Uri;
                     }
@@ -143,7 +148,7 @@ namespace NuKeeper.Gitea
                 throw new NuKeeperException("No git repository found");
             }
 
-            var remoteSettings = await CreateSettingsFromRemote(repositoryUri, targetBranch);
+            RepositorySettings remoteSettings = await CreateSettingsFromRemote(repositoryUri, targetBranch);
 
 
             return await InternalCreateRepositorySettings(remoteSettings.ApiUri, remoteSettings.RepositoryUri, remoteSettings.RepositoryName, remoteSettings.RepositoryOwner, remoteInfo);
@@ -163,8 +168,8 @@ namespace NuKeeper.Gitea
 
         private static Uri GetBaseAddress(Uri repoUri)
         {
-            var newSegments = repoUri.Segments.Take(repoUri.Segments.Length - 2).ToArray();
-            var ub = new UriBuilder(repoUri)
+            string[] newSegments = repoUri.Segments.Take(repoUri.Segments.Length - 2).ToArray();
+            UriBuilder ub = new(repoUri)
             {
                 Path = string.Concat(newSegments)
             };

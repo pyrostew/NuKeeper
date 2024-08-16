@@ -1,6 +1,7 @@
-using System.Collections.Generic;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.RepositoryInspection;
+
+using System.Collections.Generic;
 
 namespace NuKeeper.Update.Selection
 {

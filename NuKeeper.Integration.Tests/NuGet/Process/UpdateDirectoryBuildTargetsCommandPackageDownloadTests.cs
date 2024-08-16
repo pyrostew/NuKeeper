@@ -1,12 +1,15 @@
-﻿using System;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using NuGet.Versioning;
+﻿using NuGet.Versioning;
+
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.Process;
+
 using NUnit.Framework;
+
+using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Integration.Tests.NuGet.Process
 {
@@ -44,22 +47,22 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
             const string oldPackageVersion = "5.2.31";
             const string newPackageVersion = "5.3.4";
 
-            var testFolder = memberName;
-            var testFile = "Directory.Build.props";
-            var workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory, testFolder);
-            Directory.CreateDirectory(workDirectory);
-            var projectContents = testProjectContents.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase);
-            var projectPath = Path.Combine(workDirectory, testFile);
+            string testFolder = memberName;
+            string testFile = "Directory.Build.props";
+            string workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory, testFolder);
+            _ = Directory.CreateDirectory(workDirectory);
+            string projectContents = testProjectContents.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase);
+            string projectPath = Path.Combine(workDirectory, testFile);
             await File.WriteAllTextAsync(projectPath, projectContents);
 
-            var command = new UpdateDirectoryBuildTargetsCommand(NukeeperLogger);
+            UpdateDirectoryBuildTargetsCommand command = new(NukeeperLogger);
 
-            var package = new PackageInProject("foo", oldPackageVersion,
+            PackageInProject package = new("foo", oldPackageVersion,
                 new PackagePath(workDirectory, testFile, PackageReferenceType.DirectoryBuildTargets));
 
             await command.Invoke(package, new NuGetVersion(newPackageVersion), null, NuGetSources.GlobalFeed);
 
-            var contents = await File.ReadAllTextAsync(projectPath);
+            string contents = await File.ReadAllTextAsync(projectPath);
             Assert.That(contents, Does.Contain(expectedPackageString.Replace("{packageVersion}", newPackageVersion, StringComparison.OrdinalIgnoreCase)));
             Assert.That(contents, Does.Not.Contain(expectedPackageString.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase)));
         }

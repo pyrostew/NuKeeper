@@ -1,6 +1,7 @@
-using System.Threading.Tasks;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
+
+using System.Threading.Tasks;
 
 namespace NuKeeper.Update
 {

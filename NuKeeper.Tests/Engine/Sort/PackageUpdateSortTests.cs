@@ -1,29 +1,33 @@
+using NSubstitute;
+
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.Logging;
+using NuKeeper.Abstractions.RepositoryInspection;
+using NuKeeper.Inspection.Sort;
+
 using NUnit.Framework;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NSubstitute;
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.Logging;
-using NuKeeper.Inspection.Sort;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Tests.Engine.Sort
 {
     [TestFixture]
     public class PackageUpdateSortTests
     {
-        private static readonly DateTimeOffset StandardPublishedDate = new DateTimeOffset(2018, 2, 19, 11, 12, 7, TimeSpan.Zero);
+        private static readonly DateTimeOffset StandardPublishedDate = new(2018, 2, 19, 11, 12, 7, TimeSpan.Zero);
 
         [Test]
         public void CanSortWhenListIsEmpty()
         {
-            var items = new List<PackageUpdateSet>();
+            List<PackageUpdateSet> items = [];
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output, Is.Not.Null);
         }
@@ -31,10 +35,10 @@ namespace NuKeeper.Tests.Engine.Sort
         [Test]
         public void CanSortOneItem()
         {
-            var items = OnePackageUpdateSet(1)
+            List<PackageUpdateSet> items = OnePackageUpdateSet(1)
                 .InList();
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output, Is.Not.Null);
             Assert.That(output.Count, Is.EqualTo(1));
@@ -44,13 +48,13 @@ namespace NuKeeper.Tests.Engine.Sort
         [Test]
         public void CanSortTwoItems()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 OnePackageUpdateSet(1),
                 OnePackageUpdateSet(2)
-            };
+            ];
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output, Is.Not.Null);
             Assert.That(output.Count, Is.EqualTo(2));
@@ -59,14 +63,14 @@ namespace NuKeeper.Tests.Engine.Sort
         [Test]
         public void CanSortThreeItems()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 OnePackageUpdateSet(1),
                 OnePackageUpdateSet(2),
                 OnePackageUpdateSet(3),
-            };
+            ];
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output, Is.Not.Null);
             Assert.That(output.Count, Is.EqualTo(3));
@@ -75,15 +79,15 @@ namespace NuKeeper.Tests.Engine.Sort
         [Test]
         public void TwoPackageVersionsIsSortedToTop()
         {
-            var twoVersions = MakeTwoProjectVersions();
-            var items = new List<PackageUpdateSet>
-            {
+            PackageUpdateSet twoVersions = MakeTwoProjectVersions();
+            List<PackageUpdateSet> items =
+            [
                 OnePackageUpdateSet(3),
                 OnePackageUpdateSet(4),
                 twoVersions
-            };
+            ];
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output, Is.Not.Null);
             Assert.That(output[0], Is.EqualTo(twoVersions));
@@ -92,14 +96,14 @@ namespace NuKeeper.Tests.Engine.Sort
         [Test]
         public void WillSortByProjectCount()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 OnePackageUpdateSet(1),
                 OnePackageUpdateSet(2),
                 OnePackageUpdateSet(3),
-            };
+            ];
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output.Count, Is.EqualTo(3));
             Assert.That(output[0].CurrentPackages.Count, Is.EqualTo(3));
@@ -110,15 +114,15 @@ namespace NuKeeper.Tests.Engine.Sort
         [Test]
         public void WillSortByProjectVersionsOverProjectCount()
         {
-            var twoVersions = MakeTwoProjectVersions();
-            var items = new List<PackageUpdateSet>
-            {
+            PackageUpdateSet twoVersions = MakeTwoProjectVersions();
+            List<PackageUpdateSet> items =
+            [
                 OnePackageUpdateSet(10),
                 OnePackageUpdateSet(20),
                 twoVersions,
-            };
+            ];
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output.Count, Is.EqualTo(3));
             Assert.That(output[0], Is.EqualTo(twoVersions));
@@ -129,14 +133,14 @@ namespace NuKeeper.Tests.Engine.Sort
         [Test]
         public void WillSortByBiggestVersionChange()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 PackageChange("1.2.4", "1.2.3"),
                 PackageChange("2.0.0", "1.2.3"),
                 PackageChange("1.3.0", "1.2.3")
-            };
+            ];
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output.Count, Is.EqualTo(3));
             Assert.That(SelectedVersion(output[0]), Is.EqualTo("2.0.0"));
@@ -147,14 +151,14 @@ namespace NuKeeper.Tests.Engine.Sort
         [Test]
         public void WillSortByGettingOutOfBetaFirst()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 PackageChange("2.0.0", "1.2.3"),
                 PackageChange("1.2.4", "1.2.3-beta1"),
                 PackageChange("1.3.0-pre-2", "1.2.3-beta1")
-            };
+            ];
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output.Count, Is.EqualTo(3));
             Assert.That(SelectedVersion(output[0]), Is.EqualTo("1.2.4"));
@@ -166,14 +170,14 @@ namespace NuKeeper.Tests.Engine.Sort
         [Test]
         public void WillSortByOldestFirstOverPatchVersionIncrement()
         {
-            var items = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> items =
+            [
                 PackageChange("1.2.6", "1.2.3", StandardPublishedDate),
                 PackageChange("1.2.5", "1.2.3", StandardPublishedDate.AddYears(-1)),
                 PackageChange("1.2.4", "1.2.3", StandardPublishedDate.AddYears(-2))
-            };
+            ];
 
-            var output = Sort(items);
+            List<PackageUpdateSet> output = Sort(items);
 
             Assert.That(output.Count, Is.EqualTo(3));
             Assert.That(SelectedVersion(output[0]), Is.EqualTo("1.2.4"));
@@ -188,7 +192,7 @@ namespace NuKeeper.Tests.Engine.Sort
 
         private static PackageInProject MakePackageInProjectFor(PackageIdentity package)
         {
-            var path = new PackagePath(
+            PackagePath path = new(
                 Path.GetTempPath(),
                 Path.Combine("folder", "src", "project1", "packages.config"),
                 PackageReferenceType.PackagesConfig);
@@ -197,11 +201,11 @@ namespace NuKeeper.Tests.Engine.Sort
 
         private static PackageUpdateSet OnePackageUpdateSet(int projectCount)
         {
-            var newPackage = new PackageIdentity("foo.bar", new NuGetVersion("1.4.5"));
-            var package = new PackageIdentity("foo.bar", new NuGetVersion("1.2.3"));
+            PackageIdentity newPackage = new("foo.bar", new NuGetVersion("1.4.5"));
+            PackageIdentity package = new("foo.bar", new NuGetVersion("1.2.3"));
 
-            var projects = new List<PackageInProject>();
-            foreach (var i in Enumerable.Range(1, projectCount))
+            List<PackageInProject> projects = [];
+            foreach (int i in Enumerable.Range(1, projectCount))
             {
                 projects.Add(MakePackageInProjectFor(package));
             }
@@ -211,40 +215,40 @@ namespace NuKeeper.Tests.Engine.Sort
 
         private static PackageUpdateSet MakeTwoProjectVersions()
         {
-            var newPackage = new PackageIdentity("foo.bar", new NuGetVersion("1.4.5"));
+            PackageIdentity newPackage = new("foo.bar", new NuGetVersion("1.4.5"));
 
-            var package123 = new PackageIdentity("foo.bar", new NuGetVersion("1.2.3"));
-            var package124 = new PackageIdentity("foo.bar", new NuGetVersion("1.2.4"));
-            var projects = new List<PackageInProject>
-            {
+            PackageIdentity package123 = new("foo.bar", new NuGetVersion("1.2.3"));
+            PackageIdentity package124 = new("foo.bar", new NuGetVersion("1.2.4"));
+            List<PackageInProject> projects =
+            [
                 MakePackageInProjectFor(package123),
                 MakePackageInProjectFor(package124),
-            };
+            ];
 
             return PackageUpdates.UpdateSetFor(newPackage, projects.ToArray());
         }
 
         private static PackageUpdateSet PackageChange(string newVersion, string oldVersion, DateTimeOffset? publishedDate = null)
         {
-            var newPackage = new PackageIdentity("foo.bar", new NuGetVersion(newVersion));
-            var oldPackage = new PackageIdentity("foo.bar", new NuGetVersion(oldVersion));
+            PackageIdentity newPackage = new("foo.bar", new NuGetVersion(newVersion));
+            PackageIdentity oldPackage = new("foo.bar", new NuGetVersion(oldVersion));
 
             if (!publishedDate.HasValue)
             {
                 publishedDate = StandardPublishedDate;
             }
 
-            var projects = new List<PackageInProject>
-            {
+            List<PackageInProject> projects =
+            [
                 MakePackageInProjectFor(oldPackage)
-            };
+            ];
 
             return PackageUpdates.UpdateSetFor(newPackage, publishedDate.Value, projects.ToArray());
         }
 
         private static List<PackageUpdateSet> Sort(IReadOnlyCollection<PackageUpdateSet> input)
         {
-            var sorter = new PackageUpdateSetSort(Substitute.For<INuKeeperLogger>());
+            PackageUpdateSetSort sorter = new(Substitute.For<INuKeeperLogger>());
             return sorter.Sort(input)
                 .ToList();
         }

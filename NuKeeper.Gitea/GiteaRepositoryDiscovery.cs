@@ -1,13 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 
-namespace NuKeeper.Gitlab
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace NuKeeper.Gitea
 {
     public class GiteaRepositoryDiscovery : IRepositoryDiscovery
     {
@@ -24,7 +25,7 @@ namespace NuKeeper.Gitlab
         {
             if (settings == null)
             {
-                throw new ArgumentNullException(nameof(settings ));
+                throw new ArgumentNullException(nameof(settings));
             }
 
             switch (settings.Scope)
@@ -46,13 +47,13 @@ namespace NuKeeper.Gitlab
 
         private async Task<IReadOnlyCollection<RepositorySettings>> ForAllOrgs(SourceControlServerSettings settings)
         {
-            var allOrgs = await _collaborationPlatform.GetOrganizations();
+            IReadOnlyList<Abstractions.CollaborationModels.Organization> allOrgs = await _collaborationPlatform.GetOrganizations();
 
-            var allRepos = new List<RepositorySettings>();
+            List<RepositorySettings> allRepos = [];
 
-            foreach (var org in allOrgs)
+            foreach (Abstractions.CollaborationModels.Organization org in allOrgs)
             {
-                var repos = await FromOrganisation(org.Name, settings);
+                IReadOnlyCollection<RepositorySettings> repos = await FromOrganisation(org.Name, settings);
                 allRepos.AddRange(repos);
             }
 
@@ -61,9 +62,9 @@ namespace NuKeeper.Gitlab
 
         private async Task<IReadOnlyCollection<RepositorySettings>> FromOrganisation(string organisationName, SourceControlServerSettings settings)
         {
-            var allOrgRepos = await _collaborationPlatform.GetRepositoriesForOrganisation(organisationName);
+            IReadOnlyList<Abstractions.CollaborationModels.Repository> allOrgRepos = await _collaborationPlatform.GetRepositoriesForOrganisation(organisationName);
 
-            var usableRepos = allOrgRepos
+            List<Abstractions.CollaborationModels.Repository> usableRepos = allOrgRepos
                 .Where(r => MatchesIncludeExclude(r, settings))
                 .Where(RepoIsModifiable)
                 .ToList();

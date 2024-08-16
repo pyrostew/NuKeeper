@@ -1,12 +1,15 @@
-using System;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.AzureDevOps;
 using NuKeeper.Tests;
+
 using NUnit.Framework;
+
+using System;
+using System.Threading.Tasks;
 
 namespace Nukeeper.AzureDevOps.Tests
 {
@@ -26,83 +29,82 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task ReturnsTrueIfCanRead()
         {
-            var canRead = await _azureSettingsReader.CanRead(new Uri("https://org.visualstudio.com"));
-            Assert.IsTrue(canRead);
+            bool canRead = await _azureSettingsReader.CanRead(new Uri("https://org.visualstudio.com"));
+            Assert.That(canRead);
         }
 
         [Test]
         public void ReturnsCorrectPlatform()
         {
-            var platform = _azureSettingsReader.Platform;
-            Assert.IsNotNull(platform);
-            Assert.AreEqual(platform, Platform.AzureDevOps);
+            Platform platform = _azureSettingsReader.Platform;
+            Assert.That(platform == Platform.AzureDevOps);
         }
 
         [Test]
         public void UpdateSettings_UpdatesSettings()
         {
-            var settings = new CollaborationPlatformSettings
+            CollaborationPlatformSettings settings = new()
             {
                 Token = "accessToken",
                 BaseApiUrl = new Uri("https://dev.azure.com/")
             };
             _azureSettingsReader.UpdateCollaborationPlatformSettings(settings);
 
-            Assert.IsNotNull(settings);
-            Assert.AreEqual(settings.BaseApiUrl, "https://dev.azure.com/");
-            Assert.AreEqual(settings.Token, "accessToken");
-            Assert.AreEqual(settings.ForkMode, ForkMode.SingleRepositoryOnly);
+            Assert.That(settings, Is.Not.Null);
+            Assert.That(settings.BaseApiUrl.ToString() == "https://dev.azure.com/");
+            Assert.That(settings.Token == "accessToken");
+            Assert.That(settings.ForkMode == ForkMode.SingleRepositoryOnly);
         }
 
         [Test]
         public void AuthSettings_GetsCorrectSettingsFromEnvironment()
         {
-            _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_azure_devops_token").Returns("envToken");
+            _ = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_azure_devops_token").Returns("envToken");
 
-            var settings = new CollaborationPlatformSettings
+            CollaborationPlatformSettings settings = new()
             {
                 Token = "accessToken",
             };
 
             _azureSettingsReader.UpdateCollaborationPlatformSettings(settings);
 
-            Assert.AreEqual(settings.Token, "envToken");
+            Assert.That(settings.Token == "envToken");
         }
 
         [TestCase(null)]
         [TestCase("htps://dev.azure.com")]
         public async Task InvalidUrlReturnsNull(string value)
         {
-            var uriToTest = value == null ? null : new Uri(value);
-            var canRead = await _azureSettingsReader.CanRead(uriToTest);
+            Uri uriToTest = value == null ? null : new Uri(value);
+            bool canRead = await _azureSettingsReader.CanRead(uriToTest);
 
-            Assert.IsFalse(canRead);
+            Assert.That(!canRead);
         }
 
         [Test]
         public async Task RepositorySettings_GetsCorrectSettings()
         {
-            var settings = await _azureSettingsReader.RepositorySettings(new Uri("https://org.visualstudio.com/project/_git/reponame"), true);
+            RepositorySettings settings = await _azureSettingsReader.RepositorySettings(new Uri("https://org.visualstudio.com/project/_git/reponame"), true);
 
-            Assert.IsNotNull(settings);
-            Assert.AreEqual("https://org.visualstudio.com/", settings.ApiUri.ToString());
-            Assert.AreEqual("https://org.visualstudio.com/project/_git/reponame/", settings.RepositoryUri.ToString());
-            Assert.AreEqual(settings.RepositoryName, "reponame");
-            Assert.AreEqual(settings.RepositoryOwner, "project");
-            Assert.AreEqual(settings.SetAutoMerge, true);
+            Assert.That(settings, Is.Not.Null);
+            Assert.That("https://org.visualstudio.com/" == settings.ApiUri.ToString());
+            Assert.That("https://org.visualstudio.com/project/_git/reponame/" == settings.RepositoryUri.ToString());
+            Assert.That(settings.RepositoryName == "reponame");
+            Assert.That(settings.RepositoryOwner == "project");
+            Assert.That(settings.SetAutoMerge);
         }
 
         [Test]
         public async Task RepositorySettings_ReturnsNull()
         {
-            var settings = await _azureSettingsReader.RepositorySettings(null, true);
-            Assert.IsNull(settings);
+            RepositorySettings settings = await _azureSettingsReader.RepositorySettings(null, true);
+            Assert.That(settings is null);
         }
 
         [Test]
         public void RepositorySettings_InvalidFormat()
         {
-            Assert.ThrowsAsync<NuKeeperException>(() =>
+            _ = Assert.ThrowsAsync<NuKeeperException>(() =>
                 _azureSettingsReader.RepositorySettings(
                     new Uri("https://org.visualstudio.com/project/_git/reponame/thisShouldNotBeHere/"), true));
         }

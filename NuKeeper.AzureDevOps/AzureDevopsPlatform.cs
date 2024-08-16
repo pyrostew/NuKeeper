@@ -3,6 +3,7 @@ using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,14 +38,10 @@ namespace NuKeeper.AzureDevOps
         {
             try
             {
-                var currentAccounts = await _client.GetCurrentUser();
-                var account = currentAccounts.value.FirstOrDefault();
+                Resource<Account> currentAccounts = await _client.GetCurrentUser();
+                Account account = currentAccounts.value.FirstOrDefault();
 
-                if (account == null)
-                    return User.Default;
-
-                return new User(account.accountId, account.accountName, account.Mail);
-
+                return account == null ? User.Default : new User(account.accountId, account.accountName, account.Mail);
             }
             catch (NuKeeperException)
             {
@@ -56,14 +53,10 @@ namespace NuKeeper.AzureDevOps
         {
             try
             {
-                var currentAccounts = await _client.GetUserByMail(email);
-                var account = currentAccounts.value.FirstOrDefault();
+                Resource<Account> currentAccounts = await _client.GetUserByMail(email);
+                Account account = currentAccounts.value.FirstOrDefault();
 
-                if (account == null)
-                    return User.Default;
-
-                return new User(account.accountId, account.accountName, account.Mail);
-
+                return account == null ? User.Default : new User(account.accountId, account.accountName, account.Mail);
             }
             catch (NuKeeperException)
             {
@@ -78,10 +71,10 @@ namespace NuKeeper.AzureDevOps
                 throw new ArgumentNullException(nameof(target));
             }
 
-            var repos = await _client.GetGitRepositories(target.Owner);
-            var repo = repos.Single(x => x.name.Equals(target.Name, StringComparison.OrdinalIgnoreCase));
+            IEnumerable<AzureRepository> repos = await _client.GetGitRepositories(target.Owner);
+            AzureRepository repo = repos.Single(x => x.name.Equals(target.Name, StringComparison.OrdinalIgnoreCase));
 
-            var result = await _client.GetPullRequests(
+            IEnumerable<PullRequest> result = await _client.GetPullRequests(
                 target.Owner,
                 repo.id,
                 $"refs/heads/{headBranch}",
@@ -107,10 +100,10 @@ namespace NuKeeper.AzureDevOps
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var repos = await _client.GetGitRepositories(target.Owner);
-            var repo = repos.Single(x => x.name.Equals(target.Name, StringComparison.OrdinalIgnoreCase));
+            IEnumerable<AzureRepository> repos = await _client.GetGitRepositories(target.Owner);
+            AzureRepository repo = repos.Single(x => x.name.Equals(target.Name, StringComparison.OrdinalIgnoreCase));
 
-            var req = new PRRequest
+            PRRequest req = new()
             {
                 title = request.Title,
                 sourceRefName = $"refs/heads/{request.Head}",
@@ -122,30 +115,30 @@ namespace NuKeeper.AzureDevOps
                 }
             };
 
-            var pullRequest = await _client.CreatePullRequest(req, target.Owner, repo.id);
+            PullRequest pullRequest = await _client.CreatePullRequest(req, target.Owner, repo.id);
 
             if (request.SetAutoMerge)
             {
-                await _client.SetAutoComplete(new PRRequest()
+                _ = await _client.SetAutoComplete(new PRRequest()
+                {
+                    autoCompleteSetBy = new Creator()
                     {
-                        autoCompleteSetBy = new Creator()
-                        {
-                            id = pullRequest.CreatedBy.id
-                        }
-                    }, target.Owner,
+                        id = pullRequest.CreatedBy.id
+                    }
+                }, target.Owner,
                     repo.id,
                     pullRequest.PullRequestId);
             }
 
-            foreach (var label in labels)
+            foreach (string label in labels)
             {
-                await _client.CreatePullRequestLabel(new LabelRequest { name = label }, target.Owner, repo.id, pullRequest.PullRequestId);
+                _ = await _client.CreatePullRequestLabel(new LabelRequest { name = label }, target.Owner, repo.id, pullRequest.PullRequestId);
             }
         }
 
         public async Task<IReadOnlyList<Organization>> GetOrganizations()
         {
-            var projects = await _client.GetProjects();
+            IEnumerable<Project> projects = await _client.GetProjects();
             return projects
                 .Select(project => new Organization(project.name))
                 .ToList();
@@ -153,7 +146,7 @@ namespace NuKeeper.AzureDevOps
 
         public async Task<IReadOnlyList<Repository>> GetRepositoriesForOrganisation(string projectName)
         {
-            var repos = await _client.GetGitRepositories(projectName);
+            IEnumerable<AzureRepository> repos = await _client.GetGitRepositories(projectName);
             return repos.Select(x =>
                     new Repository(x.name, false,
                         new UserPermissions(true, true, true),
@@ -164,7 +157,7 @@ namespace NuKeeper.AzureDevOps
 
         public async Task<Repository> GetUserRepository(string projectName, string repositoryName)
         {
-            var repos = await GetRepositoriesForOrganisation(projectName);
+            IReadOnlyList<Repository> repos = await GetRepositoriesForOrganisation(projectName);
             return repos.Single(x => x.Name.Equals(repositoryName, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -175,10 +168,10 @@ namespace NuKeeper.AzureDevOps
 
         public async Task<bool> RepositoryBranchExists(string projectName, string repositoryName, string branchName)
         {
-            var repos = await _client.GetGitRepositories(projectName);
-            var repo = repos.Single(x => x.name.Equals(repositoryName, StringComparison.OrdinalIgnoreCase));
-            var refs = await _client.GetRepositoryRefs(projectName, repo.id);
-            var count = refs.Count(x => x.name.EndsWith(branchName, StringComparison.OrdinalIgnoreCase));
+            IEnumerable<AzureRepository> repos = await _client.GetGitRepositories(projectName);
+            AzureRepository repo = repos.Single(x => x.name.Equals(repositoryName, StringComparison.OrdinalIgnoreCase));
+            IEnumerable<GitRefs> refs = await _client.GetRepositoryRefs(projectName, repo.id);
+            int count = refs.Count(x => x.name.EndsWith(branchName, StringComparison.OrdinalIgnoreCase));
             if (count > 0)
             {
                 _logger.Detailed($"Branch found for {projectName} / {repositoryName} / {branchName}");
@@ -196,18 +189,18 @@ namespace NuKeeper.AzureDevOps
                 throw new ArgumentNullException(nameof(searchRequest));
             }
 
-            var totalCount = 0;
-            var repositoryFileNames = new List<string>();
-            foreach (var repo in searchRequest.Repos)
+            int totalCount = 0;
+            List<string> repositoryFileNames = [];
+            foreach (SearchRepo repo in searchRequest.Repos)
             {
                 repositoryFileNames.AddRange(await _client.GetGitRepositoryFileNames(repo.Owner, repo.Name));
             }
 
-            var searchStrings = searchRequest.Term
+            string[] searchStrings = searchRequest.Term
                 .Replace("\"", string.Empty)
                 .Split(new[] { "OR" }, StringSplitOptions.None);
 
-            foreach (var searchString in searchStrings)
+            foreach (string searchString in searchStrings)
             {
                 totalCount += repositoryFileNames.FindAll(x => x.EndsWith(searchString.Trim(), StringComparison.InvariantCultureIgnoreCase)).Count;
             }
@@ -217,7 +210,7 @@ namespace NuKeeper.AzureDevOps
 
         public async Task<int> GetNumberOfOpenPullRequests(string projectName, string repositoryName)
         {
-            var user = await GetCurrentUser();
+            User user = await GetCurrentUser();
 
             if (user == User.Default)
             {
@@ -225,7 +218,7 @@ namespace NuKeeper.AzureDevOps
                 user = await GetUserByMail("bot@nukeeper.com");
             }
 
-            var prs = await GetPullRequestsForUser(
+            IEnumerable<PullRequest> prs = await GetPullRequestsForUser(
                 projectName,
                 repositoryName,
                 user == User.Default ?
@@ -235,7 +228,7 @@ namespace NuKeeper.AzureDevOps
 
             if (user == User.Default)
             {
-                var relevantPrs = prs?
+                IEnumerable<PullRequest> relevantPrs = prs?
                     .Where(
                         pr => pr.labels
                             ?.FirstOrDefault(

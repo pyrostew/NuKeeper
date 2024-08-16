@@ -1,5 +1,7 @@
 using NuKeeper.Abstractions.Logging;
+
 using NUnit.Framework;
+
 using System;
 using System.Collections.Concurrent;
 
@@ -9,7 +11,7 @@ namespace NuKeeper.Integration.Tests.LogHelpers
     {
         private readonly LogLevel _logLevel;
 
-        private readonly ConcurrentQueue<string> _buffer = new ConcurrentQueue<string>();
+        private readonly ConcurrentQueue<string> _buffer = new();
 
         public NuKeeperTestLogger(LogLevel logLevel = LogLevel.Detailed)
         {
@@ -23,12 +25,12 @@ namespace NuKeeper.Integration.Tests.LogHelpers
 
         public void DumpLogToTestOutput()
         {
-            var test = TestContext.CurrentContext.Test.Name;
+            string test = TestContext.CurrentContext.Test.Name;
 
             if (!_buffer.IsEmpty)
             {
                 TestContext.Error.WriteLine($"{test}: NuKeeper Log:");
-                while (_buffer.TryDequeue(out var line))
+                while (_buffer.TryDequeue(out string line))
                 {
                     TestContext.Error.WriteLine(line);
                 }
@@ -57,18 +59,18 @@ namespace NuKeeper.Integration.Tests.LogHelpers
 
         private void Log(string message, LogLevel? level = null, Exception ex = null)
         {
-            var test = TestContext.CurrentContext.Test.Name;
+            string test = TestContext.CurrentContext.Test.Name;
 
             if (_logLevel >= (level ?? LogLevel.Detailed))
             {
-                var levelString = level?.ToString() ?? "Error";
+                string levelString = level?.ToString() ?? "Error";
 
                 _buffer.Enqueue($"{test}: {levelString} - {message}");
 
                 if (ex != null)
                 {
                     _buffer.Enqueue($"{test}:   {ex.GetType().Name} : {ex.Message}");
-                    foreach (var line in ex.StackTrace.Split(Environment.NewLine.ToCharArray()))
+                    foreach (string line in ex.StackTrace.Split(Environment.NewLine.ToCharArray()))
                     {
                         if (!string.IsNullOrEmpty(line))
                         {

@@ -1,7 +1,9 @@
 using NSubstitute;
+
 using NuGet.Configuration;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
@@ -13,7 +15,9 @@ using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Engine;
 using NuKeeper.Engine.Packages;
 using NuKeeper.Update;
+
 using NUnit.Framework;
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -34,34 +38,34 @@ namespace NuKeeper.Tests.Engine.Packages
             _existingCommitFilter = Substitute.For<IExistingCommitFilter>();
             _updateRunner = Substitute.For<IUpdateRunner>();
 
-            _existingCommitFilter
+            _ = _existingCommitFilter
                 .Filter(
                     Arg.Any<IGitDriver>(),
                     Arg.Any<IReadOnlyCollection<PackageUpdateSet>>(),
                     Arg.Any<string>(),
                     Arg.Any<string>()
                 )
-                .Returns(ci => ((IReadOnlyCollection<PackageUpdateSet>)ci[1]));
+                .Returns(ci => (IReadOnlyCollection<PackageUpdateSet>)ci[1]);
         }
 
         [Test]
         public async Task MakeUpdatePullRequests_TwoUpdatesOneExistingPrAndMaxOpenPrIsTwo_CreatesOnlyOnePr()
         {
-            _collaborationFactory
+            _ = _collaborationFactory
                 .CollaborationPlatform
                 .GetNumberOfOpenPullRequests(Arg.Any<string>(), Arg.Any<string>())
                 .Returns(1);
-            var packages = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> packages =
+            [
                 MakePackageUpdateSet("foo.bar", "1.0.0"),
                 MakePackageUpdateSet("notfoo.bar", "2.0.0")
-            };
-            var repoData = MakeRepositoryData();
-            var settings = MakeSettings();
+            ];
+            RepositoryData repoData = MakeRepositoryData();
+            SettingsContainer settings = MakeSettings();
             settings.UserSettings.MaxOpenPullRequests = 2;
-            var sut = MakePackageUpdater();
+            PackageUpdater sut = MakePackageUpdater();
 
-            var (updatesDone, thresholdReached) = await sut.MakeUpdatePullRequests(
+            (int updatesDone, bool thresholdReached) = await sut.MakeUpdatePullRequests(
                 Substitute.For<IGitDriver>(),
                 repoData,
                 packages,
@@ -76,20 +80,20 @@ namespace NuKeeper.Tests.Engine.Packages
         [Test]
         public async Task MakeUpdatePullRequest_OpenPrsEqualsMaxOpenPrs_DoesNotCreateNewPr()
         {
-            _collaborationFactory
+            _ = _collaborationFactory
                 .CollaborationPlatform
                 .GetNumberOfOpenPullRequests(Arg.Any<string>(), Arg.Any<string>())
                 .Returns(2);
-            var packages = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> packages =
+            [
                 MakePackageUpdateSet("foo.bar", "1.0.0")
-            };
-            var repoData = MakeRepositoryData();
-            var settings = MakeSettings();
+            ];
+            RepositoryData repoData = MakeRepositoryData();
+            SettingsContainer settings = MakeSettings();
             settings.UserSettings.MaxOpenPullRequests = 2;
-            var sut = MakePackageUpdater();
+            PackageUpdater sut = MakePackageUpdater();
 
-            var (updatesDone, thresHoldReached) = await sut.MakeUpdatePullRequests(
+            (int updatesDone, bool thresHoldReached) = await sut.MakeUpdatePullRequests(
                 Substitute.For<IGitDriver>(),
                 repoData,
                 packages,
@@ -104,13 +108,13 @@ namespace NuKeeper.Tests.Engine.Packages
         [Test]
         public async Task MakeUpdatePullRequest_UpdateDoesNotCreatePrDueToExistingCommits_DoesNotPreventNewUpdates()
         {
-            var packageSetOne = MakePackageUpdateSet("foo.bar", "1.0.0");
-            var packageSetTwo = MakePackageUpdateSet("notfoo.bar", "2.0.0");
-            _collaborationFactory
+            PackageUpdateSet packageSetOne = MakePackageUpdateSet("foo.bar", "1.0.0");
+            PackageUpdateSet packageSetTwo = MakePackageUpdateSet("notfoo.bar", "2.0.0");
+            _ = _collaborationFactory
                 .CollaborationPlatform
                 .GetNumberOfOpenPullRequests(Arg.Any<string>(), Arg.Any<string>())
                 .Returns(1);
-            _existingCommitFilter
+            _ = _existingCommitFilter
                 .Filter(
                     Arg.Any<IGitDriver>(),
                     Arg.Any<IReadOnlyCollection<PackageUpdateSet>>(),
@@ -118,13 +122,13 @@ namespace NuKeeper.Tests.Engine.Packages
                     Arg.Any<string>()
                 )
                 .Returns(new List<PackageUpdateSet>(), new List<PackageUpdateSet> { packageSetTwo });
-            var packages = new List<PackageUpdateSet> { packageSetOne, packageSetTwo };
-            var repoData = MakeRepositoryData();
-            var settings = MakeSettings();
+            List<PackageUpdateSet> packages = [packageSetOne, packageSetTwo];
+            RepositoryData repoData = MakeRepositoryData();
+            SettingsContainer settings = MakeSettings();
             settings.UserSettings.MaxOpenPullRequests = 2;
-            var sut = MakePackageUpdater();
+            PackageUpdater sut = MakePackageUpdater();
 
-            var (updatesDone, _) = await sut.MakeUpdatePullRequests(
+            (int updatesDone, _) = await sut.MakeUpdatePullRequests(
                 Substitute.For<IGitDriver>(),
                 repoData,
                 packages,
@@ -138,23 +142,23 @@ namespace NuKeeper.Tests.Engine.Packages
         [Test]
         public async Task MakeUpdatePullRequest_UpdateDoesNotCreatePrDueToExistingPr_DoesNotPreventNewUpdates()
         {
-            var packageSetOne = MakePackageUpdateSet("foo.bar", "1.0.0");
-            var packageSetTwo = MakePackageUpdateSet("notfoo.bar", "2.0.0");
-            _collaborationFactory
+            PackageUpdateSet packageSetOne = MakePackageUpdateSet("foo.bar", "1.0.0");
+            PackageUpdateSet packageSetTwo = MakePackageUpdateSet("notfoo.bar", "2.0.0");
+            _ = _collaborationFactory
                 .CollaborationPlatform
                 .GetNumberOfOpenPullRequests(Arg.Any<string>(), Arg.Any<string>())
                 .Returns(1);
-            _collaborationFactory
+            _ = _collaborationFactory
                 .CollaborationPlatform
                 .PullRequestExists(Arg.Any<ForkData>(), Arg.Any<string>(), Arg.Any<string>())
                 .Returns(true, false);
-            var packages = new List<PackageUpdateSet> { packageSetOne, packageSetTwo };
-            var repoData = MakeRepositoryData();
-            var settings = MakeSettings();
+            List<PackageUpdateSet> packages = [packageSetOne, packageSetTwo];
+            RepositoryData repoData = MakeRepositoryData();
+            SettingsContainer settings = MakeSettings();
             settings.UserSettings.MaxOpenPullRequests = 2;
-            var sut = MakePackageUpdater();
+            PackageUpdater sut = MakePackageUpdater();
 
-            var (updatesDone, _) = await sut.MakeUpdatePullRequests(
+            (int updatesDone, _) = await sut.MakeUpdatePullRequests(
                 Substitute.For<IGitDriver>(),
                 repoData,
                 packages,
@@ -168,21 +172,21 @@ namespace NuKeeper.Tests.Engine.Packages
         [Test]
         public async Task MakeUpdatePullRequests_LessPrsThanMaxOpenPrs_ReturnsNotThresholdReached()
         {
-            _collaborationFactory
+            _ = _collaborationFactory
                 .CollaborationPlatform
                 .GetNumberOfOpenPullRequests(Arg.Any<string>(), Arg.Any<string>())
                 .Returns(1);
-            var packages = new List<PackageUpdateSet>
-            {
+            List<PackageUpdateSet> packages =
+            [
                 MakePackageUpdateSet("foo.bar", "1.0.0"),
                 MakePackageUpdateSet("notfoo.bar", "2.0.0")
-            };
-            var repoData = MakeRepositoryData();
-            var settings = MakeSettings();
+            ];
+            RepositoryData repoData = MakeRepositoryData();
+            SettingsContainer settings = MakeSettings();
             settings.UserSettings.MaxOpenPullRequests = 10;
-            var sut = MakePackageUpdater();
+            PackageUpdater sut = MakePackageUpdater();
 
-            var (updatesDone, thresholdReached) = await sut.MakeUpdatePullRequests(
+            (int updatesDone, bool thresholdReached) = await sut.MakeUpdatePullRequests(
                 Substitute.For<IGitDriver>(),
                 repoData,
                 packages,

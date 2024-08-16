@@ -1,36 +1,30 @@
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
+
+using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Formats;
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NuGet.Packaging.Core;
-using NuGet.Versioning;
-using NuKeeper.Abstractions.CollaborationPlatform;
-using NuKeeper.Abstractions.Formats;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.AzureDevOps
 {
     public class AzureDevOpsCommitWorder : ICommitWorder
     {
         private const string CommitEmoji = "📦";
-    
+
         // Azure DevOps allows a maximum of 4000 characters to be used in a pull request description:
         // https://visualstudio.uservoice.com/forums/330519-azure-devops-formerly-visual-studio-team-services/suggestions/20217283-raise-the-character-limit-for-pull-request-descrip
         private const int MaxCharacterCount = 4000;
 
         public string MakePullRequestTitle(IReadOnlyCollection<PackageUpdateSet> updates)
         {
-            if (updates == null)
-            {
-                throw new ArgumentNullException(nameof(updates));
-            }
-
-            if (updates.Count == 1)
-            {
-                return PackageTitle(updates.First());
-            }
-
-            return $"{CommitEmoji} Automatic update of {updates.Count} packages";
+            return updates == null
+                ? throw new ArgumentNullException(nameof(updates))
+                : updates.Count == 1 ? PackageTitle(updates.First()) : $"{CommitEmoji} Automatic update of {updates.Count} packages";
         }
 
         private static string PackageTitle(PackageUpdateSet updates)
@@ -40,12 +34,7 @@ namespace NuKeeper.AzureDevOps
 
         public string MakeCommitMessage(PackageUpdateSet updates)
         {
-            if (updates == null)
-            {
-                throw new ArgumentNullException(nameof(updates));
-            }
-
-            return $"{PackageTitle(updates)}";
+            return updates == null ? throw new ArgumentNullException(nameof(updates)) : $"{PackageTitle(updates)}";
         }
 
         public string MakeCommitDetails(IReadOnlyCollection<PackageUpdateSet> updates)
@@ -55,16 +44,16 @@ namespace NuKeeper.AzureDevOps
                 throw new ArgumentNullException(nameof(updates));
             }
 
-            var builder = new StringBuilder();
+            StringBuilder builder = new();
 
             if (updates.Count > 1)
             {
                 MultiPackage(updates, builder);
             }
 
-            foreach (var update in updates)
+            foreach (PackageUpdateSet update in updates)
             {
-                builder.AppendLine(MakeCommitVersionDetails(update));
+                _ = builder.AppendLine(MakeCommitVersionDetails(update));
             }
 
             AddCommitFooter(builder);
@@ -80,97 +69,97 @@ namespace NuKeeper.AzureDevOps
 
         private static void MultiPackage(IReadOnlyCollection<PackageUpdateSet> updates, StringBuilder builder)
         {
-            var packageNames = updates
+            IEnumerable<string> packageNames = updates
                 .Select(p => p.SelectedId);
 
-            var projects = updates.SelectMany(
+            List<string> projects = updates.SelectMany(
                     u => u.CurrentPackages)
                 .Select(p => p.Path.FullName)
                 .Distinct()
                 .ToList();
 
-            var projectOptS = (projects.Count > 1) ? "s" : string.Empty;
+            string projectOptS = (projects.Count > 1) ? "s" : string.Empty;
 
-            builder.AppendLine($"{updates.Count} packages were updated in {projects.Count} project{projectOptS}:");
+            _ = builder.AppendLine($"{updates.Count} packages were updated in {projects.Count} project{projectOptS}:");
             string updatedPackageNames = "|";
-            foreach (var packageName in packageNames)
+            foreach (string packageName in packageNames)
             {
                 updatedPackageNames += $" {packageName} |";
             }
 
-            builder.AppendLine(updatedPackageNames);
-            builder.AppendLine("");
-            builder.AppendLine("## Details of updated packages");
-            builder.AppendLine("");
+            _ = builder.AppendLine(updatedPackageNames);
+            _ = builder.AppendLine("");
+            _ = builder.AppendLine("## Details of updated packages");
+            _ = builder.AppendLine("");
         }
 
         private static string MakeCommitVersionDetails(PackageUpdateSet updates)
         {
-            var versionsInUse = updates.CurrentPackages
+            List<NuGetVersion> versionsInUse = updates.CurrentPackages
                 .Select(u => u.Version)
                 .Distinct()
                 .ToList();
 
-            var oldVersions = versionsInUse
+            List<string> oldVersions = versionsInUse
                 .Select(v => CodeQuote(v.ToString()))
                 .ToList();
 
-            var minOldVersion = versionsInUse.Min();
+            NuGetVersion minOldVersion = versionsInUse.Min();
 
-            var newVersion = CodeQuote(updates.SelectedVersion.ToString());
-            var packageId = CodeQuote(updates.SelectedId);
+            string newVersion = CodeQuote(updates.SelectedVersion.ToString());
+            string packageId = CodeQuote(updates.SelectedId);
 
-            var changeLevel = ChangeLevel(minOldVersion, updates.SelectedVersion);
+            string changeLevel = ChangeLevel(minOldVersion, updates.SelectedVersion);
 
-            var builder = new StringBuilder();
+            StringBuilder builder = new();
 
             if (oldVersions.Count == 1)
             {
-                builder.AppendLine($"NuKeeper has generated a {changeLevel} update of {packageId} to {newVersion} from {oldVersions.JoinWithCommas()}");
+                _ = builder.AppendLine($"NuKeeper has generated a {changeLevel} update of {packageId} to {newVersion} from {oldVersions.JoinWithCommas()}");
             }
             else
             {
-                builder.AppendLine($"NuKeeper has generated a {changeLevel} update of {packageId} to {newVersion}");
-                builder.AppendLine($"{oldVersions.Count} versions of {packageId} were found in use: {oldVersions.JoinWithCommas()}");
+                _ = builder.AppendLine($"NuKeeper has generated a {changeLevel} update of {packageId} to {newVersion}");
+                _ = builder.AppendLine($"{oldVersions.Count} versions of {packageId} were found in use: {oldVersions.JoinWithCommas()}");
             }
 
             if (updates.Selected.Published.HasValue)
             {
-                var packageWithVersion = CodeQuote(updates.SelectedId + " " + updates.SelectedVersion);
-                var pubDateString = CodeQuote(DateFormat.AsUtcIso8601(updates.Selected.Published));
-                var pubDate = updates.Selected.Published.Value.UtcDateTime;
-                var ago = TimeSpanFormat.Ago(pubDate, DateTime.UtcNow);
+                string packageWithVersion = CodeQuote(updates.SelectedId + " " + updates.SelectedVersion);
+                string pubDateString = CodeQuote(DateFormat.AsUtcIso8601(updates.Selected.Published));
+                DateTime pubDate = updates.Selected.Published.Value.UtcDateTime;
+                string ago = TimeSpanFormat.Ago(pubDate, DateTime.UtcNow);
 
-                builder.AppendLine($"{packageWithVersion} was published at {pubDateString}, {ago}");
+                _ = builder.AppendLine($"{packageWithVersion} was published at {pubDateString}, {ago}");
             }
 
-            var highestVersion = updates.Packages.Major?.Identity.Version;
+            NuGetVersion highestVersion = updates.Packages.Major?.Identity.Version;
             if (highestVersion != null && (highestVersion > updates.SelectedVersion))
             {
                 LogHighestVersion(updates, highestVersion, builder);
             }
 
-            builder.AppendLine();
+            _ = builder.AppendLine();
 
-            var updateOptS = (updates.CurrentPackages.Count > 1) ? "s" : string.Empty;
-            builder.AppendLine($"### {updates.CurrentPackages.Count} project update{updateOptS}:");
+            string updateOptS = (updates.CurrentPackages.Count > 1) ? "s" : string.Empty;
+            _ = builder.AppendLine($"### {updates.CurrentPackages.Count} project update{updateOptS}:");
 
-            builder.AppendLine("| Project   | Package   | From   | To   |");
-            builder.AppendLine("|:----------|:----------|-------:|-----:|");
+            _ = builder.AppendLine("| Project   | Package   | From   | To   |");
+            _ = builder.AppendLine("|:----------|:----------|-------:|-----:|");
 
-            foreach (var current in updates.CurrentPackages)
+            foreach (PackageInProject current in updates.CurrentPackages)
             {
                 string line;
                 if (SourceIsPublicNuget(updates.Selected.Source.SourceUri))
                 {
                     line = $"| {CodeQuote(current.Path.RelativePath)} | {CodeQuote(updates.SelectedId)} | {NuGetVersionPackageLink(current.Identity)} | {NuGetVersionPackageLink(updates.Selected.Identity)} |";
-                    builder.AppendLine(line);
+                    _ = builder.AppendLine(line);
 
                     continue;
                 }
 
-                line = $"| {CodeQuote(current.Path.RelativePath)} | {CodeQuote(updates.SelectedId)} | {current.Version.ToString()} | {updates.SelectedVersion.ToString()} |";
-                builder.AppendLine(line);
+                line = $"| {CodeQuote(current.Path.RelativePath)} | {CodeQuote(updates.SelectedId)} | {current.Version} | {updates.SelectedVersion} |";
+                _ = builder.AppendLine(line);
             }
 
             return builder.ToString();
@@ -178,42 +167,28 @@ namespace NuKeeper.AzureDevOps
 
         private static void AddCommitFooter(StringBuilder builder)
         {
-            builder.AppendLine("This is an automated update. Merge only if it passes tests");
-            builder.AppendLine("**NuKeeper**: https://github.com/NuKeeperDotNet/NuKeeper");
+            _ = builder.AppendLine("This is an automated update. Merge only if it passes tests");
+            _ = builder.AppendLine("**NuKeeper**: https://github.com/NuKeeperDotNet/NuKeeper");
         }
 
         private static string ChangeLevel(NuGetVersion oldVersion, NuGetVersion newVersion)
         {
-            if (newVersion.Major > oldVersion.Major)
-            {
-                return "major";
-            }
-
-            if (newVersion.Minor > oldVersion.Minor)
-            {
-                return "minor";
-            }
-
-            if (newVersion.Patch > oldVersion.Patch)
-            {
-                return "patch";
-            }
-
-            if (!newVersion.IsPrerelease && oldVersion.IsPrerelease)
-            {
-                return "out of beta";
-            }
-
-            return string.Empty;
+            return newVersion.Major > oldVersion.Major
+                ? "major"
+                : newVersion.Minor > oldVersion.Minor
+                ? "minor"
+                : newVersion.Patch > oldVersion.Patch
+                ? "patch"
+                : !newVersion.IsPrerelease && oldVersion.IsPrerelease ? "out of beta" : string.Empty;
         }
 
         private static void LogHighestVersion(PackageUpdateSet updates, NuGetVersion highestVersion, StringBuilder builder)
         {
-            var allowedChange = CodeQuote(updates.AllowedChange.ToString());
-            var highest = CodeQuote(updates.SelectedId + " " + highestVersion);
-            var highestPublishedAt = HighestPublishedAt(updates.Packages.Major.Published);
+            string allowedChange = CodeQuote(updates.AllowedChange.ToString());
+            string highest = CodeQuote(updates.SelectedId + " " + highestVersion);
+            string highestPublishedAt = HighestPublishedAt(updates.Packages.Major.Published);
 
-            builder.AppendLine(
+            _ = builder.AppendLine(
                 $"There is also a higher version, {highest}{highestPublishedAt}, " +
                 $"but this was not applied as only {allowedChange} version changes are allowed.");
         }
@@ -225,9 +200,9 @@ namespace NuKeeper.AzureDevOps
                 return string.Empty;
             }
 
-            var highestPubDate = highestPublishedAt.Value;
-            var formattedPubDate = CodeQuote(DateFormat.AsUtcIso8601(highestPubDate));
-            var highestAgo = TimeSpanFormat.Ago(highestPubDate.UtcDateTime, DateTime.UtcNow);
+            DateTimeOffset highestPubDate = highestPublishedAt.Value;
+            string formattedPubDate = CodeQuote(DateFormat.AsUtcIso8601(highestPubDate));
+            string highestAgo = TimeSpanFormat.Ago(highestPubDate.UtcDateTime, DateTime.UtcNow);
 
             return $" published at {formattedPubDate}, {highestAgo}";
         }
@@ -246,7 +221,7 @@ namespace NuKeeper.AzureDevOps
 
         private static string NuGetVersionPackageLink(PackageIdentity package)
         {
-            var url = $"https://www.nuget.org/packages/{package.Id}/{package.Version}";
+            string url = $"https://www.nuget.org/packages/{package.Id}/{package.Version}";
             return $"[{package.Version}]({url})";
         }
     }

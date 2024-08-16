@@ -1,9 +1,12 @@
 using NSubstitute;
+
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Engine;
 using NuKeeper.GitHub;
+
 using NUnit.Framework;
+
 using System;
 using System.Threading.Tasks;
 
@@ -17,13 +20,13 @@ namespace NuKeeper.Integration.Tests.Engine
         {
             IRepositoryFilter subject = MakeRepositoryFilter();
 
-            var result =
+            bool result =
                 await subject.ContainsDotNetProjects(new RepositorySettings
                 {
                     RepositoryName = "jquery",
                     RepositoryOwner = "jquery"
                 });
-            Assert.False(result);
+            Assert.That(result, Is.False);
         }
 
         [Test]
@@ -31,19 +34,21 @@ namespace NuKeeper.Integration.Tests.Engine
         {
             IRepositoryFilter subject = MakeRepositoryFilter();
 
-            var result =
+            bool result =
                 await subject.ContainsDotNetProjects(new RepositorySettings { RepositoryName = "sdk", RepositoryOwner = "dotnet" });
-            Assert.True(result);
+            Assert.That(result, Is.True);
         }
 
         private RepositoryFilter MakeRepositoryFilter()
-        {            
-            var collaborationFactory = Substitute.For<ICollaborationFactory>();
-            var gitHubClient = new OctokitClient(NukeeperLogger);
-            gitHubClient.Initialise(new AuthSettings(new Uri("https://api.github.com"), ""));
+        {
+            ICollaborationFactory collaborationFactory = Substitute.For<ICollaborationFactory>();
+            OctokitClient gitHubClient = new(NukeeperLogger);
+            gitHubClient.Initialise(new AuthSettings(new Uri("https://api.github.com"), GetPAT()));
             collaborationFactory.CollaborationPlatform.Returns(gitHubClient);
 
             return new RepositoryFilter(collaborationFactory, NukeeperLogger);
         }
+
+        private string GetPAT() => Environment.GetEnvironmentVariable("GitHubPAT");
     }
 }

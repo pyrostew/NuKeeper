@@ -1,14 +1,18 @@
-using System;
 using NSubstitute;
-using NUnit.Framework;
+
 using NuGet.Configuration;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.NuGetApi;
+
+using NUnit.Framework;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,14 +22,14 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
     [TestFixture]
     public class PackageUpdatesLookupTests
     {
-        IApiPackageLookup _apiPackageLookup;
+        private IApiPackageLookup _apiPackageLookup;
 
         [SetUp]
         public void Initialize()
         {
             _apiPackageLookup = Substitute.For<IApiPackageLookup>();
 
-            _apiPackageLookup
+            _ = _apiPackageLookup
                 .FindVersionUpdate(
                     Arg.Any<PackageIdentity>(),
                     Arg.Any<NuGetSources>(),
@@ -43,21 +47,21 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         [Test]
         public async Task FindUpdatesForPackages_OnePackageDifferentVersionsInDifferentProjects_RespectsAllowedChangeForEachVersionIndependently()
         {
-            var packagesInProjects = new List<PackageInProject>
-            {
+            List<PackageInProject> packagesInProjects =
+            [
                 MakePackageInProject("foo.bar", "6.0.1", "root", "myprojectA"),
                 MakePackageInProject("foo.bar", "10.2.1", "root", "myprojectB")
-            };
-            var sut = MakePackageUpdatesLookup();
+            ];
+            PackageUpdatesLookup sut = MakePackageUpdatesLookup();
 
-            var result = await sut.FindUpdatesForPackages(
+            IReadOnlyCollection<PackageUpdateSet> result = await sut.FindUpdatesForPackages(
                 packagesInProjects,
                 new NuGetSources("https://api.nuget.com/"),
                 VersionChange.Minor,
                 UsePrerelease.Never
             );
 
-            var versionUpdates = result.Select(p => p.SelectedVersion.ToNormalizedString()).ToList();
+            List<string> versionUpdates = result.Select(p => p.SelectedVersion.ToNormalizedString()).ToList();
             Assert.That(versionUpdates, Has.Some.Matches<string>(version => version.StartsWith("6.", StringComparison.OrdinalIgnoreCase)));
             Assert.That(versionUpdates, Has.Some.Matches<string>(version => version.StartsWith("10.", StringComparison.OrdinalIgnoreCase)));
         }
@@ -67,16 +71,16 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
             VersionChange versionChange
         )
         {
-            var packageName = package.Id;
-            var major = package.Version.Major;
-            var minor = package.Version.Minor;
-            var patch = package.Version.Patch;
+            string packageName = package.Id;
+            int major = package.Version.Major;
+            int minor = package.Version.Minor;
+            int patch = package.Version.Patch;
 
             return new PackageLookupResult(
                 versionChange,
                 MakePackageSearchMetadata(packageName, $"{major + 1}.0.0"),
-                MakePackageSearchMetadata(packageName, $"{major}.{minor+1}.0"),
-                MakePackageSearchMetadata(packageName, $"{major}.{minor}.{patch+1}")
+                MakePackageSearchMetadata(packageName, $"{major}.{minor + 1}.0"),
+                MakePackageSearchMetadata(packageName, $"{major}.{minor}.{patch + 1}")
             );
         }
 

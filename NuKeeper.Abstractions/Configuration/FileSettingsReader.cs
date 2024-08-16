@@ -1,6 +1,8 @@
-using System.IO;
 using Newtonsoft.Json;
+
 using NuKeeper.Abstractions.Logging;
+
+using System.IO;
 
 namespace NuKeeper.Abstractions.Configuration
 {
@@ -17,22 +19,17 @@ namespace NuKeeper.Abstractions.Configuration
         {
             const string fileName = "nukeeper.settings.json";
 
-            var fullPath = Path.Combine(folder, fileName);
+            string fullPath = Path.Combine(folder, fileName);
 
-            if (File.Exists(fullPath))
-            {
-                return ReadFile(fullPath);
-            }
-
-            return FileSettings.Empty();
+            return File.Exists(fullPath) ? ReadFile(fullPath) : FileSettings.Empty();
         }
 
         private FileSettings ReadFile(string fullPath)
         {
             try
             {
-                var contents = File.ReadAllText(fullPath);
-                var result = JsonConvert.DeserializeObject<FileSettings>(contents);
+                string contents = File.ReadAllText(fullPath);
+                FileSettings result = JsonConvert.DeserializeObject<FileSettings>(contents);
                 _logger.Detailed($"Read settings file at {fullPath}");
                 return result;
             }

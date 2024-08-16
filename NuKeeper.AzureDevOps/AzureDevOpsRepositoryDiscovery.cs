@@ -1,12 +1,13 @@
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.CollaborationModels;
 
 namespace NuKeeper.AzureDevOps
 {
@@ -39,7 +40,7 @@ namespace NuKeeper.AzureDevOps
                     return await FromOrganisation(settings.OrganisationName, settings);
 
                 case ServerScope.Repository:
-                    
+
                     settings.Repository.RepositoryUri = PasswordReplacedRepositoryUri(settings.Repository.RepositoryUri);
                     return new List<RepositorySettings> { settings.Repository }.AsEnumerable();
 
@@ -51,13 +52,13 @@ namespace NuKeeper.AzureDevOps
 
         private async Task<IReadOnlyCollection<RepositorySettings>> ForAllOrgs(SourceControlServerSettings settings)
         {
-            var allOrgs = await _collaborationPlatform.GetOrganizations();
+            IReadOnlyList<Organization> allOrgs = await _collaborationPlatform.GetOrganizations();
 
-            var allRepos = new List<RepositorySettings>();
+            List<RepositorySettings> allRepos = [];
 
-            foreach (var org in allOrgs)
+            foreach (Organization org in allOrgs)
             {
-                var repos = await FromOrganisation(org.Name, settings);
+                IReadOnlyCollection<RepositorySettings> repos = await FromOrganisation(org.Name, settings);
                 allRepos.AddRange(repos);
             }
 
@@ -66,9 +67,9 @@ namespace NuKeeper.AzureDevOps
 
         private async Task<IReadOnlyCollection<RepositorySettings>> FromOrganisation(string organisationName, SourceControlServerSettings settings)
         {
-            var allOrgRepos = await _collaborationPlatform.GetRepositoriesForOrganisation(organisationName);
+            IReadOnlyList<Repository> allOrgRepos = await _collaborationPlatform.GetRepositoriesForOrganisation(organisationName);
 
-            var usableRepos = allOrgRepos
+            List<Repository> usableRepos = allOrgRepos
                 .Where(r => MatchesIncludeExclude(r, settings))
                 .Where(RepoIsModifiable)
                 .ToList();
@@ -95,14 +96,17 @@ namespace NuKeeper.AzureDevOps
                 repo.UserPermissions.Pull;
         }
 
-        private RepositorySettings CreateRepositorySettings(string org, Uri repositoryUri, string project, string repoName, RemoteInfo remoteInfo = null) => new RepositorySettings
+        private RepositorySettings CreateRepositorySettings(string org, Uri repositoryUri, string project, string repoName, RemoteInfo remoteInfo = null)
         {
-            ApiUri = string.IsNullOrWhiteSpace(org) ? new Uri($"https://dev.azure.com/") : new Uri($"https://dev.azure.com/{org}/"),
-            RepositoryUri = PasswordReplacedRepositoryUri(repositoryUri),
-            RepositoryName = repoName,
-            RepositoryOwner = project,
-            RemoteInfo = remoteInfo
-        };
+            return new()
+            {
+                ApiUri = string.IsNullOrWhiteSpace(org) ? new Uri($"https://dev.azure.com/") : new Uri($"https://dev.azure.com/{org}/"),
+                RepositoryUri = PasswordReplacedRepositoryUri(repositoryUri),
+                RepositoryName = repoName,
+                RepositoryOwner = project,
+                RemoteInfo = remoteInfo
+            };
+        }
 
         private Uri PasswordReplacedRepositoryUri(Uri repositoryUri)
         {

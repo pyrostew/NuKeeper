@@ -1,20 +1,20 @@
 using NuKeeper.Abstractions.Git;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Update.ProcessRunner;
-using NuKeeper.Abstractions.Formats;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Git
 {
     public class GitCmdDiscoveryDriver : IGitDiscoveryDriver
     {
         private readonly INuKeeperLogger _logger;
-        private string _pathGit;
+        private readonly string _pathGit;
 
         public GitCmdDiscoveryDriver(string pathToGit, INuKeeperLogger logger)
         {
@@ -39,7 +39,7 @@ namespace NuKeeper.Git
                 throw new ArgumentNullException(nameof(repositoryUri));
             }
 
-            var result = await StartGitProcess("config --get remote.origin.url", true, repositoryUri.LocalPath);
+            string result = await StartGitProcess("config --get remote.origin.url", true, repositoryUri.LocalPath);
             return new Uri(result);
         }
 
@@ -50,7 +50,7 @@ namespace NuKeeper.Git
                 throw new ArgumentNullException(nameof(repositoryUri));
             }
 
-            var getBranchHead = await StartGitProcess($"symbolic-ref -q --short HEAD", true, repositoryUri.LocalPath);
+            string getBranchHead = await StartGitProcess($"symbolic-ref -q --short HEAD", true, repositoryUri.LocalPath);
             return string.IsNullOrEmpty(getBranchHead) ?
                 await StartGitProcess($"rev-parse HEAD", true, repositoryUri.LocalPath) :
                 getBranchHead;
@@ -58,7 +58,7 @@ namespace NuKeeper.Git
 
         public async Task<GitRemote> GetRemoteForPlatform(Uri repositoryUri, string platformHost)
         {
-            var remotes = await GetRemotes(repositoryUri);
+            IEnumerable<GitRemote> remotes = await GetRemotes(repositoryUri);
             return remotes.FirstOrDefault(rm => rm.Url.Host.Contains(platformHost, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -74,17 +74,17 @@ namespace NuKeeper.Git
                 return Enumerable.Empty<GitRemote>();
             }
 
-            var result = await StartGitProcess("remote -v", true, repositoryUri.LocalPath);
+            string result = await StartGitProcess("remote -v", true, repositoryUri.LocalPath);
 
             // result should look like "origin\thttps://github.com/nukeeper/NuKeeper.git (fetch)\norigin\thttps://github.com/nukeeper/NuKeeper.git (push)"
             if (!string.IsNullOrWhiteSpace(result))
             {
-                var remoteList = new List<GitRemote>();
-                var remotes = result.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                List<GitRemote> remoteList = [];
+                string[] remotes = result.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
-                foreach (var remote in remotes)
+                foreach (string remote in remotes)
                 {
-                    var gitRemote = CreateGitRemoteFromString(remote);
+                    GitRemote gitRemote = CreateGitRemoteFromString(remote);
                     if (gitRemote != null && !remoteList.Any(x => x.Name == gitRemote.Name))
                     {
                         remoteList.Add(gitRemote);
@@ -99,31 +99,26 @@ namespace NuKeeper.Git
 
         public async Task<bool> IsGitRepo(Uri repositoryUri)
         {
-            var discovered = await DiscoverRepo(repositoryUri);
-            if (discovered == null)
-            {
-                return false;
-            }
-
-            return true;
+            Uri discovered = await DiscoverRepo(repositoryUri);
+            return discovered != null;
         }
 
         internal async Task<string> StartGitProcess(string arguments, bool ensureSuccess, string workingFolder)
         {
-            var process = new ExternalProcess(_logger);
-            var output = await process.Run(workingFolder, _pathGit, arguments, ensureSuccess);
+            ExternalProcess process = new(_logger);
+            ProcessOutput output = await process.Run(workingFolder, _pathGit, arguments, ensureSuccess);
             return output.Output.TrimEnd(Environment.NewLine.ToCharArray());
         }
 
         private GitRemote CreateGitRemoteFromString(string remote)
         {
-            var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            var match = linkParser.Match(remote);
+            Regex linkParser = new(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            Match match = linkParser.Match(remote);
             if (match.Success)
             {
                 if (Uri.TryCreate(match.Value, UriKind.Absolute, out Uri repositoryUri))
                 {
-                    var remoteName = remote.Split(new [] { "\t"}, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                    string remoteName = remote.Split(new[] { "\t" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
                     if (!string.IsNullOrWhiteSpace(remoteName))
                     {
                         return new GitRemote

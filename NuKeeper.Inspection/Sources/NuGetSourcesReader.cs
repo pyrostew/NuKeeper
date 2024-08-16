@@ -24,7 +24,7 @@ namespace NuKeeper.Inspection.Sources
                 return overrideValues;
             }
 
-            var fromConfigFile = _reader.ReadNugetSources(workingFolder);
+            NuGetSources fromConfigFile = _reader.ReadNugetSources(workingFolder);
 
             if (fromConfigFile != null)
             {

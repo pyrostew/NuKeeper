@@ -2,7 +2,7 @@ using System;
 
 namespace NuKeeper.Gitlab
 {
-    class Result<T>
+    internal class Result<T>
     {
         private readonly T _value;
         public bool IsSuccessful { get; }

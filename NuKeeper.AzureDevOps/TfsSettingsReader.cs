@@ -1,10 +1,11 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.Git;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.AzureDevOps
 {
@@ -34,13 +35,13 @@ namespace NuKeeper.AzureDevOps
                 repositoryUri = await repositoryUri.GetRemoteUriFromLocalRepo(_gitDriver, PlatformHost);
             }
 
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
-            var tfsInPath = pathParts.Count > 0 && pathParts[0].Contains(PlatformHost, StringComparison.OrdinalIgnoreCase);
-            var tfsInHost = repositoryUri.Host.Contains(PlatformHost, StringComparison.OrdinalIgnoreCase);
+            bool tfsInPath = pathParts.Count > 0 && pathParts[0].Contains(PlatformHost, StringComparison.OrdinalIgnoreCase);
+            bool tfsInHost = repositoryUri.Host.Contains(PlatformHost, StringComparison.OrdinalIgnoreCase);
             return tfsInPath || tfsInHost;
         }
 
@@ -51,12 +52,12 @@ namespace NuKeeper.AzureDevOps
                 return null;
             }
 
-            var settings = repositoryUri.IsFile
+            RepositorySettings settings = repositoryUri.IsFile
                 ? await CreateSettingsFromLocal(repositoryUri, targetBranch)
                 : CreateSettingsFromRemote(repositoryUri, targetBranch);
             if (settings == null)
             {
-                throw new NuKeeperException($"The provided uri was is not in the correct format. Provided {repositoryUri.ToString()} and format should be {UrlPattern}");
+                throw new NuKeeperException($"The provided uri was is not in the correct format. Provided {repositoryUri} and format should be {UrlPattern}");
             }
 
             settings.SetAutoMerge = setAutoMerge;
@@ -71,13 +72,13 @@ namespace NuKeeper.AzureDevOps
 
         private async Task<RepositorySettings> CreateSettingsFromLocal(Uri repositoryUri, string targetBranch)
         {
-            var remoteInfo = new RemoteInfo();
+            RemoteInfo remoteInfo = new();
 
-            var localFolder = repositoryUri;
+            Uri localFolder = repositoryUri;
             if (await _gitDriver.IsGitRepo(repositoryUri))
             {
                 // Check the origin remotes
-                var origin = await _gitDriver.GetRemoteForPlatform(repositoryUri, PlatformHost);
+                GitRemote origin = await _gitDriver.GetRemoteForPlatform(repositoryUri, PlatformHost);
 
                 if (origin != null)
                 {
@@ -100,20 +101,20 @@ namespace NuKeeper.AzureDevOps
         {
             // URL pattern is
             // https://tfs.company.local:{port}/<nothingOrVirtualSite>/{project}/_git/{repo}
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
-            var gitLocation = pathParts.IndexOf("_git");
+            int gitLocation = pathParts.IndexOf("_git");
             if (gitLocation == -1)
             {
                 throw new NuKeeperException("Unknown format. Format should be http(s)://tfs.company.local:port/<nothingOrVirtualSite>/{project}/_git/{repo}");
             }
 
-            var project = Uri.UnescapeDataString(pathParts[gitLocation - 1]);
-            var repoName = Uri.UnescapeDataString(pathParts[gitLocation + 1]);
-            var apiPathParts = pathParts.Take(gitLocation - 1).ToArray();
+            string project = Uri.UnescapeDataString(pathParts[gitLocation - 1]);
+            string repoName = Uri.UnescapeDataString(pathParts[gitLocation + 1]);
+            string[] apiPathParts = pathParts.Take(gitLocation - 1).ToArray();
 
             return new RepositorySettings
             {

@@ -21,12 +21,9 @@ namespace NuKeeper.Abstractions.Formats
             string value,
             StringComparison comparisonType)
         {
-            if (subject == null)
-            {
-                throw new ArgumentNullException(nameof(subject));
-            }
-
-            return subject.IndexOf(value, 0, subject.Length, comparisonType) >= 0;
+            return subject == null
+                ? throw new ArgumentNullException(nameof(subject))
+                : subject.IndexOf(value, 0, subject.Length, comparisonType) >= 0;
         }
     }
 }

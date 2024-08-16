@@ -1,4 +1,5 @@
 using NuKeeper.Abstractions.NuGet;
+
 using NUnit.Framework;
 
 namespace NuKeeper.Abstractions.Tests.NuGet
@@ -9,21 +10,21 @@ namespace NuKeeper.Abstractions.Tests.NuGet
         [Test]
         public void ShouldGenerateCommandLineArguments()
         {
-            var subject = new NuGetSources("one", "two");
+            NuGetSources subject = new("one", "two");
 
-            var result = subject.CommandLine("-s");
+            string result = subject.CommandLine("-s");
 
-            Assert.AreEqual("-s one -s two", result);
+            Assert.That("-s one -s two" == result);
         }
 
         [Test]
         public void ShouldEscapeLocalPaths()
         {
-            var subject = new NuGetSources("file://one", "C:/Program Files (x86)/Microsoft SDKs/NuGetPackages/", "http://two");
+            NuGetSources subject = new("file://one", "C:/Program Files (x86)/Microsoft SDKs/NuGetPackages/", "http://two");
 
-            var result = subject.CommandLine("-s");
+            string result = subject.CommandLine("-s");
 
-            Assert.AreEqual("-s file://one -s \"C:/Program Files (x86)/Microsoft SDKs/NuGetPackages/\" -s http://two", result);
+            Assert.That("-s file://one -s \"C:/Program Files (x86)/Microsoft SDKs/NuGetPackages/\" -s http://two" == result);
         }
     }
 }

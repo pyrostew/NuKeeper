@@ -1,12 +1,14 @@
-using System;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Collaboration;
 using NuKeeper.Inspection.Logging;
+
+using System;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Commands
 {
@@ -29,25 +31,25 @@ namespace NuKeeper.Commands
 
         protected override async Task<ValidationResult> PopulateSettings(SettingsContainer settings)
         {
-            var baseResult = await base.PopulateSettings(settings);
+            ValidationResult baseResult = await base.PopulateSettings(settings);
             if (!baseResult.IsSuccess)
             {
                 return baseResult;
             }
 
-            var regexIncludeReposValid = PopulateIncludeRepos(settings);
+            ValidationResult regexIncludeReposValid = PopulateIncludeRepos(settings);
             if (!regexIncludeReposValid.IsSuccess)
             {
                 return regexIncludeReposValid;
             }
 
-            var regexExcludeReposValid = PopulateExcludeRepos(settings);
+            ValidationResult regexExcludeReposValid = PopulateExcludeRepos(settings);
             if (!regexExcludeReposValid.IsSuccess)
             {
                 return regexExcludeReposValid;
             }
 
-            var fileSettings = FileSettingsCache.GetSettings();
+            FileSettings fileSettings = FileSettingsCache.GetSettings();
             const int defaultMaxReposChanged = 10;
 
             settings.UserSettings.MaxRepositoriesChanged = Concat.FirstValue(
@@ -58,8 +60,8 @@ namespace NuKeeper.Commands
 
         private ValidationResult PopulateIncludeRepos(SettingsContainer settings)
         {
-            var settingsFromFile = FileSettingsCache.GetSettings();
-            var value = Concat.FirstValue(IncludeRepos, settingsFromFile.IncludeRepos);
+            FileSettings settingsFromFile = FileSettingsCache.GetSettings();
+            string value = Concat.FirstValue(IncludeRepos, settingsFromFile.IncludeRepos);
 
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -81,8 +83,8 @@ namespace NuKeeper.Commands
 
         private ValidationResult PopulateExcludeRepos(SettingsContainer settings)
         {
-            var settingsFromFile = FileSettingsCache.GetSettings();
-            var value = Concat.FirstValue(ExcludeRepos, settingsFromFile.ExcludeRepos);
+            FileSettings settingsFromFile = FileSettingsCache.GetSettings();
+            string value = Concat.FirstValue(ExcludeRepos, settingsFromFile.ExcludeRepos);
 
             if (string.IsNullOrWhiteSpace(value))
             {

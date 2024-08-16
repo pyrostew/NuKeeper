@@ -1,12 +1,14 @@
 using McMaster.Extensions.CommandLineUtils;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
+using NuKeeper.Collaboration;
 using NuKeeper.Inspection.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using NuKeeper.Collaboration;
 
 namespace NuKeeper.Commands
 {
@@ -54,7 +56,7 @@ namespace NuKeeper.Commands
             Description = "Deletes branch created by NuKeeper after merge. Defaults to true.")]
         public bool? DeleteBranchAfterMerge { get; set; }
 
-        private HashSet<Platform> _platformsSupportingDeleteBranchAfterMerge = new HashSet<Platform>();
+        private readonly HashSet<Platform> _platformsSupportingDeleteBranchAfterMerge = [];
 
         protected CollaborationPlatformCommand(ICollaborationEngine engine, IConfigureLogger logger,
             IFileSettingsCache fileSettingsCache, ICollaborationFactory collaborationFactory) :
@@ -62,34 +64,34 @@ namespace NuKeeper.Commands
         {
             _engine = engine;
             CollaborationFactory = collaborationFactory;
-            _platformsSupportingDeleteBranchAfterMerge.Add(Abstractions.CollaborationPlatform.Platform.AzureDevOps);
-            _platformsSupportingDeleteBranchAfterMerge.Add(Abstractions.CollaborationPlatform.Platform.Bitbucket);
-            _platformsSupportingDeleteBranchAfterMerge.Add(Abstractions.CollaborationPlatform.Platform.GitLab);
-            _platformsSupportingDeleteBranchAfterMerge.Add(Abstractions.CollaborationPlatform.Platform.Gitea);
+            _ = _platformsSupportingDeleteBranchAfterMerge.Add(Abstractions.CollaborationPlatform.Platform.AzureDevOps);
+            _ = _platformsSupportingDeleteBranchAfterMerge.Add(Abstractions.CollaborationPlatform.Platform.Bitbucket);
+            _ = _platformsSupportingDeleteBranchAfterMerge.Add(Abstractions.CollaborationPlatform.Platform.GitLab);
+            _ = _platformsSupportingDeleteBranchAfterMerge.Add(Abstractions.CollaborationPlatform.Platform.Gitea);
         }
 
         protected override async Task<ValidationResult> PopulateSettings(SettingsContainer settings)
         {
-            var baseResult = await base.PopulateSettings(settings);
+            ValidationResult baseResult = await base.PopulateSettings(settings);
             if (!baseResult.IsSuccess)
             {
                 return baseResult;
             }
 
-            var fileSettings = FileSettingsCache.GetSettings();
+            FileSettings fileSettings = FileSettingsCache.GetSettings();
 
-            var endpoint = Concat.FirstValue(ApiEndpoint, fileSettings.Api, settings.SourceControlServerSettings.Repository?.ApiUri.ToString());
-            var forkMode = ForkMode ?? fileSettings.ForkMode;
-            var platform = Platform ?? fileSettings.Platform;
+            string endpoint = Concat.FirstValue(ApiEndpoint, fileSettings.Api, settings.SourceControlServerSettings.Repository?.ApiUri.ToString());
+            ForkMode? forkMode = ForkMode ?? fileSettings.ForkMode;
+            Platform? platform = Platform ?? fileSettings.Platform;
 
-            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var baseUri))
+            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out Uri baseUri))
             {
                 return ValidationResult.Failure($"Bad Api Base '{endpoint}'");
             }
 
             try
             {
-                var collaborationResult = await CollaborationFactory.Initialise(
+                ValidationResult collaborationResult = await CollaborationFactory.Initialise(
                     baseUri, PersonalAccessToken,
                     forkMode, platform);
 
@@ -98,9 +100,7 @@ namespace NuKeeper.Commands
                     return collaborationResult;
                 }
             }
-#pragma warning disable CA1031
             catch (Exception ex)
-#pragma warning restore CA1031
             {
                 return ValidationResult.Failure(ex.Message);
             }
@@ -110,13 +110,13 @@ namespace NuKeeper.Commands
                 return ValidationResult.Failure("The required access token was not found");
             }
 
-            var consolidate = 
+            bool consolidate =
                 Concat.FirstValue(Consolidate, fileSettings.Consolidate, false);
 
             settings.UserSettings.ConsolidateUpdatesInSinglePullRequest = consolidate;
 
             const int defaultMaxPackageUpdates = 3;
-            var maxPackageUpdates = 
+            int maxPackageUpdates =
                 Concat.FirstValue(MaxPackageUpdates, fileSettings.MaxPackageUpdates, defaultMaxPackageUpdates);
 
             settings.PackageFilters.MaxPackageUpdates = maxPackageUpdates;
@@ -130,54 +130,38 @@ namespace NuKeeper.Commands
                     : maxPackageUpdates
             );
 
-            var defaultLabels = new List<string> { "nukeeper" };
+            List<string> defaultLabels = ["nukeeper"];
 
             settings.SourceControlServerSettings.Labels =
                 Concat.FirstPopulatedList(Label, fileSettings.Label, defaultLabels);
 
-            var deleteBranchAfterMergeValid = PopulateDeleteBranchAfterMerge(settings);
-            if (!deleteBranchAfterMergeValid.IsSuccess)
-            {
-                return deleteBranchAfterMergeValid;
-            }
-
-            return ValidationResult.Success;
+            ValidationResult deleteBranchAfterMergeValid = PopulateDeleteBranchAfterMerge(settings);
+            return !deleteBranchAfterMergeValid.IsSuccess ? deleteBranchAfterMergeValid : ValidationResult.Success;
         }
 
         protected override async Task<int> Run(SettingsContainer settings)
         {
-            await _engine.Run(settings);
+            _ = await _engine.Run(settings);
             return 0;
         }
 
         private ValidationResult PopulateDeleteBranchAfterMerge(
             SettingsContainer settings)
         {
-            var fileSettings = FileSettingsCache.GetSettings();
+            FileSettings fileSettings = FileSettingsCache.GetSettings();
 
-            bool defaultValue;
+            bool defaultValue = !Platform.HasValue || _platformsSupportingDeleteBranchAfterMerge.Contains(Platform.Value);
 
             // The default value is true, if it is supported for the corresponding platform.
-            if (Platform.HasValue && !_platformsSupportingDeleteBranchAfterMerge.Contains(Platform.Value))
-            {
-                defaultValue = false;
-            }
-            else
-            {
-                defaultValue = true;
-            }
 
             settings.BranchSettings.DeleteBranchAfterMerge = Concat.FirstValue(DeleteBranchAfterMerge, fileSettings.DeleteBranchAfterMerge, defaultValue);
 
             // Ensure that the resulting DeleteBranchAfterMerge value is supported.
-            if (settings.BranchSettings.DeleteBranchAfterMerge &&
+            return settings.BranchSettings.DeleteBranchAfterMerge &&
                 Platform.HasValue &&
-                !_platformsSupportingDeleteBranchAfterMerge.Contains(Platform.Value))
-            {
-                return ValidationResult.Failure("Deletion of source branch after merge is currently only available for Azure DevOps, Gitlab and Bitbucket.");
-            }
-
-            return ValidationResult.Success;
+                !_platformsSupportingDeleteBranchAfterMerge.Contains(Platform.Value)
+                ? ValidationResult.Failure("Deletion of source branch after merge is currently only available for Azure DevOps, Gitlab and Bitbucket.")
+                : ValidationResult.Success;
         }
     }
 }

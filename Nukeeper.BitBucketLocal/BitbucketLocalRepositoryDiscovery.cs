@@ -1,12 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.BitBucketLocal
 {
@@ -14,7 +15,7 @@ namespace NuKeeper.BitBucketLocal
     {
         private readonly INuKeeperLogger _logger;
         private readonly ICollaborationPlatform _collaborationPlatform;
-        private CollaborationPlatformSettings _setting;
+        private readonly CollaborationPlatformSettings _setting;
 
         public BitbucketLocalRepositoryDiscovery(INuKeeperLogger logger, ICollaborationPlatform collaborationPlatform, CollaborationPlatformSettings settings)
         {
@@ -52,9 +53,9 @@ namespace NuKeeper.BitBucketLocal
 
         private async Task<IReadOnlyCollection<RepositorySettings>> FromOrganisation(string organisationName, SourceControlServerSettings settings)
         {
-            var allOrgRepos = await _collaborationPlatform.GetRepositoriesForOrganisation(organisationName);
+            IReadOnlyList<Repository> allOrgRepos = await _collaborationPlatform.GetRepositoriesForOrganisation(organisationName);
 
-            var usableRepos = allOrgRepos
+            List<Repository> usableRepos = allOrgRepos
                 .Where(r => MatchesIncludeExclude(r, settings))
                 .ToList();
 

@@ -1,5 +1,6 @@
-using System.Threading.Tasks;
 using NuKeeper.Abstractions.Configuration;
+
+using System.Threading.Tasks;
 
 namespace NuKeeper.Local
 {

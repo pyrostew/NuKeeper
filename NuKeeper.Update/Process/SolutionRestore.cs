@@ -1,10 +1,11 @@
+using NuKeeper.Abstractions.Inspections.Files;
+using NuKeeper.Abstractions.NuGet;
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions.Inspections.Files;
-using NuKeeper.Abstractions.NuGet;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Update.Process
 {
@@ -32,9 +33,9 @@ namespace NuKeeper.Update.Process
 
         private async Task Restore(IFolder workingFolder, NuGetSources sources)
         {
-            var solutionFiles = workingFolder.Find("*.sln");
+            IReadOnlyCollection<System.IO.FileInfo> solutionFiles = workingFolder.Find("*.sln");
 
-            foreach (var sln in solutionFiles)
+            foreach (System.IO.FileInfo sln in solutionFiles)
             {
                 await _fileRestoreCommand.Invoke(sln, sources);
             }

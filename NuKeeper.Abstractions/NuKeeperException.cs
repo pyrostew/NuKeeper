@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.Serialization;
 
 namespace NuKeeper.Abstractions
 {
@@ -17,8 +16,5 @@ namespace NuKeeper.Abstractions
         public NuKeeperException(string message, Exception innerException) : base(message, innerException)
         {
         }
-
-        protected NuKeeperException(SerializationInfo info, StreamingContext context) : base(info, context)
-        { }
     }
 }

@@ -20,14 +20,14 @@ namespace NuKeeper.Abstractions.RepositoryInspection
 
             if (relativePath[0] == Path.DirectorySeparatorChar)
             {
-                relativePath = relativePath.Substring(1);
+                relativePath = relativePath[1..];
             }
 
             BaseDirectory = baseDirectory;
             RelativePath = relativePath;
             PackageReferenceType = packageReferenceType;
 
-            var fullPath = Path.Combine(baseDirectory, relativePath);
+            string fullPath = Path.Combine(baseDirectory, relativePath);
             Info = new FileInfo(fullPath);
         }
 

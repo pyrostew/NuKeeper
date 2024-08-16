@@ -1,13 +1,17 @@
-using System;
 using NSubstitute;
+
 using NuGet.Configuration;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Inspection.NuGetApi;
+
 using NUnit.Framework;
+
+using System;
 
 namespace NuKeeper.Inspection.Tests.NuGetApi
 {
@@ -17,10 +21,10 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         [Test]
         public void CanCopeWithEmptyData()
         {
-            var logger = Substitute.For<INuKeeperLogger>();
-            var reporter = new PackageLookupResultReporter(logger);
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            PackageLookupResultReporter reporter = new(logger);
 
-            var data = new PackageLookupResult(VersionChange.Major, null, null, null);
+            PackageLookupResult data = new(VersionChange.Major, null, null, null);
 
             reporter.Report(data);
 
@@ -34,14 +38,14 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         [Test]
         public void WhenThereIsAMajorUpdate()
         {
-            var logger = Substitute.For<INuKeeperLogger>();
-            var reporter = new PackageLookupResultReporter(logger);
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            PackageLookupResultReporter reporter = new(logger);
 
-            var fooMetadata = new PackageSearchMetadata(
+            PackageSearchMetadata fooMetadata = new(
                 new PackageIdentity("foo", new NuGetVersion(2, 3, 4)),
                 new PackageSource("http://none"), DateTimeOffset.Now, null);
 
-            var data = new PackageLookupResult(VersionChange.Major, fooMetadata, fooMetadata, fooMetadata);
+            PackageLookupResult data = new(VersionChange.Major, fooMetadata, fooMetadata, fooMetadata);
 
             reporter.Report(data);
 
@@ -55,14 +59,14 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         [Test]
         public void WhenThereIsAMinorUpdate()
         {
-            var logger = Substitute.For<INuKeeperLogger>();
-            var reporter = new PackageLookupResultReporter(logger);
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            PackageLookupResultReporter reporter = new(logger);
 
-            var fooMetadata = new PackageSearchMetadata(
+            PackageSearchMetadata fooMetadata = new(
                 new PackageIdentity("foo", new NuGetVersion(2, 3, 4)),
                 new PackageSource("http://none"), DateTimeOffset.Now, null);
 
-            var data = new PackageLookupResult(VersionChange.Minor, fooMetadata, fooMetadata, fooMetadata);
+            PackageLookupResult data = new(VersionChange.Minor, fooMetadata, fooMetadata, fooMetadata);
 
             reporter.Report(data);
 
@@ -77,17 +81,17 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         [Test]
         public void WhenThereIsAMajorAndAMinorUpdate()
         {
-            var logger = Substitute.For<INuKeeperLogger>();
-            var reporter = new PackageLookupResultReporter(logger);
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            PackageLookupResultReporter reporter = new(logger);
 
-            var fooMajor = new PackageSearchMetadata(
+            PackageSearchMetadata fooMajor = new(
                 new PackageIdentity("foo", new NuGetVersion(3, 0, 0)),
                 new PackageSource("http://none"), DateTimeOffset.Now, null);
-            var fooMinor = new PackageSearchMetadata(
+            PackageSearchMetadata fooMinor = new(
                 new PackageIdentity("foo", new NuGetVersion(2, 3, 4)),
                 new PackageSource("http://none"), DateTimeOffset.Now, null);
 
-            var data = new PackageLookupResult(VersionChange.Minor, fooMajor, fooMinor, null);
+            PackageLookupResult data = new(VersionChange.Minor, fooMajor, fooMinor, null);
 
             reporter.Report(data);
 
@@ -101,14 +105,14 @@ namespace NuKeeper.Inspection.Tests.NuGetApi
         [Test]
         public void WhenThereIsAMajorUpdateThatCannotBeUsed()
         {
-            var logger = Substitute.For<INuKeeperLogger>();
-            var reporter = new PackageLookupResultReporter(logger);
+            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+            PackageLookupResultReporter reporter = new(logger);
 
-            var fooMajor = new PackageSearchMetadata(
+            PackageSearchMetadata fooMajor = new(
                 new PackageIdentity("foo", new NuGetVersion(3, 0, 0)),
                 new PackageSource("http://none"), DateTimeOffset.Now, null);
 
-            var data = new PackageLookupResult(VersionChange.Minor, fooMajor, null, null);
+            PackageLookupResult data = new(VersionChange.Minor, fooMajor, null, null);
 
             reporter.Report(data);
 

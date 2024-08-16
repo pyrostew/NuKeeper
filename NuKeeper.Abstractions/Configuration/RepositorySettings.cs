@@ -1,5 +1,6 @@
-using System;
 using NuKeeper.Abstractions.CollaborationModels;
+
+using System;
 
 namespace NuKeeper.Abstractions.Configuration
 {

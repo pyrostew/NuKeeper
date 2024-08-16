@@ -1,8 +1,9 @@
+using NuKeeper.Abstractions.RepositoryInspection;
+using NuKeeper.Inspection.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
-using NuKeeper.Abstractions.RepositoryInspection;
-using NuKeeper.Inspection.Logging;
 
 namespace NuKeeper.Inspection
 {
@@ -15,14 +16,14 @@ namespace NuKeeper.Inspection
                 throw new ArgumentNullException(nameof(updates));
             }
 
-            var headline = $"Found {updates.Count} possible updates";
-            var details = new StringBuilder();
+            string headline = $"Found {updates.Count} possible updates";
+            StringBuilder details = new();
 
-            foreach (var updateSet in updates)
+            foreach (PackageUpdateSet updateSet in updates)
             {
-                foreach (var current in updateSet.CurrentPackages)
+                foreach (PackageInProject current in updateSet.CurrentPackages)
                 {
-                    details.AppendLine($"{updateSet.SelectedId} from {current.Version} to {updateSet.SelectedVersion} in {current.Path.RelativePath}");
+                    _ = details.AppendLine($"{updateSet.SelectedId} from {current.Version} to {updateSet.SelectedVersion} in {current.Path.RelativePath}");
                 }
             }
             return new LogData

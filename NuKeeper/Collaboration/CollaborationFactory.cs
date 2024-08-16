@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
@@ -15,6 +10,12 @@ using NuKeeper.Engine;
 using NuKeeper.Gitea;
 using NuKeeper.GitHub;
 using NuKeeper.Gitlab;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Collaboration
 {
@@ -47,7 +48,7 @@ namespace NuKeeper.Collaboration
         public async Task<ValidationResult> Initialise(Uri apiEndpoint, string token,
             ForkMode? forkModeFromSettings, Platform? platformFromSettings)
         {
-            var platformSettingsReader = await FindPlatformSettingsReader(platformFromSettings, apiEndpoint);
+            ISettingsReader platformSettingsReader = await FindPlatformSettingsReader(platformFromSettings, apiEndpoint);
             if (platformSettingsReader != null)
             {
                 _platform = platformSettingsReader.Platform;
@@ -62,7 +63,7 @@ namespace NuKeeper.Collaboration
             Settings.ForkMode = forkModeFromSettings;
             platformSettingsReader.UpdateCollaborationPlatformSettings(Settings);
 
-            var result = ValidateSettings();
+            ValidationResult result = ValidateSettings();
             if (!result.IsSuccess)
             {
                 return result;
@@ -78,7 +79,7 @@ namespace NuKeeper.Collaboration
         {
             if (platformFromSettings.HasValue)
             {
-                var reader = _settingReaders
+                ISettingsReader reader = _settingReaders
                     .FirstOrDefault(s => s.Platform == platformFromSettings.Value);
 
                 if (reader != null)
@@ -90,7 +91,7 @@ namespace NuKeeper.Collaboration
             }
             else
             {
-                var reader = await _settingReaders
+                ISettingsReader reader = await _settingReaders
                     .FirstOrDefaultAsync(s => s.CanRead(apiEndpoint));
 
                 if (reader != null)
@@ -104,34 +105,20 @@ namespace NuKeeper.Collaboration
 
         private ValidationResult ValidateSettings()
         {
-            if (!Settings.BaseApiUrl.IsWellFormedOriginalString()
-                || (Settings.BaseApiUrl.Scheme != "http" && Settings.BaseApiUrl.Scheme != "https"))
-            {
-                return ValidationResult.Failure(
-                    $"Api is not of correct format {Settings.BaseApiUrl}");
-            }
-
-            if (!Settings.ForkMode.HasValue)
-            {
-                return ValidationResult.Failure("Fork Mode was not set");
-            }
-
-            if (string.IsNullOrWhiteSpace(Settings.Token))
-            {
-                return ValidationResult.Failure("Token was not set");
-            }
-
-            if (!_platform.HasValue)
-            {
-                return ValidationResult.Failure("Platform was not set");
-            }
-
-            return ValidationResult.Success;
+            return !Settings.BaseApiUrl.IsWellFormedOriginalString()
+                || (Settings.BaseApiUrl.Scheme != "http" && Settings.BaseApiUrl.Scheme != "https")
+                ? ValidationResult.Failure(
+                    $"Api is not of correct format {Settings.BaseApiUrl}")
+                : !Settings.ForkMode.HasValue
+                ? ValidationResult.Failure("Fork Mode was not set")
+                : string.IsNullOrWhiteSpace(Settings.Token)
+                ? ValidationResult.Failure("Token was not set")
+                : !_platform.HasValue ? ValidationResult.Failure("Platform was not set") : ValidationResult.Success;
         }
 
         private void CreateForPlatform()
         {
-            var forkMode = Settings.ForkMode.Value;
+            ForkMode forkMode = Settings.ForkMode.Value;
 
             switch (_platform.Value)
             {
@@ -184,7 +171,7 @@ namespace NuKeeper.Collaboration
                     throw new NuKeeperException($"Unknown platform: {_platform}");
             }
 
-            var auth = new AuthSettings(Settings.BaseApiUrl, Settings.Token, Settings.Username);
+            AuthSettings auth = new(Settings.BaseApiUrl, Settings.Token, Settings.Username);
             CollaborationPlatform.Initialise(auth);
 
             if (ForkFinder == null ||

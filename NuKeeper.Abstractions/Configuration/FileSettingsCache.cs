@@ -14,10 +14,7 @@ namespace NuKeeper.Abstractions.Configuration
 
         public FileSettings GetSettings()
         {
-            if (_settings == null)
-            {
-                _settings = _reader.Read(GetFolder());
-            }
+            _settings ??= _reader.Read(GetFolder());
 
             return _settings;
         }

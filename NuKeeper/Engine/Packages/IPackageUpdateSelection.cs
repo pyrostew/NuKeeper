@@ -1,6 +1,7 @@
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.RepositoryInspection;
+
 using System.Collections.Generic;
 
 namespace NuKeeper.Engine.Packages

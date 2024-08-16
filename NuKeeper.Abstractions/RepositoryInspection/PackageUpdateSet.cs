@@ -1,10 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.NuGetApi;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Abstractions.RepositoryInspection
 {
@@ -29,7 +31,7 @@ namespace NuKeeper.Abstractions.RepositoryInspection
                 throw new ArgumentNullException(nameof(currentPackages));
             }
 
-            var currentPackagesList = currentPackages.ToList();
+            List<PackageInProject> currentPackagesList = currentPackages.ToList();
 
             if (!currentPackagesList.Any())
             {
@@ -59,12 +61,12 @@ namespace NuKeeper.Abstractions.RepositoryInspection
 
         private void CheckIdConsistency()
         {
-            if (CurrentPackages.Any(p => !p.Id.Equals(SelectedId,StringComparison.InvariantCultureIgnoreCase)))
+            if (CurrentPackages.Any(p => !p.Id.Equals(SelectedId, StringComparison.InvariantCultureIgnoreCase)))
             {
-                var errorIds = CurrentPackages
+                IEnumerable<string> errorIds = CurrentPackages
                     .Select(p => p.Id)
                     .Distinct()
-                    .Where(id => !id.Equals(SelectedId,StringComparison.InvariantCultureIgnoreCase));
+                    .Where(id => !id.Equals(SelectedId, StringComparison.InvariantCultureIgnoreCase));
 
                 throw new ArgumentException($"Updates must all be for package '{SelectedId}', got '{errorIds.JoinWithCommas()}'");
             }

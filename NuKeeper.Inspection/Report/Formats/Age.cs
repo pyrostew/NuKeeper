@@ -1,8 +1,9 @@
+using NuKeeper.Abstractions.RepositoryInspection;
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.Report.Formats
 {
@@ -10,9 +11,9 @@ namespace NuKeeper.Inspection.Report.Formats
     {
         public static TimeSpan Sum(IEnumerable<PackageUpdateSet> updates)
         {
-            var now = DateTimeOffset.UtcNow;
+            DateTimeOffset now = DateTimeOffset.UtcNow;
 
-            var sum = updates
+            TimeSpan sum = updates
                 .Select(u => u.Selected.Published)
                 .Where(p => p.HasValue)
                 .Select(p => now.Subtract(p.Value))
@@ -23,7 +24,7 @@ namespace NuKeeper.Inspection.Report.Formats
 
         public static string AsLibYears(TimeSpan totalAge)
         {
-            var years = totalAge.TotalDays / 365;
+            double years = totalAge.TotalDays / 365;
             return years.ToString("0.000", CultureInfo.InvariantCulture);
         }
     }

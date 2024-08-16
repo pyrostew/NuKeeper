@@ -4,6 +4,7 @@ using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Sort;
 using NuKeeper.Update.Selection;
+
 using System.Collections.Generic;
 using System.Linq;
 
@@ -30,12 +31,12 @@ namespace NuKeeper.Engine.Packages
             IReadOnlyCollection<PackageUpdateSet> potentialUpdates,
             FilterSettings filterSettings)
         {
-            var sorted = _sort.Sort(potentialUpdates)
+            List<PackageUpdateSet> sorted = _sort.Sort(potentialUpdates)
                 .ToList();
 
-            var filtered = _updateSelection.Filter(sorted, filterSettings);
+            IReadOnlyCollection<PackageUpdateSet> filtered = _updateSelection.Filter(sorted, filterSettings);
 
-            foreach (var updateSet in filtered)
+            foreach (PackageUpdateSet updateSet in filtered)
             {
                 _logger.Normal($"Selected package update of {updateSet.SelectedId} to {updateSet.SelectedVersion}");
             }

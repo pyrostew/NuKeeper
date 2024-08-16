@@ -1,11 +1,12 @@
+using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions.CollaborationModels;
 
 namespace NuKeeper.Engine
 {
@@ -27,22 +28,22 @@ namespace NuKeeper.Engine
                 throw new ArgumentNullException(nameof(repository));
             }
 
-            IEnumerable<string> dotNetCodeExtensions = new ReadOnlyCollection<string>(new List<string>(){ ".sln", ".csproj", ".fsproj", ".vbproj" });
+            IEnumerable<string> dotNetCodeExtensions = new ReadOnlyCollection<string>(new List<string>() { ".sln", ".csproj", ".fsproj", ".vbproj" });
             const string dotNetCodeTerms = "\"packages.config\" OR \".csproj\" OR \".fsproj\" OR \".vbproj\"";
 
-            var repos = new List<SearchRepo>
-            {
+            List<SearchRepo> repos =
+            [
                 new SearchRepo(repository.RepositoryOwner, repository.RepositoryName)
-            };
+            ];
 
-            var searchCodeRequest = new SearchCodeRequest(repos, dotNetCodeTerms, dotNetCodeExtensions)
+            SearchCodeRequest searchCodeRequest = new(repos, dotNetCodeTerms, dotNetCodeExtensions)
             {
                 PerPage = 1
             };
 
             try
             {
-                var result = await _collaborationFactory.CollaborationPlatform.Search(searchCodeRequest);
+                SearchCodeResult result = await _collaborationFactory.CollaborationPlatform.Search(searchCodeRequest);
                 if (result.TotalCount <= 0)
                 {
                     _logger.Detailed(
@@ -52,9 +53,7 @@ namespace NuKeeper.Engine
 
                 return true;
             }
-#pragma warning disable CA1031
             catch (Exception ex)
-#pragma warning restore CA1031
             {
                 _logger.Error("Repository search failed.", ex);
             }

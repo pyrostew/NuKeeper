@@ -1,6 +1,7 @@
-using System;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
+using System;
 
 namespace NuKeeper.Abstractions.NuGet
 {
@@ -22,24 +23,14 @@ namespace NuKeeper.Abstractions.NuGet
 
         public static PackageVersionRange Parse(string id, string version)
         {
-            var success = VersionRange.TryParse(version, out VersionRange versionRange);
-            if (!success)
-            {
-                return null;
-            }
-
-            return new PackageVersionRange(id, versionRange);
+            bool success = VersionRange.TryParse(version, out VersionRange versionRange);
+            return !success ? null : new PackageVersionRange(id, versionRange);
         }
 
         public PackageIdentity SingleVersionIdentity()
         {
-            var version = VersionRanges.SingleVersion(Version);
-            if (version == null)
-            {
-                return null;
-            }
-
-            return new PackageIdentity(Id, version);
+            NuGetVersion version = VersionRanges.SingleVersion(Version);
+            return version == null ? null : new PackageIdentity(Id, version);
         }
     }
 }

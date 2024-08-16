@@ -1,16 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NSubstitute;
+
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.AzureDevOps;
+
 using NUnit.Framework;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Nukeeper.AzureDevOps.Tests
 {
@@ -19,17 +22,17 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task SuccessInRepoMode()
         {
-            var settings = new SourceControlServerSettings
+            SourceControlServerSettings settings = new()
             {
                 Repository = new RepositorySettings { RepositoryUri = new Uri("https://repo/") },
                 Scope = ServerScope.Repository
             };
 
-            var githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
+            IRepositoryDiscovery githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
 
-            var reposResponse = await githubRepositoryDiscovery.GetRepositories(settings);
+            IEnumerable<RepositorySettings> reposResponse = await githubRepositoryDiscovery.GetRepositories(settings);
 
-            var repos = reposResponse.ToList();
+            List<RepositorySettings> repos = reposResponse.ToList();
 
             Assert.That(repos, Is.Not.Null);
             Assert.That(repos.Count, Is.EqualTo(1));
@@ -39,17 +42,17 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task SuccessInRepoModeReplacesToken()
         {
-            var settings = new SourceControlServerSettings
+            SourceControlServerSettings settings = new()
             {
                 Repository = new RepositorySettings { RepositoryUri = new Uri("https://user:--PasswordToReplace--@repo/") },
                 Scope = ServerScope.Repository
             };
 
-            var githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
+            IRepositoryDiscovery githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
 
-            var reposResponse = await githubRepositoryDiscovery.GetRepositories(settings);
+            IEnumerable<RepositorySettings> reposResponse = await githubRepositoryDiscovery.GetRepositories(settings);
 
-            var repos = reposResponse.ToList();
+            List<RepositorySettings> repos = reposResponse.ToList();
 
             Assert.That(repos, Is.Not.Null);
             Assert.That(repos.Count, Is.EqualTo(1));
@@ -60,7 +63,7 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task RepoModeIgnoresIncludesAndExcludes()
         {
-            var settings = new SourceControlServerSettings
+            SourceControlServerSettings settings = new()
             {
                 Repository = new RepositorySettings(RepositoryBuilder.MakeRepository(name: "foo")),
                 Scope = ServerScope.Repository,
@@ -68,25 +71,25 @@ namespace Nukeeper.AzureDevOps.Tests
                 ExcludeRepos = new Regex("^foo")
             };
 
-            var githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
+            IRepositoryDiscovery githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
 
-            var reposResponse = await githubRepositoryDiscovery.GetRepositories(settings);
+            IEnumerable<RepositorySettings> reposResponse = await githubRepositoryDiscovery.GetRepositories(settings);
 
-            var repos = reposResponse.ToList();
+            List<RepositorySettings> repos = reposResponse.ToList();
 
             Assert.That(repos, Is.Not.Null);
             Assert.That(repos.Count, Is.EqualTo(1));
 
-            var firstRepo = repos.First();
+            RepositorySettings firstRepo = repos.First();
             Assert.That(firstRepo.RepositoryName, Is.EqualTo("foo"));
         }
 
         [Test]
         public async Task SuccessInOrgMode()
         {
-            var githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
+            IRepositoryDiscovery githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
 
-            var repos = await githubRepositoryDiscovery.GetRepositories(OrgModeSettings());
+            IEnumerable<RepositorySettings> repos = await githubRepositoryDiscovery.GetRepositories(OrgModeSettings());
 
             Assert.That(repos, Is.Not.Null);
             Assert.That(repos, Is.Empty);
@@ -95,21 +98,21 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task OrgModeInvalidReposAreExcluded()
         {
-            var inputRepos = new List<Repository>
-            {
+            List<Repository> inputRepos =
+            [
                 RepositoryBuilder.MakeRepository("http://a.com/repo1.git".ToUri(), false),
                 RepositoryBuilder.MakeRepository("http://b.com/repob.git".ToUri(), true)
-            };
+            ];
 
-            var githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery(inputRepos.AsReadOnly());
+            IRepositoryDiscovery githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery(inputRepos.AsReadOnly());
 
-            var repos = await githubRepositoryDiscovery.GetRepositories(OrgModeSettings());
+            IEnumerable<RepositorySettings> repos = await githubRepositoryDiscovery.GetRepositories(OrgModeSettings());
 
             Assert.That(repos, Is.Not.Null);
             Assert.That(repos, Is.Not.Empty);
             Assert.That(repos.Count(), Is.EqualTo(1));
 
-            var firstRepo = repos.First();
+            RepositorySettings firstRepo = repos.First();
             Assert.That(firstRepo.RepositoryName, Is.EqualTo(inputRepos[1].Name));
             Assert.That(firstRepo.RepositoryUri.ToString(), Is.EqualTo(inputRepos[1].CloneUrl));
         }
@@ -117,64 +120,64 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task OrgModeWhenThereAreIncludes_OnlyConsiderMatches()
         {
-            var inputRepos = new List<Repository>
-            {
-                RepositoryBuilder.MakeRepository(name:"foo"),
-                RepositoryBuilder.MakeRepository(name:"bar")
-            };
+            List<Repository> inputRepos =
+            [
+                RepositoryBuilder.MakeRepository(name: "foo"),
+                RepositoryBuilder.MakeRepository(name: "bar")
+            ];
 
-            var githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery(inputRepos.AsReadOnly());
+            IRepositoryDiscovery githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery(inputRepos.AsReadOnly());
 
-            var settings = OrgModeSettings();
+            SourceControlServerSettings settings = OrgModeSettings();
             settings.IncludeRepos = new Regex("^bar");
-            var repos = await githubRepositoryDiscovery.GetRepositories(settings);
+            IEnumerable<RepositorySettings> repos = await githubRepositoryDiscovery.GetRepositories(settings);
 
             Assert.That(repos, Is.Not.Null);
             Assert.That(repos, Is.Not.Empty);
             Assert.That(repos.Count(), Is.EqualTo(1));
 
-            var firstRepo = repos.First();
+            RepositorySettings firstRepo = repos.First();
             Assert.That(firstRepo.RepositoryName, Is.EqualTo("bar"));
         }
 
         [Test]
         public async Task OrgModeWhenThereAreExcludes_OnlyConsiderNonMatching()
         {
-            var inputRepos = new List<Repository>
-            {
-                RepositoryBuilder.MakeRepository(name:"foo"),
-                RepositoryBuilder.MakeRepository(name:"bar")
-            };
+            List<Repository> inputRepos =
+            [
+                RepositoryBuilder.MakeRepository(name: "foo"),
+                RepositoryBuilder.MakeRepository(name: "bar")
+            ];
 
-            var githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery(inputRepos.AsReadOnly());
+            IRepositoryDiscovery githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery(inputRepos.AsReadOnly());
 
-            var settings = OrgModeSettings();
+            SourceControlServerSettings settings = OrgModeSettings();
             settings.ExcludeRepos = new Regex("^bar");
-            var repos = await githubRepositoryDiscovery.GetRepositories(settings);
+            IEnumerable<RepositorySettings> repos = await githubRepositoryDiscovery.GetRepositories(settings);
 
             Assert.That(repos, Is.Not.Null);
             Assert.That(repos, Is.Not.Empty);
             Assert.That(repos.Count(), Is.EqualTo(1));
 
-            var firstRepo = repos.First();
+            RepositorySettings firstRepo = repos.First();
             Assert.That(firstRepo.RepositoryName, Is.EqualTo("foo"));
         }
 
         [Test]
         public async Task OrgModeWhenThereAreIncludesAndExcludes_OnlyConsiderMatchesButRemoveNonMatching()
         {
-            var inputRepos = new List<Repository>
-            {
-                RepositoryBuilder.MakeRepository(name:"foo"),
-                RepositoryBuilder.MakeRepository(name:"bar")
-            };
+            List<Repository> inputRepos =
+            [
+                RepositoryBuilder.MakeRepository(name: "foo"),
+                RepositoryBuilder.MakeRepository(name: "bar")
+            ];
 
-            var githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery(inputRepos.AsReadOnly());
+            IRepositoryDiscovery githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery(inputRepos.AsReadOnly());
 
-            var settings = OrgModeSettings();
+            SourceControlServerSettings settings = OrgModeSettings();
             settings.IncludeRepos = new Regex("^bar");
             settings.ExcludeRepos = new Regex("^bar");
-            var repos = await githubRepositoryDiscovery.GetRepositories(settings);
+            IEnumerable<RepositorySettings> repos = await githubRepositoryDiscovery.GetRepositories(settings);
 
             Assert.That(repos, Is.Not.Null);
             Assert.That(repos.Count(), Is.EqualTo(0));
@@ -183,9 +186,9 @@ namespace Nukeeper.AzureDevOps.Tests
         [Test]
         public async Task SuccessInGlobalMode()
         {
-            var githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
+            IRepositoryDiscovery githubRepositoryDiscovery = MakeAzureDevOpsRepositoryDiscovery();
 
-            var repos = await githubRepositoryDiscovery.GetRepositories(new SourceControlServerSettings { Scope = ServerScope.Global });
+            IEnumerable<RepositorySettings> repos = await githubRepositoryDiscovery.GetRepositories(new SourceControlServerSettings { Scope = ServerScope.Global });
 
             Assert.That(repos, Is.Not.Null);
             Assert.That(repos, Is.Empty);
@@ -193,8 +196,8 @@ namespace Nukeeper.AzureDevOps.Tests
 
         private static IRepositoryDiscovery MakeAzureDevOpsRepositoryDiscovery(IReadOnlyList<Repository> repositories = null)
         {
-            var collaborationPlatform = Substitute.For<ICollaborationPlatform>();
-            collaborationPlatform.GetRepositoriesForOrganisation(Arg.Any<string>())
+            ICollaborationPlatform collaborationPlatform = Substitute.For<ICollaborationPlatform>();
+            _ = collaborationPlatform.GetRepositoriesForOrganisation(Arg.Any<string>())
                 .Returns(repositories ?? new List<Repository>());
             return new AzureDevOpsRepositoryDiscovery(Substitute.For<INuKeeperLogger>(), collaborationPlatform, "token");
         }

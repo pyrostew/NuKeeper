@@ -1,5 +1,6 @@
-using System;
 using NuKeeper.Abstractions.Configuration;
+
+using System;
 
 namespace NuKeeper.Abstractions.NuGetApi
 {
@@ -25,23 +26,14 @@ namespace NuKeeper.Abstractions.NuGetApi
 
         public PackageSearchMetadata Selected()
         {
-            switch (AllowedChange)
+            return AllowedChange switch
             {
-                case VersionChange.Major:
-                    return Major;
-
-                case VersionChange.Minor:
-                    return Minor;
-
-                case VersionChange.Patch:
-                    return Patch;
-
-                case VersionChange.None:
-                    return null;
-
-                default:
-                    throw new Exception($"Unknown version change {AllowedChange}");
-            }
+                VersionChange.Major => Major,
+                VersionChange.Minor => Minor,
+                VersionChange.Patch => Patch,
+                VersionChange.None => null,
+                _ => throw new Exception($"Unknown version change {AllowedChange}"),
+            };
         }
     }
 }

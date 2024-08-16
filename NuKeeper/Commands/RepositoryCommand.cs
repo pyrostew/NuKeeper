@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 using McMaster.Extensions.CommandLineUtils;
 
 using NuKeeper.Abstractions.CollaborationPlatform;
@@ -10,6 +5,11 @@ using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Collaboration;
 using NuKeeper.Inspection.Logging;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Commands
 {
@@ -65,7 +65,7 @@ namespace NuKeeper.Commands
 
             settings.SourceControlServerSettings.Repository = await reader.RepositorySettings(repoUri, SetAutoMerge ?? false, TargetBranch);
 
-            var baseResult = await base.PopulateSettings(settings);
+            ValidationResult baseResult = await base.PopulateSettings(settings);
             if (!baseResult.IsSuccess)
             {
                 return baseResult;
@@ -92,7 +92,7 @@ namespace NuKeeper.Commands
             }
 
             // Otherwise, use the Uri to guess which platform to use.
-            foreach (var reader in _settingsReaders)
+            foreach (ISettingsReader reader in _settingsReaders)
             {
                 if (await reader.CanRead(repoUri))
                 {

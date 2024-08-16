@@ -1,7 +1,8 @@
-using System.Collections.Generic;
-using System.Linq;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.RepositoryInspection;
+
+using System.Collections.Generic;
+using System.Linq;
 
 namespace NuKeeper.Inspection.Sort
 {
@@ -16,13 +17,13 @@ namespace NuKeeper.Inspection.Sort
 
         public IEnumerable<PackageUpdateSet> Sort(IReadOnlyCollection<PackageUpdateSet> input)
         {
-            var topo = new TopologicalSort<PackageUpdateSet>(_logger, Match);
+            TopologicalSort<PackageUpdateSet> topo = new(_logger, Match);
 
-            var inputMap = input.Select(p =>
+            List<SortItemData<PackageUpdateSet>> inputMap = input.Select(p =>
                 new SortItemData<PackageUpdateSet>(p, PackageDeps(p, input)))
                 .ToList();
 
-            var sorted = topo.Sort(inputMap)
+            List<PackageUpdateSet> sorted = topo.Sort(inputMap)
                 .ToList();
 
             ReportSort(input.ToList(), sorted);
@@ -36,7 +37,7 @@ namespace NuKeeper.Inspection.Sort
 
         private static IReadOnlyCollection<PackageUpdateSet> PackageDeps(PackageUpdateSet set, IReadOnlyCollection<PackageUpdateSet> all)
         {
-            var deps = set.Selected.Dependencies;
+            IReadOnlyCollection<NuGet.Packaging.Core.PackageDependency> deps = set.Selected.Dependencies;
             return all.Where(i => deps.Any(d => d.Id == i.SelectedId)).ToList();
         }
 
@@ -49,8 +50,8 @@ namespace NuKeeper.Inspection.Sort
                 if (input[i] != output[i])
                 {
                     hasChange = true;
-                    var firstChange = output[i];
-                    var originalIndex = input.IndexOf(firstChange);
+                    PackageUpdateSet firstChange = output[i];
+                    int originalIndex = input.IndexOf(firstChange);
                     _logger.Detailed($"Resorted {output.Count} packages by dependencies, first change is {firstChange.SelectedId} moved to position {i} from {originalIndex}.");
                     break;
                 }

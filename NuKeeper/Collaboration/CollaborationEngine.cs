@@ -6,6 +6,7 @@ using NuKeeper.Abstractions.Git;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Engine;
 using NuKeeper.Inspection.Files;
+
 using System;
 using System.Threading.Tasks;
 
@@ -40,19 +41,19 @@ namespace NuKeeper.Collaboration
             _logger.Detailed($"{Now()}: Started");
             _folderFactory.DeleteExistingTempDirs();
 
-            var user = await _collaborationFactory.CollaborationPlatform.GetCurrentUser();
-            var credentials = new GitUsernamePasswordCredentials
+            Abstractions.CollaborationModels.User user = await _collaborationFactory.CollaborationPlatform.GetCurrentUser();
+            GitUsernamePasswordCredentials credentials = new()
             {
                 Username = user.Login,
                 Password = _collaborationFactory.Settings.Token
             };
 
-            var repositories = await _collaborationFactory.RepositoryDiscovery.GetRepositories(settings.SourceControlServerSettings);
+            System.Collections.Generic.IEnumerable<RepositorySettings> repositories = await _collaborationFactory.RepositoryDiscovery.GetRepositories(settings.SourceControlServerSettings);
 
-            var reposUpdated = 0;
+            int reposUpdated = 0;
             (bool Happened, Exception Value) unhandledEx = (false, null);
 
-            foreach (var repository in repositories)
+            foreach (RepositorySettings repository in repositories)
             {
                 if (reposUpdated >= settings.UserSettings.MaxRepositoriesChanged)
                 {
@@ -62,7 +63,7 @@ namespace NuKeeper.Collaboration
                 try
                 {
 
-                    var updatesInThisRepo = await _repositoryEngine.Run(repository,
+                    int updatesInThisRepo = await _repositoryEngine.Run(repository,
                         credentials, settings, user);
 
                     if (updatesInThisRepo > 0)
@@ -70,9 +71,7 @@ namespace NuKeeper.Collaboration
                         reposUpdated++;
                     }
                 }
-#pragma warning disable CA1031
                 catch (Exception ex)
-#pragma warning restore CA1031
                 {
                     _logger.Error($"Failed on repo {repository.RepositoryName}", ex);
                     SetOrUpdateUnhandledException(ref unhandledEx, ex);
@@ -102,14 +101,7 @@ namespace NuKeeper.Collaboration
         )
         {
             unhandledEx.Happened = true;
-            if (unhandledEx.Value == null)
-            {
-                unhandledEx.Value = ex;
-            }
-            else
-            {
-                unhandledEx.Value = new AggregateException(unhandledEx.Value, ex);
-            }
+            unhandledEx.Value = unhandledEx.Value == null ? ex : new AggregateException(unhandledEx.Value, ex);
         }
 
         private static void ThrowIfUnhandledException(
@@ -118,7 +110,7 @@ namespace NuKeeper.Collaboration
         {
             if (unhandledEx.Happened)
             {
-                var exception = unhandledEx.Value;
+                Exception exception = unhandledEx.Value;
                 if (exception is AggregateException aggregateException)
                 {
                     exception = aggregateException.Flatten();

@@ -1,8 +1,10 @@
-using System;
 using NuKeeper.Collaboration;
 using NuKeeper.Commands;
-using NUnit.Framework;
 using NuKeeper.Local;
+
+using NUnit.Framework;
+
+using System;
 
 namespace NuKeeper.Tests
 {
@@ -12,9 +14,9 @@ namespace NuKeeper.Tests
         [Test]
         public void RootCanBeResolved()
         {
-            var container = ContainerRegistration.Init();
+            SimpleInjector.Container container = ContainerRegistration.Init();
 
-            var engine = container.GetInstance<ICollaborationEngine>();
+            ICollaborationEngine engine = container.GetInstance<ICollaborationEngine>();
 
             Assert.That(engine, Is.Not.Null);
             Assert.That(engine, Is.TypeOf<CollaborationEngine>());
@@ -23,9 +25,9 @@ namespace NuKeeper.Tests
         [Test]
         public void InspectorCanBeResolved()
         {
-            var container = ContainerRegistration.Init();
+            SimpleInjector.Container container = ContainerRegistration.Init();
 
-            var inspector = container.GetInstance<ILocalEngine>();
+            ILocalEngine inspector = container.GetInstance<ILocalEngine>();
 
             Assert.That(inspector, Is.Not.Null);
             Assert.That(inspector, Is.TypeOf<LocalEngine>());
@@ -38,9 +40,9 @@ namespace NuKeeper.Tests
         [TestCase(typeof(GlobalCommand))]
         public void CommandsCanBeResolved(Type commandType)
         {
-            var container = ContainerRegistration.Init();
+            SimpleInjector.Container container = ContainerRegistration.Init();
 
-            var command = container.GetInstance(commandType);
+            object command = container.GetInstance(commandType);
 
             Assert.That(command, Is.Not.Null);
         }

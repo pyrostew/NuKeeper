@@ -1,14 +1,17 @@
-using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
+
 using NuGet.Configuration;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.ProcessRunner;
+
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace NuKeeper.Update.Process
 {
@@ -45,7 +48,7 @@ namespace NuKeeper.Update.Process
 
             _logger.Normal($"Nuget restore on {file.DirectoryName} {file.Name}");
 
-            var nuget = _nuGetPath.Executable;
+            string nuget = _nuGetPath.Executable;
 
             if (string.IsNullOrWhiteSpace(nuget))
             {
@@ -53,8 +56,8 @@ namespace NuKeeper.Update.Process
                 return;
             }
 
-            var fileNameCommandLine = ArgumentEscaper.EscapeAndConcatenate(new[] { file.Name });
-            var sourcesCommandLine = sources.CommandLine("-Source");
+            string fileNameCommandLine = ArgumentEscaper.EscapeAndConcatenate(new[] { file.Name });
+            string sourcesCommandLine = sources.CommandLine("-Source");
             string restoreCommand = $"restore {fileNameCommandLine} {sourcesCommandLine} -NonInteractive";
 
             // see: https://docs.microsoft.com/en-us/nuget/reference/cli-reference/cli-ref-restore

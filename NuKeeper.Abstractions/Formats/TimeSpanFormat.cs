@@ -6,7 +6,7 @@ namespace NuKeeper.Abstractions.Formats
     {
         public static string Ago(DateTime start, DateTime end)
         {
-            var duration = end.Subtract(start);
+            TimeSpan duration = end.Subtract(start);
 
             if (start.Year == end.Year && start.Month == end.Month)
             {
@@ -20,20 +20,14 @@ namespace NuKeeper.Abstractions.Formats
             }
 
             int months = MonthsBetween(start, end);
-            var years = months / 12;
-            var remainderMonth = months % 12;
+            int years = months / 12;
+            int remainderMonth = months % 12;
 
-            if (years == 0)
-            {
-                return Plural(remainderMonth, "month") + " ago";
-            }
-
-            if (remainderMonth == 0)
-            {
-                return Plural(years, "year") + " ago";
-            }
-
-            return Plural(years, "year") + " and " + Plural(remainderMonth, "month") + " ago";
+            return years == 0
+                ? Plural(remainderMonth, "month") + " ago"
+                : remainderMonth == 0
+                ? Plural(years, "year") + " ago"
+                : Plural(years, "year") + " and " + Plural(remainderMonth, "month") + " ago";
         }
 
         private static int MonthsBetween(DateTime start, DateTime end)
@@ -43,9 +37,9 @@ namespace NuKeeper.Abstractions.Formats
                 return end.Month - start.Month;
             }
 
-            var fullYears = (end.Year - start.Year - 1);
-            var months = end.Month + 12 - start.Month;
-            return fullYears * 12 + months;
+            int fullYears = end.Year - start.Year - 1;
+            int months = end.Month + 12 - start.Month;
+            return (fullYears * 12) + months;
         }
 
         public static string Ago(TimeSpan ago)
@@ -57,34 +51,29 @@ namespace NuKeeper.Abstractions.Formats
 
             if (ago.TotalMinutes < 1)
             {
-                var secs = (int)ago.TotalSeconds;
+                int secs = (int)ago.TotalSeconds;
                 return Plural(secs, "second") + " ago";
             }
 
             if (ago.TotalHours < 1)
             {
-                var mins = (int)ago.TotalMinutes;
+                int mins = (int)ago.TotalMinutes;
                 return Plural(mins, "minute") + " ago";
             }
 
             if (ago.TotalDays < 1)
             {
-                var hours = (int)ago.TotalHours;
+                int hours = (int)ago.TotalHours;
                 return Plural(hours, "hour") + " ago";
             }
 
-            var days = (int)ago.TotalDays;
+            int days = (int)ago.TotalDays;
             return Plural(days, "day") + " ago";
         }
 
         private static string Plural(int value, string metric)
         {
-            if (value == 1)
-            {
-                return $"1 {metric}";
-            }
-
-            return $"{value} {metric}s";
+            return value == 1 ? $"1 {metric}" : $"{value} {metric}s";
         }
     }
 }

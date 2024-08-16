@@ -1,9 +1,11 @@
+using NuGet.Configuration;
+using NuGet.Packaging.Core;
+
+using NuKeeper.Abstractions.Formats;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NuGet.Configuration;
-using NuGet.Packaging.Core;
-using NuKeeper.Abstractions.Formats;
 
 namespace NuKeeper.Abstractions.NuGetApi
 {
@@ -18,7 +20,7 @@ namespace NuKeeper.Abstractions.NuGetApi
             Identity = identity ?? throw new ArgumentNullException(nameof(identity));
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Published = published;
-            Dependencies = dependencies?.ToList() ?? new List<PackageDependency>();
+            Dependencies = dependencies?.ToList() ?? [];
         }
 
         public PackageIdentity Identity { get; }
@@ -29,12 +31,9 @@ namespace NuKeeper.Abstractions.NuGetApi
 
         public override string ToString()
         {
-            if (Published.HasValue)
-            {
-                return $"{Identity} from {Source}, published at {DateFormat.AsUtcIso8601(Published)}";
-            }
-
-            return $"{Identity} from {Source}, no published date";
+            return Published.HasValue
+                ? $"{Identity} from {Source}, published at {DateFormat.AsUtcIso8601(Published)}"
+                : $"{Identity} from {Source}, no published date";
         }
     }
 }

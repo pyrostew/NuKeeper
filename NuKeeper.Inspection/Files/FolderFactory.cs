@@ -1,11 +1,11 @@
+using NuKeeper.Abstractions.Inspections.Files;
+using NuKeeper.Abstractions.Logging;
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-
-using NuKeeper.Abstractions.Inspections.Files;
-using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Inspection.Files
 {
@@ -31,8 +31,8 @@ namespace NuKeeper.Inspection.Files
                 throw new ArgumentNullException(nameof(nukeeperTemp));
             }
 
-            var dirs = nukeeperTemp.Exists ? nukeeperTemp.EnumerateDirectories() : Enumerable.Empty<DirectoryInfo>();
-            var filterDatetime = DateTime.Now.AddHours(-1);
+            IEnumerable<DirectoryInfo> dirs = nukeeperTemp.Exists ? nukeeperTemp.EnumerateDirectories() : Enumerable.Empty<DirectoryInfo>();
+            DateTime filterDatetime = DateTime.Now.AddHours(-1);
             return dirs.Where(d =>
                 d.Name.StartsWith(FolderPrefix, StringComparison.InvariantCultureIgnoreCase) &&
                 d.LastWriteTime < filterDatetime);
@@ -48,10 +48,10 @@ namespace NuKeeper.Inspection.Files
         /// </summary>
         public void DeleteExistingTempDirs()
         {
-            var dirInfo = new DirectoryInfo(NuKeeperTempFilesPath());
-            foreach (var dir in GetTempDirsToCleanup(dirInfo))
+            DirectoryInfo dirInfo = new(NuKeeperTempFilesPath());
+            foreach (DirectoryInfo dir in GetTempDirsToCleanup(dirInfo))
             {
-                var folder = new Folder(_logger, dir);
+                Folder folder = new(_logger, dir);
                 folder.TryDelete();
             }
         }
@@ -63,14 +63,14 @@ namespace NuKeeper.Inspection.Files
 
         public IFolder UniqueTemporaryFolder()
         {
-            var tempDir = new DirectoryInfo(GetUniqueTemporaryPath());
+            DirectoryInfo tempDir = new(GetUniqueTemporaryPath());
             tempDir.Create();
             return new Folder(_logger, tempDir);
         }
 
         private static string GetUniqueTemporaryPath()
         {
-            var uniqueName = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+            string uniqueName = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
             return Path.Combine(NuKeeperTempFilesPath(), $"{FolderPrefix}{uniqueName}");
         }
     }

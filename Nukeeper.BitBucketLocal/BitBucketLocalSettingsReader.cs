@@ -1,11 +1,11 @@
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Configuration;
+
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.CollaborationPlatform;
-using NuKeeper.Abstractions.Configuration;
-using NuKeeper.Abstractions.Formats;
 
 namespace NuKeeper.BitBucketLocal
 {
@@ -35,8 +35,8 @@ namespace NuKeeper.BitBucketLocal
                 return Task.FromResult<RepositorySettings>(null);
             }
 
-            var path = repositoryUri.AbsolutePath;
-            var pathParts = path.Split('/')
+            string path = repositoryUri.AbsolutePath;
+            System.Collections.Generic.List<string> pathParts = path.Split('/')
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToList();
 
@@ -47,8 +47,8 @@ namespace NuKeeper.BitBucketLocal
                 return Task.FromResult<RepositorySettings>(null);
             }
 
-            var repoName = pathParts[pathParts.Count - 1].ToLower(CultureInfo.CurrentCulture).Replace(".git", string.Empty);
-            var project = pathParts[pathParts.Count - 2];
+            string repoName = pathParts[^1].ToLower(CultureInfo.CurrentCulture).Replace(".git", string.Empty);
+            string project = pathParts[^2];
 
             return Task.FromResult(new RepositorySettings
             {
@@ -69,9 +69,9 @@ namespace NuKeeper.BitBucketLocal
 
             settings.Username = Concat.FirstValue(Username, _environmentVariablesProvider.GetUserName());
 
-            var envToken = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_bitbucketlocal_token");
+            string envToken = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_bitbucketlocal_token");
             settings.Token = Concat.FirstValue(envToken, settings.Token);
-            settings.ForkMode = settings.ForkMode ?? ForkMode.SingleRepositoryOnly;
+            settings.ForkMode ??= ForkMode.SingleRepositoryOnly;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace NuKeeper.Abstractions.Formats
             {
                 return string.Empty;
             }
-            var utcValue = source.Value.ToUniversalTime();
+            DateTimeOffset utcValue = source.Value.ToUniversalTime();
             return string.Concat(utcValue.ToString(Iso8601Format, CultureInfo.InvariantCulture), "Z");
         }
     }

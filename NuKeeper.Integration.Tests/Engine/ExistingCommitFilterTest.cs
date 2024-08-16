@@ -1,14 +1,18 @@
 using NSubstitute;
+
 using NuGet.Configuration;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Git;
 using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Engine.Packages;
+
 using NUnit.Framework;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,64 +25,64 @@ namespace NuKeeper.Integration.Tests.Engine
         [Test]
         public async Task DoFilter()
         {
-            var nugetsToUpdate = new[]
+            string[] nugetsToUpdate = new[]
             {
                 "First.Nuget",
                 "Second.Nuget"
             };
 
-            var nugetsAlreadyCommitted = new[]
+            string[] nugetsAlreadyCommitted = new[]
             {
                 "Second.Nuget",
             };
 
-            var git = MakeGitDriver(nugetsAlreadyCommitted);
+            IGitDriver git = MakeGitDriver(nugetsAlreadyCommitted);
 
-            var updates = nugetsToUpdate.Select(n => MakeUpdateSet(n)).ToList();
+            List<PackageUpdateSet> updates = nugetsToUpdate.Select(MakeUpdateSet).ToList();
 
-            var subject = MakeExistingCommitFilter();
+            IExistingCommitFilter subject = MakeExistingCommitFilter();
 
-            var result = await subject.Filter(git, updates.AsReadOnly(), "base", "head");
+            IReadOnlyCollection<PackageUpdateSet> result = await subject.Filter(git, updates.AsReadOnly(), "base", "head");
 
-            Assert.AreEqual(1, result.Count);
-            Assert.AreEqual("First.Nuget", result.FirstOrDefault()?.SelectedId);
+            Assert.That(result.Count, Is.EqualTo(1));
+            Assert.That(result.FirstOrDefault()?.SelectedId, Is.EqualTo("First.Nuget"));
         }
 
         [Test]
         public async Task DoNotFilter()
         {
-            var nugetsToUpdate = new[]
+            string[] nugetsToUpdate = new[]
             {
                 "First.Nuget",
                 "Second.Nuget"
             };
 
-            var nugetsAlreadyCommitted = new[]
+            string[] nugetsAlreadyCommitted = new[]
             {
                 "Third.Nuget",
             };
 
-            var git = MakeGitDriver(nugetsAlreadyCommitted);
+            IGitDriver git = MakeGitDriver(nugetsAlreadyCommitted);
 
-            var updates = nugetsToUpdate.Select(n => MakeUpdateSet(n)).ToList();
+            List<PackageUpdateSet> updates = nugetsToUpdate.Select(MakeUpdateSet).ToList();
 
-            var subject = MakeExistingCommitFilter();
+            IExistingCommitFilter subject = MakeExistingCommitFilter();
 
-            var result = await subject.Filter(git, updates.AsReadOnly(), "base", "head");
+            IReadOnlyCollection<PackageUpdateSet> result = await subject.Filter(git, updates.AsReadOnly(), "base", "head");
 
-            Assert.AreEqual(2, result.Count);
+            Assert.That(result.Count, Is.EqualTo(2));
         }
 
         private IExistingCommitFilter MakeExistingCommitFilter()
         {
-            var collaborationFactory = Substitute.For<ICollaborationFactory>();
+            ICollaborationFactory collaborationFactory = Substitute.For<ICollaborationFactory>();
 
-            var gitClient = Substitute.For<ICollaborationPlatform>();
-            collaborationFactory.CollaborationPlatform.Returns(gitClient);
+            ICollaborationPlatform gitClient = Substitute.For<ICollaborationPlatform>();
+            _ = collaborationFactory.CollaborationPlatform.Returns(gitClient);
 
-            var commitWorder = Substitute.For<ICommitWorder>();
-            commitWorder.MakeCommitMessage(Arg.Any<PackageUpdateSet>()).Returns(p => $"Automatic update of {((PackageUpdateSet)p[0]).SelectedId} to {((PackageUpdateSet)p[0]).SelectedVersion}");
-            collaborationFactory.CommitWorder.Returns(commitWorder);
+            ICommitWorder commitWorder = Substitute.For<ICommitWorder>();
+            _ = commitWorder.MakeCommitMessage(Arg.Any<PackageUpdateSet>()).Returns(p => $"Automatic update of {((PackageUpdateSet)p[0]).SelectedId} to {((PackageUpdateSet)p[0]).SelectedVersion}");
+            _ = collaborationFactory.CommitWorder.Returns(commitWorder);
 
             return new ExistingCommitFilter(collaborationFactory, NukeeperLogger);
         }
@@ -93,10 +97,10 @@ namespace NuKeeper.Integration.Tests.Engine
 
         private static IGitDriver MakeGitDriver(string[] ids)
         {
-            var l = ids.Select(id => CreateCommitMessage(id, new NuGetVersion("3.0.0"))).ToArray();
+            string[] l = ids.Select(id => CreateCommitMessage(id, new NuGetVersion("3.0.0"))).ToArray();
 
-            var git = Substitute.For<IGitDriver>();
-            git.GetNewCommitMessages(Arg.Any<string>(), Arg.Any<string>())
+            IGitDriver git = Substitute.For<IGitDriver>();
+            _ = git.GetNewCommitMessages(Arg.Any<string>(), Arg.Any<string>())
                 .Returns(FixedReturnVal(ids));
 
             return git;
@@ -109,19 +113,19 @@ namespace NuKeeper.Integration.Tests.Engine
 
         private static PackageUpdateSet MakeUpdateSet(string id)
         {
-            var currentPackages = new List<PackageInProject>
-            {
-                new PackageInProject(id, "1.0.0", new PackagePath("base","rel", PackageReferenceType.ProjectFile)),
-                new PackageInProject(id, "2.0.0", new PackagePath("base","rel", PackageReferenceType.ProjectFile)),
-            };
+            List<PackageInProject> currentPackages =
+            [
+                new PackageInProject(id, "1.0.0", new PackagePath("base", "rel", PackageReferenceType.ProjectFile)),
+                new PackageInProject(id, "2.0.0", new PackagePath("base", "rel", PackageReferenceType.ProjectFile)),
+            ];
 
-            var majorUpdate = new PackageSearchMetadata(
+            PackageSearchMetadata majorUpdate = new(
                 new PackageIdentity(
                     id,
                     new NuGetVersion("3.0.0")),
                 new PackageSource("https://api.nuget.org/v3/index.json"), null, null);
 
-            var lookupResult = new PackageLookupResult(VersionChange.Major, majorUpdate, null, null);
+            PackageLookupResult lookupResult = new(VersionChange.Major, majorUpdate, null, null);
 
             return new PackageUpdateSet(lookupResult, currentPackages);
         }

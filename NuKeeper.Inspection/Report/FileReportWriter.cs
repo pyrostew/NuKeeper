@@ -9,7 +9,7 @@ namespace NuKeeper.Inspection.Report
 
         public FileReportWriter(string fileName)
         {
-            var output = new FileStream(fileName, FileMode.Create);
+            FileStream output = new(fileName, FileMode.Create);
             _stream = new StreamWriter(output);
         }
 

@@ -1,15 +1,17 @@
 using NuGet.Common;
+
 using NUnit.Framework;
+
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 namespace NuKeeper.Integration.Tests.LogHelpers
 {
-    class NugetTestLogger : ILogger
+    internal class NugetTestLogger : ILogger
     {
         private readonly LogLevel _logLevel;
 
-        private readonly ConcurrentQueue<string> _buffer = new ConcurrentQueue<string>();
+        private readonly ConcurrentQueue<string> _buffer = new();
 
         public NugetTestLogger(LogLevel logLevel = LogLevel.Verbose)
         {
@@ -23,12 +25,12 @@ namespace NuKeeper.Integration.Tests.LogHelpers
 
         public void DumpLogToTestOutput()
         {
-            var test = TestContext.CurrentContext.Test.Name;
+            string test = TestContext.CurrentContext.Test.Name;
 
             if (!_buffer.IsEmpty)
             {
                 TestContext.Error.WriteLine($"{test}: NuKeeper Log:");
-                while (_buffer.TryDequeue(out var line))
+                while (_buffer.TryDequeue(out string line))
                 {
                     TestContext.Error.WriteLine(line);
                 }
@@ -37,9 +39,9 @@ namespace NuKeeper.Integration.Tests.LogHelpers
 
         public void Log(LogLevel level, string data)
         {
-            var test = TestContext.CurrentContext.Test.Name;
+            string test = TestContext.CurrentContext.Test.Name;
 
-            if (level >= _logLevel )
+            if (level >= _logLevel)
             {
                 _buffer.Enqueue($"{test}: {level} - {data}");
             }

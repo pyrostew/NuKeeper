@@ -1,7 +1,9 @@
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.Process;
+
 using NUnit.Framework;
+
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -31,22 +33,22 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
         [Test]
         public async Task ShouldUpdateConditionOnTaskImport()
         {
-            var workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory,
+            string workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory,
                 nameof(ShouldUpdateConditionOnTaskImport));
 
-            Directory.CreateDirectory(workDirectory);
-            var projectName = nameof(ShouldUpdateConditionOnTaskImport) + ".csproj";
-            var projectPath = Path.Combine(workDirectory, projectName);
+            _ = Directory.CreateDirectory(workDirectory);
+            string projectName = nameof(ShouldUpdateConditionOnTaskImport) + ".csproj";
+            string projectPath = Path.Combine(workDirectory, projectName);
             await File.WriteAllTextAsync(projectPath, _testWebApiProject);
 
-            var subject = new UpdateProjectImportsCommand();
+            UpdateProjectImportsCommand subject = new();
 
-            var package = new PackageInProject("acme", "1.0.0",
+            PackageInProject package = new("acme", "1.0.0",
                 new PackagePath(workDirectory, projectName, PackageReferenceType.ProjectFileOldStyle));
 
             await subject.Invoke(package, null, null, NuGetSources.GlobalFeed);
 
-            var updatedContents = await File.ReadAllTextAsync(projectPath);
+            string updatedContents = await File.ReadAllTextAsync(projectPath);
 
             Assert.That(updatedContents, Does.Not.Contain(_unpatchedImport));
             Assert.That(updatedContents, Does.Contain(_patchedImport));
@@ -55,33 +57,33 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
         [Test]
         public async Task ShouldFollowResolvableImports()
         {
-            var workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory,
+            string workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory,
                 nameof(ShouldFollowResolvableImports));
 
-            Directory.CreateDirectory(workDirectory);
+            _ = Directory.CreateDirectory(workDirectory);
 
-            var projectName = nameof(ShouldFollowResolvableImports) + ".csproj";
-            var projectPath = Path.Combine(workDirectory, projectName);
+            string projectName = nameof(ShouldFollowResolvableImports) + ".csproj";
+            string projectPath = Path.Combine(workDirectory, projectName);
             await File.WriteAllTextAsync(projectPath, _testWebApiProject);
 
-            var intermediateProject = Path.Combine(workDirectory, "Intermediate.csproj");
-            var intermediateContents = _projectWithReference.Replace("{importPath}", projectPath, StringComparison.OrdinalIgnoreCase);
+            string intermediateProject = Path.Combine(workDirectory, "Intermediate.csproj");
+            string intermediateContents = _projectWithReference.Replace("{importPath}", projectPath, StringComparison.OrdinalIgnoreCase);
             await File.WriteAllTextAsync(intermediateProject, intermediateContents);
 
-            var rootProject = Path.Combine(workDirectory, "RootProject.csproj");
-            var rootContents = _projectWithReference.Replace("{importPath}",
+            string rootProject = Path.Combine(workDirectory, "RootProject.csproj");
+            string rootContents = _projectWithReference.Replace("{importPath}",
                 Path.Combine("..", nameof(ShouldFollowResolvableImports), "Intermediate.csproj"),
                 StringComparison.OrdinalIgnoreCase);
             await File.WriteAllTextAsync(rootProject, rootContents);
 
-            var subject = new UpdateProjectImportsCommand();
+            UpdateProjectImportsCommand subject = new();
 
-            var package = new PackageInProject("acme", "1.0.0",
+            PackageInProject package = new("acme", "1.0.0",
                 new PackagePath(workDirectory, "RootProject.csproj", PackageReferenceType.ProjectFileOldStyle));
 
             await subject.Invoke(package, null, null, NuGetSources.GlobalFeed);
 
-            var updatedContents = await File.ReadAllTextAsync(projectPath);
+            string updatedContents = await File.ReadAllTextAsync(projectPath);
 
             Assert.That(updatedContents, Does.Not.Contain(_unpatchedImport));
             Assert.That(updatedContents, Does.Contain(_patchedImport));

@@ -3,7 +3,7 @@ using System;
 namespace NuKeeper
 {
     [Flags]
-    enum ExitCodes
+    internal enum ExitCodes
     {
         Success = 0,
         UnknownError = 1 << 0,
