@@ -3,7 +3,7 @@ strategy:
     Linux:
       imageName: 'ubuntu-latest'
     Windows:
-      imageName: 'windows-2019'
+      imageName: 'windows-2022'
     Mac:
       imageName: 'macOS-10.14'
 
@@ -15,9 +15,9 @@ variables:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 steps:
 - task: DotNetCoreInstaller@1
-  displayName: 'Use .NET Core sdk 5.0.x'
+  displayName: 'Use .NET Core sdk 8.0.x'
   inputs:
-    version: 5.0.x
+    version: 8.0.x
 
 - bash: echo NugetVersion is $NugetVersion; export NugetVersion
   displayName: 'export NugetVersion into env vars'
