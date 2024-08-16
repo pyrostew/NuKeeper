@@ -14,8 +14,7 @@ variables:
   buildConfiguration: Release
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 steps:
-- task: DotNetCoreInstaller@1
-  displayName: 'Use .NET Core sdk 8.0.x'
+- task: UseDotNet@2
   inputs:
     packageType: 'sdk'
     version: '8.x'
