@@ -3,9 +3,9 @@ strategy:
     Linux:
       imageName: 'ubuntu-latest'
     Windows:
-      imageName: 'windows-2022'
+      imageName: 'windows-latest'
     Mac:
-      imageName: 'macOS-10.14'
+      imageName: 'macOS-latest'
 
 pool:
   vmImage: $(imageName)
