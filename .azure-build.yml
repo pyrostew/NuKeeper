@@ -11,8 +11,12 @@ pool:
   vmImage: $(imageName)
 
 variables:
-  buildConfiguration: Release
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+- group: GitHub Tokens
+- name: buildConfiguration
+  value: Release
+- name: DOTNET_SKIP_FIRST_TIME_EXPERIENCE
+  value: true
+
 steps:
 - task: UseDotNet@2
   inputs:
@@ -38,6 +42,8 @@ steps:
     projects: 'NuKeeper.sln'
     arguments: '--collect:"XPlat Code Coverage" --configuration $(BuildConfiguration)'
     nobuild: true
+  env:
+    GitHubPAT: $(GitHubPAT)
 
 - script: |
     dotnet tool install -g dotnet-reportgenerator-globaltool
