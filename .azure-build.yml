@@ -51,12 +51,10 @@ steps:
   displayName: Create Code coverage report
   condition: eq(variables['Agent.OS'], 'Windows_NT')
 
-- task: PublishCodeCoverageResults@1
+- task: PublishCodeCoverageResults@2
   displayName: 'Publish code coverage'
   inputs:
-    codeCoverageTool: Cobertura
     summaryFileLocation: '$(Build.SourcesDirectory)/CodeCoverage/Cobertura.xml'
-    reportDirectory: '$(Build.SourcesDirectory)/CodeCoverage'
   condition: eq(variables['Agent.OS'], 'Windows_NT')
 
 - task: PublishBuildArtifacts@1
