@@ -17,7 +17,8 @@ steps:
 - task: DotNetCoreInstaller@1
   displayName: 'Use .NET Core sdk 8.0.x'
   inputs:
-    version: 8.0.x
+    packageType: 'sdk'
+    version: '8.x'
 
 - bash: echo NugetVersion is $NugetVersion; export NugetVersion
   displayName: 'export NugetVersion into env vars'
