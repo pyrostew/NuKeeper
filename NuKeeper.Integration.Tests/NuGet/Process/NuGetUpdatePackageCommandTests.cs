@@ -49,6 +49,12 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
         }
 
         [Test]
+        public async Task ShouldUpdateSDKStyleProjectsThatReferenceMixedProjects()
+        {
+
+        }
+
+        [Test]
         public async Task ShouldUpdateDotnetClassicProject()
         {
             const string oldPackageVersion = "5.2.3";

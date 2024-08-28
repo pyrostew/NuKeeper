@@ -173,7 +173,8 @@ namespace NuKeeper.Git
                 using Repository repo = MakeRepo();
                 Signature signature = GetSignature(repo);
                 GitCommands.Stage(repo, "*");
-                _ = repo.Commit(message, signature, signature);
+                CommitOptions options = new CommitOptions() { AllowEmptyCommit = true };
+                repo.Commit(message, signature, signature, options);
             });
         }
 

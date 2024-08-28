@@ -74,20 +74,20 @@ namespace NuKeeper.Update
         {
             return packageReferenceType switch
             {
-                PackageReferenceType.PackagesConfig => new IPackageCommand[]
-                                    {
+                PackageReferenceType.PackagesConfig =>
+                    [
                         _fileRestoreCommand,
                         _nuGetUpdatePackageCommand
-                                    },
-                PackageReferenceType.ProjectFileOldStyle => new IPackageCommand[]
-                    {
+                    ],
+                PackageReferenceType.ProjectFileOldStyle =>
+                    [
                         _updateProjectImportsCommand,
                         _fileRestoreCommand,
                         _dotNetUpdatePackageCommand
-                    },
-                PackageReferenceType.ProjectFile => new[] { _dotNetUpdatePackageCommand },
-                PackageReferenceType.Nuspec => new[] { _updateNuspecCommand },
-                PackageReferenceType.DirectoryBuildTargets => new[] { _updateDirectoryBuildTargetsCommand },
+                    ],
+                PackageReferenceType.ProjectFile => [ _dotNetUpdatePackageCommand ],
+                PackageReferenceType.Nuspec => [ _updateNuspecCommand ],
+                PackageReferenceType.DirectoryBuildTargets => [ _updateDirectoryBuildTargetsCommand ],
                 _ => throw new ArgumentOutOfRangeException(nameof(packageReferenceType)),
             };
         }
