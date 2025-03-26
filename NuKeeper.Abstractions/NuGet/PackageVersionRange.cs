@@ -1,7 +1,7 @@
+using System;
+
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
-
-using System;
 
 namespace NuKeeper.Abstractions.NuGet
 {

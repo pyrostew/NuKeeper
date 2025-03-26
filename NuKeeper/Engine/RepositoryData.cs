@@ -1,6 +1,6 @@
-using NuKeeper.Abstractions.CollaborationModels;
-
 using System;
+
+using NuKeeper.Abstractions.CollaborationModels;
 
 namespace NuKeeper.Engine
 {

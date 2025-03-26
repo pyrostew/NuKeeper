@@ -1,3 +1,8 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+
 using NSubstitute;
 
 using NuGet.Versioning;
@@ -7,11 +12,6 @@ using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.RepositoryInspection;
 
 using NUnit.Framework;
-
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace NuKeeper.Inspection.Tests.RepositoryInspection
 {

@@ -1,9 +1,9 @@
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+
 using NuGet.Common;
 
 using NUnit.Framework;
-
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Integration.Tests.LogHelpers
 {

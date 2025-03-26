@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 using McMaster.Extensions.CommandLineUtils;
 
 using NuKeeper.Abstractions;
@@ -5,8 +7,6 @@ using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Collaboration;
 using NuKeeper.Inspection.Logging;
-
-using System.Threading.Tasks;
 
 namespace NuKeeper.Commands
 {

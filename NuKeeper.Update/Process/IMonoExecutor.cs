@@ -1,6 +1,6 @@
-using NuKeeper.Update.ProcessRunner;
-
 using System.Threading.Tasks;
+
+using NuKeeper.Update.ProcessRunner;
 
 namespace NuKeeper.Update.Process
 {

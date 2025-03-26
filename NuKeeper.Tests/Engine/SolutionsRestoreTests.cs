@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions;
@@ -7,10 +11,6 @@ using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.Process;
 
 using NUnit.Framework;
-
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Engine
 {

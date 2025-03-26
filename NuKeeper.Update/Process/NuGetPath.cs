@@ -1,8 +1,8 @@
-using NuKeeper.Abstractions.Logging;
-
 using System;
 using System.IO;
 using System.Linq;
+
+using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Update.Process
 {

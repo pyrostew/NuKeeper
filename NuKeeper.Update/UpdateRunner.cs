@@ -1,13 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Sort;
 using NuKeeper.Update.Process;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Update
 {
@@ -85,9 +85,9 @@ namespace NuKeeper.Update
                         _fileRestoreCommand,
                         _dotNetUpdatePackageCommand
                     ],
-                PackageReferenceType.ProjectFile => [ _dotNetUpdatePackageCommand ],
-                PackageReferenceType.Nuspec => [ _updateNuspecCommand ],
-                PackageReferenceType.DirectoryBuildTargets => [ _updateDirectoryBuildTargetsCommand ],
+                PackageReferenceType.ProjectFile => [_dotNetUpdatePackageCommand],
+                PackageReferenceType.Nuspec => [_updateNuspecCommand],
+                PackageReferenceType.DirectoryBuildTargets => [_updateDirectoryBuildTargetsCommand],
                 _ => throw new ArgumentOutOfRangeException(nameof(packageReferenceType)),
             };
         }

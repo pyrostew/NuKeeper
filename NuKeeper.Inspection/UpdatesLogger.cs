@@ -1,9 +1,9 @@
-using NuKeeper.Abstractions.RepositoryInspection;
-using NuKeeper.Inspection.Logging;
-
 using System;
 using System.Collections.Generic;
 using System.Text;
+
+using NuKeeper.Abstractions.RepositoryInspection;
+using NuKeeper.Inspection.Logging;
 
 namespace NuKeeper.Inspection
 {

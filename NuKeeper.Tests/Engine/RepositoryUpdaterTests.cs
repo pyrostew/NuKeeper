@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuGet.Configuration;
@@ -25,12 +31,6 @@ using NuKeeper.Update.Process;
 using NuKeeper.Update.Selection;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Engine
 {

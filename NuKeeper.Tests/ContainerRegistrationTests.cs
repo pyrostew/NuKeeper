@@ -1,10 +1,10 @@
+using System;
+
 using NuKeeper.Collaboration;
 using NuKeeper.Commands;
 using NuKeeper.Local;
 
 using NUnit.Framework;
-
-using System;
 
 namespace NuKeeper.Tests
 {

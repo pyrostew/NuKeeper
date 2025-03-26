@@ -1,7 +1,7 @@
-using Newtonsoft.Json.Serialization;
-
 using System;
 using System.Globalization;
+
+using Newtonsoft.Json.Serialization;
 
 namespace NuKeeper
 {

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
@@ -7,9 +10,6 @@ using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Tests;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Generic;
 
 namespace NuKeeper.AzureDevOps.Tests
 {

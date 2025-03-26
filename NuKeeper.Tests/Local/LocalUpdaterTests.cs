@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions;
@@ -12,9 +15,6 @@ using NuKeeper.Update.Process;
 using NuKeeper.Update.Selection;
 
 using NUnit.Framework;
-
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Local
 {

@@ -1,8 +1,8 @@
-using NuKeeper.Abstractions.Git;
-
 using System;
 using System.IO;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions.Git;
 
 namespace NuKeeper.Abstractions.Formats
 {

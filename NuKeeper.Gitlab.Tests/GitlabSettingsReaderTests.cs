@@ -1,12 +1,12 @@
+using System;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 
 using NUnit.Framework;
-
-using System;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Gitlab.Tests
 {

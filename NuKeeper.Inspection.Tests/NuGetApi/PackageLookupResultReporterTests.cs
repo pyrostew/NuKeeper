@@ -1,3 +1,5 @@
+using System;
+
 using NSubstitute;
 
 using NuGet.Configuration;
@@ -10,8 +12,6 @@ using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Inspection.NuGetApi;
 
 using NUnit.Framework;
-
-using System;
 
 namespace NuKeeper.Inspection.Tests.NuGetApi
 {

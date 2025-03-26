@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.CollaborationModels;
@@ -15,11 +20,6 @@ using NuKeeper.Inspection.Files;
 using NuKeeper.Inspection.Logging;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Commands
 {

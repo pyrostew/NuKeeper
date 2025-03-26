@@ -1,10 +1,10 @@
-using NuGet.Versioning;
-
-using NuKeeper.Abstractions.RepositoryInspection;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using NuGet.Versioning;
+
+using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.Sort
 {

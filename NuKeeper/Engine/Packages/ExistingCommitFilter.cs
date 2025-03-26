@@ -1,12 +1,12 @@
-using NuKeeper.Abstractions.CollaborationPlatform;
-using NuKeeper.Abstractions.Git;
-using NuKeeper.Abstractions.Logging;
-using NuKeeper.Abstractions.RepositoryInspection;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Git;
+using NuKeeper.Abstractions.Logging;
+using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Engine.Packages
 {

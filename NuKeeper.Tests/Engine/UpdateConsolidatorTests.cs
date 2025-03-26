@@ -1,11 +1,11 @@
+using System.Collections.Generic;
+using System.Linq;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Engine;
 
 using NUnit.Framework;
-
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NuKeeper.Tests.Engine
 {

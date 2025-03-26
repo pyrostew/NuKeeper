@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.CollaborationPlatform;
@@ -9,11 +14,6 @@ using NuKeeper.Engine;
 using NuKeeper.GitHub;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Engine
 {

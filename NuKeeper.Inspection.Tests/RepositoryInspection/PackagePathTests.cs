@@ -1,8 +1,8 @@
+using System.IO;
+
 using NuKeeper.Abstractions.RepositoryInspection;
 
 using NUnit.Framework;
-
-using System.IO;
 
 namespace NuKeeper.Inspection.Tests.RepositoryInspection
 {

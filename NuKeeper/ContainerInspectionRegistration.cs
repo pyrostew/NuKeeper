@@ -1,3 +1,5 @@
+using System.Text;
+
 using NuGet.Common;
 
 using NuKeeper.Abstractions.Logging;
@@ -11,8 +13,6 @@ using NuKeeper.Inspection.Sort;
 using NuKeeper.Inspection.Sources;
 
 using SimpleInjector;
-
-using System.Text;
 
 namespace NuKeeper
 {

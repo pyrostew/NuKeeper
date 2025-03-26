@@ -1,3 +1,6 @@
+using System;
+using System.Threading.Tasks;
+
 using McMaster.Extensions.CommandLineUtils;
 
 using NuGet.Configuration;
@@ -6,9 +9,6 @@ using NuGet.Versioning;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.ProcessRunner;
-
-using System;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Update.Process
 {

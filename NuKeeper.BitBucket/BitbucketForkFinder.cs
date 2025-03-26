@@ -1,10 +1,10 @@
+using System;
+using System.Threading.Tasks;
+
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
-
-using System;
-using System.Threading.Tasks;
 
 namespace NuKeeper.BitBucket
 {

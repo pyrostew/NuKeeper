@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using NuGet.Configuration;
 
 using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGet;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NuKeeper.Inspection.Sources
 {

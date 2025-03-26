@@ -1,3 +1,7 @@
+using System;
+using System.IO;
+using System.Threading.Tasks;
+
 using NuGet.Common;
 using NuGet.Credentials;
 
@@ -9,10 +13,6 @@ using NuKeeper.Abstractions.Inspections.Files;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Git;
 using NuKeeper.Inspection.Files;
-
-using System;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Engine
 {

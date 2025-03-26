@@ -1,8 +1,8 @@
+using System.Collections.Generic;
+
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.Output;
-
-using System.Collections.Generic;
 
 namespace NuKeeper.Abstractions.Configuration
 {

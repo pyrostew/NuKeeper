@@ -1,9 +1,9 @@
+using System;
+using System.Threading.Tasks;
+
 using NuGet.Common;
 
 using NuKeeper.Abstractions.Logging;
-
-using System;
-using System.Threading.Tasks;
 
 using LogLevel = NuGet.Common.LogLevel;
 

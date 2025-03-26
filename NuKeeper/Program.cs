@@ -1,11 +1,11 @@
-using McMaster.Extensions.CommandLineUtils;
-
-using NuKeeper.Commands;
-
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
+using McMaster.Extensions.CommandLineUtils;
+
+using NuKeeper.Commands;
 
 [assembly: InternalsVisibleTo("NuKeeper.Tests")]
 

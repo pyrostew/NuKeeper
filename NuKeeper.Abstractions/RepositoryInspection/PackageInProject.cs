@@ -1,10 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
+
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
 using NuKeeper.Abstractions.NuGet;
-
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NuKeeper.Abstractions.RepositoryInspection
 {

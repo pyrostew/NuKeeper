@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using McMaster.Extensions.CommandLineUtils;
 
 using NuGet.Configuration;
 
 using NuKeeper.Abstractions.Formats;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NuKeeper.Abstractions.NuGet
 {

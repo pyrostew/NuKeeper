@@ -1,3 +1,6 @@
+using System;
+using System.Threading.Tasks;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
@@ -6,9 +9,6 @@ using NuKeeper.Abstractions.Git;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Engine;
 using NuKeeper.Inspection.Files;
-
-using System;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Collaboration
 {

@@ -1,9 +1,9 @@
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.Logging;
-
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Update.ProcessRunner
 {

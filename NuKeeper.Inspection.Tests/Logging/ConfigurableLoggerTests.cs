@@ -1,9 +1,9 @@
+using System;
+
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Inspection.Logging;
 
 using NUnit.Framework;
-
-using System;
 
 namespace NuKeeper.Inspection.Tests.Logging
 {

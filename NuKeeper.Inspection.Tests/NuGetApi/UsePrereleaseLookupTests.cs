@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuGet.Packaging.Core;
@@ -9,10 +13,6 @@ using NuKeeper.Abstractions.NuGetApi;
 using NuKeeper.Inspection.NuGetApi;
 
 using NUnit.Framework;
-
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Inspection.Tests.NuGetApi
 {

@@ -1,11 +1,11 @@
+using System.Threading.Tasks;
+
 using McMaster.Extensions.CommandLineUtils;
 
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Inspection.Logging;
 using NuKeeper.Local;
-
-using System.Threading.Tasks;
 
 namespace NuKeeper.Commands
 {

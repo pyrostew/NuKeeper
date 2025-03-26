@@ -1,8 +1,8 @@
-using NuKeeper.Abstractions.CollaborationModels;
-using NuKeeper.Abstractions.Configuration;
-
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions.CollaborationModels;
+using NuKeeper.Abstractions.Configuration;
 
 namespace NuKeeper.Abstractions.CollaborationPlatform
 {

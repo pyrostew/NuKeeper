@@ -1,10 +1,10 @@
-using NuKeeper.Abstractions.Configuration;
-using NuKeeper.Abstractions.NuGet;
-using NuKeeper.Abstractions.RepositoryInspection;
-
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions.Configuration;
+using NuKeeper.Abstractions.NuGet;
+using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.NuGetApi
 {

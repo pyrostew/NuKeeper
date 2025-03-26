@@ -1,13 +1,13 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Inspection.Files;
 using NuKeeper.Inspection.Logging;
 
 using NUnit.Framework;
-
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Git.Tests
 {

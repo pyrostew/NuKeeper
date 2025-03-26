@@ -1,3 +1,6 @@
+using System;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions;
@@ -6,9 +9,6 @@ using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Tests;
 
 using NUnit.Framework;
-
-using System;
-using System.Threading.Tasks;
 
 namespace NuKeeper.GitHub.Tests
 {

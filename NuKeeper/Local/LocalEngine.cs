@@ -1,3 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
 using NuGet.Common;
 using NuGet.Credentials;
 
@@ -11,13 +18,6 @@ using NuKeeper.Inspection.Files;
 using NuKeeper.Inspection.Report;
 using NuKeeper.Inspection.Sort;
 using NuKeeper.Inspection.Sources;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Local
 {

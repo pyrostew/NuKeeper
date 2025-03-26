@@ -1,6 +1,6 @@
-using NuKeeper.Inspection.Report;
-
 using System.Text;
+
+using NuKeeper.Inspection.Report;
 
 namespace NuKeeper.Inspection.Tests.Report
 {

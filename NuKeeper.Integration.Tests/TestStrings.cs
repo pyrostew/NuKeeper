@@ -1,14 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace NuKeeper.Integration.Tests
 {
     internal class TestStrings
     {
-        public const string SimpleMixedProject =@"<?xml version=""1.0"" encoding=""utf-8""?>
+        public const string SimpleMixedProject = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Project DefaultTargets=""Build"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
   <ItemGroup Label=""ProjectConfigurations"">
     <ProjectConfiguration Include=""Debug|x64"">

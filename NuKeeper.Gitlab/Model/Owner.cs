@@ -1,6 +1,6 @@
-using Newtonsoft.Json;
-
 using System;
+
+using Newtonsoft.Json;
 
 namespace NuKeeper.Gitlab.Model
 {

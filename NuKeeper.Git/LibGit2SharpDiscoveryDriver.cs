@@ -1,13 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 using LibGit2Sharp;
 
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.Git;
 using NuKeeper.Abstractions.Logging;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Git
 {

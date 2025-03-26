@@ -1,3 +1,6 @@
+using System;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.Configuration;
@@ -7,9 +10,6 @@ using NuKeeper.Inspection.Logging;
 using NuKeeper.Local;
 
 using NUnit.Framework;
-
-using System;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Commands
 {

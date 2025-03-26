@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuGet.Configuration;
@@ -17,10 +21,6 @@ using NuKeeper.Engine.Packages;
 using NuKeeper.Update;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Engine.Packages
 {

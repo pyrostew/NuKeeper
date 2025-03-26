@@ -1,10 +1,10 @@
-using NuKeeper.Abstractions.Formats;
-using NuKeeper.Abstractions.RepositoryInspection;
-using NuKeeper.Inspection.Logging;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using NuKeeper.Abstractions.Formats;
+using NuKeeper.Abstractions.RepositoryInspection;
+using NuKeeper.Inspection.Logging;
 
 namespace NuKeeper.Inspection
 {

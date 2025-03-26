@@ -1,6 +1,6 @@
-using NuKeeper.Abstractions.Configuration;
-
 using System;
+
+using NuKeeper.Abstractions.Configuration;
 
 namespace NuKeeper.Abstractions.CollaborationPlatform
 {

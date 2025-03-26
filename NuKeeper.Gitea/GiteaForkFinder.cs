@@ -1,11 +1,11 @@
+using System;
+using System.Threading.Tasks;
+
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.GitHub;
-
-using System;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Gitea
 {

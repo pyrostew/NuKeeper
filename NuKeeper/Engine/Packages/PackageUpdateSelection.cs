@@ -1,12 +1,12 @@
+using System.Collections.Generic;
+using System.Linq;
+
 using NuKeeper.Abstractions.CollaborationModels;
 using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Sort;
 using NuKeeper.Update.Selection;
-
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NuKeeper.Engine.Packages
 {

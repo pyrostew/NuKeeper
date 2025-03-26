@@ -1,3 +1,8 @@
+using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+
 using NuGet.Configuration;
 using NuGet.Versioning;
 
@@ -9,11 +14,6 @@ using NuKeeper.Update.Process;
 using NuKeeper.Update.ProcessRunner;
 
 using NUnit.Framework;
-
-using System;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Integration.Tests.NuGet.Process
 {

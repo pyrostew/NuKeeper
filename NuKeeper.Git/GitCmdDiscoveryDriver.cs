@@ -1,13 +1,13 @@
-using NuKeeper.Abstractions.Git;
-using NuKeeper.Abstractions.Logging;
-using NuKeeper.Update.ProcessRunner;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions.Git;
+using NuKeeper.Abstractions.Logging;
+using NuKeeper.Update.ProcessRunner;
 
 namespace NuKeeper.Git
 {

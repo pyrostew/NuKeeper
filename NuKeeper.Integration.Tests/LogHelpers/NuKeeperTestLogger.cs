@@ -1,9 +1,9 @@
+using System;
+using System.Collections.Concurrent;
+
 using NuKeeper.Abstractions.Logging;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Concurrent;
 
 namespace NuKeeper.Integration.Tests.LogHelpers
 {

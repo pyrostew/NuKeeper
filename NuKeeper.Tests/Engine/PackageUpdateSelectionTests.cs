@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions;
@@ -10,10 +14,6 @@ using NuKeeper.Inspection.Sort;
 using NuKeeper.Update.Selection;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NuKeeper.Tests.Engine
 {

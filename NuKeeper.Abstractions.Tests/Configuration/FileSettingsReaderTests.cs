@@ -1,3 +1,7 @@
+using System;
+using System.Globalization;
+using System.IO;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.CollaborationPlatform;
@@ -6,10 +10,6 @@ using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.Output;
 
 using NUnit.Framework;
-
-using System;
-using System.Globalization;
-using System.IO;
 
 namespace NuKeeper.Abstractions.Tests.Configuration
 {

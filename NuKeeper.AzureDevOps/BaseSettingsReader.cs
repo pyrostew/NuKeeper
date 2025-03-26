@@ -1,9 +1,9 @@
+using System;
+using System.Threading.Tasks;
+
 using NuKeeper.Abstractions;
 using NuKeeper.Abstractions.CollaborationPlatform;
 using NuKeeper.Abstractions.Configuration;
-
-using System;
-using System.Threading.Tasks;
 
 namespace NuKeeper.AzureDevOps
 {

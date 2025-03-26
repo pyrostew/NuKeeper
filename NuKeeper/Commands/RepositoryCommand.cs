@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 using McMaster.Extensions.CommandLineUtils;
 
 using NuKeeper.Abstractions.CollaborationPlatform;
@@ -5,11 +10,6 @@ using NuKeeper.Abstractions.Configuration;
 using NuKeeper.Abstractions.Formats;
 using NuKeeper.Collaboration;
 using NuKeeper.Inspection.Logging;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Commands
 {

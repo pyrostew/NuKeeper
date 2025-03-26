@@ -1,10 +1,10 @@
-using NuKeeper.Update.ProcessRunner;
-
-using NUnit.Framework;
-
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
+
+using NuKeeper.Update.ProcessRunner;
+
+using NUnit.Framework;
 
 namespace NuKeeper.Integration.Tests.ProcessRunner
 {

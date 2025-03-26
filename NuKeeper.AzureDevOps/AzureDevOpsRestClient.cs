@@ -1,8 +1,3 @@
-using Newtonsoft.Json;
-
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.Logging;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +8,11 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+
+using Newtonsoft.Json;
+
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.AzureDevOps
 {

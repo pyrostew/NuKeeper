@@ -1,10 +1,10 @@
+using System;
+using System.Collections.Generic;
+
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.Output;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Report.Formats;
-
-using System;
-using System.Collections.Generic;
 
 namespace NuKeeper.Inspection.Report
 {

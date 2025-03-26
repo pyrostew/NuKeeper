@@ -1,13 +1,13 @@
+using System;
+using System.IO;
+using System.Linq;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Inspection.Files;
 
 using NUnit.Framework;
-
-using System;
-using System.IO;
-using System.Linq;
 
 namespace NuKeeper.Inspection.Tests.Files
 {

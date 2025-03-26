@@ -1,3 +1,6 @@
+using System.IO;
+using System.Linq;
+
 using NSubstitute;
 
 using NuGet.Configuration;
@@ -9,9 +12,6 @@ using NuKeeper.Inspection.Files;
 using NuKeeper.Inspection.Sources;
 
 using NUnit.Framework;
-
-using System.IO;
-using System.Linq;
 
 namespace NuKeeper.Inspection.Tests.Sources
 {

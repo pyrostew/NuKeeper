@@ -1,3 +1,8 @@
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Reflection;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -20,11 +25,6 @@ using NuKeeper.Update.Process;
 using NuKeeper.Update.Selection;
 
 using SimpleInjector;
-
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Reflection;
 
 namespace NuKeeper
 {

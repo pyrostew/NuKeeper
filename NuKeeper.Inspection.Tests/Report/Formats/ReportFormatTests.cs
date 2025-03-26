@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
+
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Report;
 using NuKeeper.Inspection.Report.Formats;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Generic;
 
 namespace NuKeeper.Inspection.Tests.Report.Formats
 {

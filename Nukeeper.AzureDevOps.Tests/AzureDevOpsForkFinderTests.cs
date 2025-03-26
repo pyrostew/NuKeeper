@@ -1,3 +1,6 @@
+using System;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.CollaborationModels;
@@ -7,9 +10,6 @@ using NuKeeper.Abstractions.Logging;
 using NuKeeper.AzureDevOps;
 
 using NUnit.Framework;
-
-using System;
-using System.Threading.Tasks;
 
 namespace Nukeeper.AzureDevOps.Tests
 {

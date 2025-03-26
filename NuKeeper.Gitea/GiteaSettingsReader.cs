@@ -1,13 +1,13 @@
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.CollaborationPlatform;
-using NuKeeper.Abstractions.Configuration;
-using NuKeeper.Abstractions.Git;
-
 using System;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Configuration;
+using NuKeeper.Abstractions.Git;
 
 namespace NuKeeper.Gitea
 {

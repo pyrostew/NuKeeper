@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
@@ -6,11 +11,6 @@ using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Inspection.NuGetApi;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Integration.Tests.NuGet.Api
 {

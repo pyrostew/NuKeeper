@@ -1,8 +1,8 @@
+using System;
+
 using NuKeeper.Abstractions.Formats;
 
 using NUnit.Framework;
-
-using System;
 
 namespace NuKeeper.Abstractions.Tests.Formats
 {

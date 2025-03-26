@@ -1,8 +1,8 @@
+using System.IO;
+
 using Newtonsoft.Json;
 
 using NuKeeper.Abstractions.Logging;
-
-using System.IO;
 
 namespace NuKeeper.Abstractions.Configuration
 {

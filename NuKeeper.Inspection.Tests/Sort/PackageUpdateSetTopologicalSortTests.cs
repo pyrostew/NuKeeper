@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using NSubstitute;
 
 using NuGet.Configuration;
@@ -11,10 +15,6 @@ using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Inspection.Sort;
 
 using NUnit.Framework;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NuKeeper.Inspection.Tests.Sort
 {

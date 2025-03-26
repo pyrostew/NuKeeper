@@ -1,3 +1,8 @@
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+
 using McMaster.Extensions.CommandLineUtils;
 
 using NuGet.Configuration;
@@ -7,11 +12,6 @@ using NuKeeper.Abstractions.Logging;
 using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.RepositoryInspection;
 using NuKeeper.Update.ProcessRunner;
-
-using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Update.Process
 {

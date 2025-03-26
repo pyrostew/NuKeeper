@@ -1,3 +1,6 @@
+using System;
+using System.Net.Http;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.Configuration;
@@ -5,9 +8,6 @@ using NuKeeper.Abstractions.Logging;
 using NuKeeper.AzureDevOps;
 
 using NUnit.Framework;
-
-using System;
-using System.Net.Http;
 
 namespace Nukeeper.AzureDevOps.Tests
 {

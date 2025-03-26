@@ -1,12 +1,12 @@
-using NuKeeper.Abstractions.CollaborationModels;
-using NuKeeper.Abstractions.CollaborationPlatform;
-using NuKeeper.Abstractions.Configuration;
-using NuKeeper.Abstractions.Logging;
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions.CollaborationModels;
+using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Configuration;
+using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Engine
 {

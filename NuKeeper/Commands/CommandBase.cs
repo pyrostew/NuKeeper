@@ -1,3 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
 using McMaster.Extensions.CommandLineUtils;
 
 using NuKeeper.Abstractions;
@@ -8,13 +15,6 @@ using NuKeeper.Abstractions.NuGet;
 using NuKeeper.Abstractions.Output;
 using NuKeeper.Engine;
 using NuKeeper.Inspection.Logging;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Commands
 {

@@ -1,10 +1,10 @@
+using System;
+using System.Threading.Tasks;
+
 using NuGet.Common;
 
 using NuKeeper.Abstractions.Logging;
 using NuKeeper.Update.ProcessRunner;
-
-using System;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Update.Process
 {

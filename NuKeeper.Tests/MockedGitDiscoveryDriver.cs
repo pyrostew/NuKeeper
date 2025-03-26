@@ -1,9 +1,9 @@
-using NuKeeper.Abstractions.Git;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions.Git;
 
 namespace NuKeeper.Tests
 {

@@ -1,9 +1,9 @@
+using System;
+using System.IO;
+
 using NuKeeper.Inspection.RepositoryInspection;
 
 using NUnit.Framework;
-
-using System;
-using System.IO;
 
 namespace NuKeeper.Inspection.Tests.RepositoryInspection
 {

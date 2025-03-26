@@ -1,11 +1,11 @@
-using NuKeeper.Abstractions;
-using NuKeeper.Abstractions.CollaborationPlatform;
-using NuKeeper.Abstractions.Configuration;
-
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+
+using NuKeeper.Abstractions;
+using NuKeeper.Abstractions.CollaborationPlatform;
+using NuKeeper.Abstractions.Configuration;
 
 namespace NuKeeper.BitBucketLocal
 {

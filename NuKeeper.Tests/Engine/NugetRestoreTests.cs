@@ -1,3 +1,7 @@
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.Logging;
@@ -6,10 +10,6 @@ using NuKeeper.Update.Process;
 using NuKeeper.Update.ProcessRunner;
 
 using NUnit.Framework;
-
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Engine
 {

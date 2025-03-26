@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 using NuGet.Configuration;
 using NuGet.Packaging.Core;
 
 using NuKeeper.Abstractions.Formats;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace NuKeeper.Abstractions.NuGetApi
 {

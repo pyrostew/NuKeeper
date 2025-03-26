@@ -1,3 +1,7 @@
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
 using NSubstitute;
 
 using NuKeeper.Abstractions.CollaborationPlatform;
@@ -12,10 +16,6 @@ using NuKeeper.GitHub;
 using NuKeeper.Inspection.Logging;
 
 using NUnit.Framework;
-
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace NuKeeper.Tests.Commands
 {
