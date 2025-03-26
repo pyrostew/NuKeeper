@@ -15,7 +15,6 @@ using NuKeeper.Abstractions.Logging;
 using NuKeeper.AzureDevOps;
 using NuKeeper.BitBucket;
 using NuKeeper.BitBucketLocal;
-using NuKeeper.Collaboration;
 using NuKeeper.Commands;
 using NuKeeper.Engine;
 using NuKeeper.Engine.Packages;
@@ -74,17 +73,13 @@ namespace NuKeeper
 
       private static void RegisterCommands(IServiceCollection services)
       {
-         services.AddTransient<GlobalCommand>();
          services.AddTransient<InspectCommand>();
-         services.AddTransient<OrganisationCommand>();
-         services.AddTransient<RepositoryCommand>();
          services.AddTransient<UpdateCommand>();
       }
 
       private static void Register(IServiceCollection services)
       {
          services.AddTransient<ILocalEngine, LocalEngine>();
-         services.AddTransient<ICollaborationEngine, CollaborationEngine>();
          services.AddTransient<IGitRepositoryEngine, GitRepositoryEngine>();
          services.AddTransient<IRepositoryUpdater, RepositoryUpdater>();
          services.AddTransient<IPackageUpdateSelection, PackageUpdateSelection>();
@@ -102,8 +97,6 @@ namespace NuKeeper
 
          services.AddSingleton<IGitDiscoveryDriver, LibGit2SharpDiscoveryDriver>();
 
-         services.AddSingleton<ICollaborationFactory, CollaborationFactory>();
-
          services.AddTransient<ISettingsReader, GitHubSettingsReader>();
          services.AddTransient<ISettingsReader, AzureDevOpsSettingsReader>();
          services.AddTransient<ISettingsReader, VstsSettingsReader>();
@@ -113,7 +106,7 @@ namespace NuKeeper
          services.AddTransient<ISettingsReader, GiteaSettingsReader>();
       }
 
-      internal static void RegisterInspectionServices(IServiceCollection services)
+      public static void RegisterInspectionServices(IServiceCollection services)
       {
          services.AddSingleton(new ConfigurableLogger());
          services.AddTransient<INuKeeperLogger>((s) => s.GetService<ConfigurableLogger>());
@@ -145,7 +138,7 @@ namespace NuKeeper
          Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
       }
 
-      internal static void RegisterUpdateServices(IServiceCollection services)
+      public static void RegisterUpdateServices(IServiceCollection services)
       {
          services.AddTransient<IFileRestoreCommand, NuGetFileRestoreCommand>();
          services.AddTransient<INuGetUpdatePackageCommand, NuGetUpdatePackageCommand>();

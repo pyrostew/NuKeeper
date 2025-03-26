@@ -96,7 +96,7 @@ namespace NuKeeper.Integration.Tests
   <ImportGroup Label=""ExtensionTargets"">
   </ImportGroup>
 </Project>";
-        public const string SimpleDotNetDependsOnMixed = @"<Project Sdk=""Microsoft.NET.Sdk"">
+      public const string SimpleDotNetDependsOnMixed = @"<Project Sdk=""Microsoft.NET.Sdk"">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -115,6 +115,6 @@ namespace NuKeeper.Integration.Tests
   </ItemGroup>
 
 </Project>
-"
+";
     }
 }

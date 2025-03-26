@@ -51,7 +51,25 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
         [Test]
         public async Task ShouldUpdateSDKStyleProjectsThatReferenceMixedProjects()
         {
+            const string oldPackageVersion = "13.0.2";
+            //const string newPackageVersion = "13.0.3";
+            //const string expectedPackageString =
+            //    @"<PackageReference Include=""Newtonsoft.Json"" Version=""{packageVersion}"" />";
+            const string testFolder = nameof(ShouldUpdateSDKStyleProjectsThatReferenceMixedProjects);
 
+            string testProject = $"{testFolder}.csproj";
+
+            string workDirectory = Path.Combine(_uniqueTemporaryFolder.FullPath, testFolder);
+            Directory.CreateDirectory(workDirectory);
+            string packagesFolder = Path.Combine(workDirectory, "packages");
+            Directory.CreateDirectory(packagesFolder);
+
+            string projectContents = TestStrings.SimpleDotNetDependsOnMixed.Replace("{packageVersion}", oldPackageVersion,
+                StringComparison.OrdinalIgnoreCase);
+            string projectPath = Path.Combine(workDirectory, testProject);
+            await File.WriteAllTextAsync(projectPath, projectContents);
+
+            File.WriteAllText(Path.Combine(workDirectory, "\\MixedLibrary\\MixedLibrary.vcxproj"), TestStrings.SimpleMixedProject);
         }
 
         [Test]
@@ -66,9 +84,9 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
             string testProject = $"{testFolder}.csproj";
 
             string workDirectory = Path.Combine(_uniqueTemporaryFolder.FullPath, testFolder);
-            _ = Directory.CreateDirectory(workDirectory);
+            Directory.CreateDirectory(workDirectory);
             string packagesFolder = Path.Combine(workDirectory, "packages");
-            _ = Directory.CreateDirectory(packagesFolder);
+            Directory.CreateDirectory(packagesFolder);
 
             string projectContents = _testDotNetClassicProject.Replace("{packageVersion}", oldPackageVersion,
                 StringComparison.OrdinalIgnoreCase);

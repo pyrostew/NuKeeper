@@ -22,9 +22,6 @@ namespace NuKeeper
    [VersionOptionFromMember(MemberName = nameof(GetVersion))]
    [Subcommand(typeof(InspectCommand))]
    [Subcommand(typeof(UpdateCommand))]
-   [Subcommand(typeof(RepositoryCommand))]
-   [Subcommand(typeof(OrganisationCommand))]
-   [Subcommand(typeof(GlobalCommand))]
    public class Program
    {
       public static async Task<int> Main(string[] args)

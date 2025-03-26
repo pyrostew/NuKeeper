@@ -1,7 +1,12 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using NSubstitute;
+
+using NuGet.Common;
+
 using NuKeeper.Abstractions.Logging;
-using NuKeeper.Integration.Tests.LogHelpers;
-using NuKeeper.Update.Process;
-using NuKeeper.Update.ProcessRunner;
+using NuKeeper.Local;
 
 using NUnit.Framework;
 
@@ -12,19 +17,17 @@ namespace NuKeeper.Update.Tests
    {
       public void UpdateSimpleNETProject()
       {
-         INuKeeperLogger logger = new NuKeeperTestLogger();
-         INuGetPath nuGetPath = new NuGetPath(logger);
-         IExternalProcess externalProcess = new ExternalProcess(logger);
-         IMonoExecutor monoExecutor = new MonoExecutor(logger, externalProcess);
-         IFileRestoreCommand fileRestoreCommand = new NuGetFileRestoreCommand(logger, nuGetPath, monoExecutor, externalProcess);
-         INuGetUpdatePackageCommand nuGetUpdatePackageCommand = new NuGetUpdatePackageCommand(logger, nuGetPath, monoExecutor, externalProcess);
-         IDotNetUpdatePackageCommand dotNetUpdatePackageCommand = new DotNetUpdatePackageCommand(externalProcess);
-         IUpdateProjectImportsCommand updateProjectImportsCommand = new UpdateProjectImportsCommand();
-         IUpdateNuspecCommand updateNuspecCommand = new UpdateNuspecCommand(logger);
-         IUpdateDirectoryBuildTargetsCommand updateDirectoryBuildTargetsCommand = new UpdateDirectoryBuildTargetsCommand(logger);
+         ServiceProvider services = ServicesRegistration.BuildProvider(s =>
+         {
+            ServicesRegistration.RegisterServices(s);
+            ServicesRegistration.RegisterUpdateServices(s);
+            ServicesRegistration.RegisterInspectionServices(s);
 
-         UpdateRunner runner = new(logger, );
+            s.Replace(ServiceDescriptor.Transient(s => Substitute.For<INuKeeperLogger>()));
+            s.Replace(ServiceDescriptor.Transient(s => Substitute.For<ILogger>()));
+         });
 
+         ILocalEngine engine = services.GetRequiredService<ILocalEngine>();
 
       }
    }
