@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -262,11 +263,11 @@ namespace NuKeeper.Integration.Tests.RepositoryInspection
         private IRepositoryScanner MakeScanner()
         {
             Abstractions.Logging.INuKeeperLogger logger = NukeeperLogger;
-            return new RepositoryScanner(
+            return new RepositoryScanner([
                 new ProjectFileReader(logger),
                 new PackagesFileReader(logger),
                 new NuspecFileReader(logger),
-                new DirectoryBuildTargetsReader(logger),
+                new DirectoryBuildTargetsReader(logger)],
                 new DirectoryExclusions());
         }
 

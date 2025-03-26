@@ -16,9 +16,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3" />
     <PackageReference Include="NuGet.Credentials" Version="6.13.2" />
-    <PackageReference Include="SimpleInjector" Version="5.5.0" />
-    <PackageReference Include="SimpleInjector.Integration.ServiceCollection" Version="5.5.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   <ItemGroup>
