@@ -5,8 +5,8 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.RepositoryInspection
 {
-    public interface IRepositoryScanner
-    {
-        IReadOnlyCollection<PackageInProject> FindAllNuGetPackages(IFolder workingFolder);
-    }
+   public interface IRepositoryScanner
+   {
+      IReadOnlyCollection<PackageInProject> FindAllNuGetPackages(IFolder workingFolder);
+   }
 }

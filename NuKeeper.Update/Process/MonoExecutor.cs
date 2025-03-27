@@ -8,43 +8,43 @@ using NuKeeper.Update.ProcessRunner;
 
 namespace NuKeeper.Update.Process
 {
-    public class MonoExecutor : IMonoExecutor
-    {
-        private readonly INuKeeperLogger _logger;
-        private readonly IExternalProcess _externalProcess;
+   public class MonoExecutor : IMonoExecutor
+   {
+      private readonly INuKeeperLogger _logger;
+      private readonly IExternalProcess _externalProcess;
 
-        private readonly AsyncLazy<bool> _checkMono;
+      private readonly AsyncLazy<bool> _checkMono;
 
-        public MonoExecutor(INuKeeperLogger logger, IExternalProcess externalProcess)
-        {
-            _logger = logger;
-            _externalProcess = externalProcess;
-            _checkMono = new AsyncLazy<bool>(CheckMonoExists);
-        }
+      public MonoExecutor(INuKeeperLogger logger, IExternalProcess externalProcess)
+      {
+         _logger = logger;
+         _externalProcess = externalProcess;
+         _checkMono = new AsyncLazy<bool>(CheckMonoExists);
+      }
 
-        public async Task<bool> CanRun()
-        {
-            return await _checkMono;
-        }
+      public async Task<bool> CanRun()
+      {
+         return await _checkMono;
+      }
 
-        public async Task<ProcessOutput> Run(string workingDirectory, string command, string arguments, bool ensureSuccess)
-        {
-            _logger.Normal($"Using Mono to run '{command}'");
+      public async Task<ProcessOutput> Run(string workingDirectory, string command, string arguments, bool ensureSuccess)
+      {
+         _logger.Normal($"Using Mono to run '{command}'");
 
-            if (!await CanRun())
-            {
-                _logger.Error($"Cannot run '{command}' on Mono since Mono installation was not found");
-                throw new InvalidOperationException("Mono installation was not found");
-            }
+         if (!await CanRun())
+         {
+            _logger.Error($"Cannot run '{command}' on Mono since Mono installation was not found");
+            throw new InvalidOperationException("Mono installation was not found");
+         }
 
-            return await _externalProcess.Run(workingDirectory, "mono", $"{command} {arguments}", ensureSuccess);
-        }
+         return await _externalProcess.Run(workingDirectory, "mono", $"{command} {arguments}", ensureSuccess);
+      }
 
-        private async Task<bool> CheckMonoExists()
-        {
-            ProcessOutput result = await _externalProcess.Run("", "mono", "--version", false);
+      private async Task<bool> CheckMonoExists()
+      {
+         ProcessOutput result = await _externalProcess.Run("", "mono", "--version", false);
 
-            return result.Success;
-        }
-    }
+         return result.Success;
+      }
+   }
 }

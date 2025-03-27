@@ -10,89 +10,89 @@ using NUnit.Framework;
 
 namespace NuKeeper.Gitlab.Tests
 {
-    [TestFixture]
-    public class GitlabSettingsReaderTests
-    {
-        private GitlabSettingsReader _gitlabSettingsReader;
-        private IEnvironmentVariablesProvider _environmentVariablesProvider;
+   [TestFixture]
+   public class GitlabSettingsReaderTests
+   {
+      private GitlabSettingsReader _gitlabSettingsReader;
+      private IEnvironmentVariablesProvider _environmentVariablesProvider;
 
-        [SetUp]
-        public void Setup()
-        {
-            _environmentVariablesProvider = Substitute.For<IEnvironmentVariablesProvider>();
+      [SetUp]
+      public void Setup()
+      {
+         _environmentVariablesProvider = Substitute.For<IEnvironmentVariablesProvider>();
 
-            _gitlabSettingsReader = new GitlabSettingsReader(_environmentVariablesProvider);
-        }
+         _gitlabSettingsReader = new GitlabSettingsReader(_environmentVariablesProvider);
+      }
 
-        [Test]
-        public void ReturnsCorrectPlatform()
-        {
-            Platform platform = _gitlabSettingsReader.Platform;
+      [Test]
+      public void ReturnsCorrectPlatform()
+      {
+         Platform platform = _gitlabSettingsReader.Platform;
 
-            Assert.That(Platform.GitLab == platform);
-        }
+         Assert.That(Platform.GitLab == platform);
+      }
 
-        [Test]
-        public void UpdatesAuthenticationTokenFromTheEnvironment()
-        {
-            _ = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_gitlab_token").Returns("envToken");
+      [Test]
+      public void UpdatesAuthenticationTokenFromTheEnvironment()
+      {
+         _ = _environmentVariablesProvider.GetEnvironmentVariable("NuKeeper_gitlab_token").Returns("envToken");
 
-            CollaborationPlatformSettings settings = new()
-            {
-                Token = "accessToken",
-            };
+         CollaborationPlatformSettings settings = new()
+         {
+            Token = "accessToken",
+         };
 
-            _gitlabSettingsReader.UpdateCollaborationPlatformSettings(settings);
+         _gitlabSettingsReader.UpdateCollaborationPlatformSettings(settings);
 
-            Assert.That(settings.Token == "envToken");
-        }
+         Assert.That(settings.Token == "envToken");
+      }
 
-        [Test]
-        public async Task AssumesItCanReadGitLabUrls()
-        {
-            bool canRead = await _gitlabSettingsReader.CanRead(new Uri("https://gitlab.com/user/projectname.git"));
+      [Test]
+      public async Task AssumesItCanReadGitLabUrls()
+      {
+         bool canRead = await _gitlabSettingsReader.CanRead(new Uri("https://gitlab.com/user/projectname.git"));
 
-            Assert.That(canRead);
-        }
+         Assert.That(canRead);
+      }
 
-        [Test]
-        public async Task AssumesItCanReadGitLabOrganisationUrls()
-        {
-            bool canRead = await _gitlabSettingsReader.CanRead(new Uri("https://gitlab.com/org/user/projectname.git"));
+      [Test]
+      public async Task AssumesItCanReadGitLabOrganisationUrls()
+      {
+         bool canRead = await _gitlabSettingsReader.CanRead(new Uri("https://gitlab.com/org/user/projectname.git"));
 
-            Assert.That(canRead);
-        }
+         Assert.That(canRead);
+      }
 
-        [TestCase(null)]
-        [TestCase("master")]
-        public async Task GetsCorrectSettingsFromTheUrl(string targetBranch)
-        {
-            Uri repositoryUri = new("https://gitlab.com/user/projectname.git");
-            RepositorySettings repositorySettings = await _gitlabSettingsReader.RepositorySettings(repositoryUri, true, targetBranch);
+      [TestCase(null)]
+      [TestCase("master")]
+      public async Task GetsCorrectSettingsFromTheUrl(string targetBranch)
+      {
+         Uri repositoryUri = new("https://gitlab.com/user/projectname.git");
+         RepositorySettings repositorySettings = await _gitlabSettingsReader.RepositorySettings(repositoryUri, true, targetBranch);
 
-            Assert.That(repositorySettings, Is.Not.Null);
-            Assert.That(new Uri("https://gitlab.com/api/v4/") == repositorySettings.ApiUri);
-            Assert.That(repositoryUri == repositorySettings.RepositoryUri);
-            Assert.That("user" == repositorySettings.RepositoryOwner);
-            Assert.That("projectname" == repositorySettings.RepositoryName);
-            Assert.That(targetBranch == repositorySettings.RemoteInfo?.BranchName);
-            Assert.That(!repositorySettings.SetAutoMerge);
-        }
+         Assert.That(repositorySettings, Is.Not.Null);
+         Assert.That(new Uri("https://gitlab.com/api/v4/") == repositorySettings.ApiUri);
+         Assert.That(repositoryUri == repositorySettings.RepositoryUri);
+         Assert.That("user" == repositorySettings.RepositoryOwner);
+         Assert.That("projectname" == repositorySettings.RepositoryName);
+         Assert.That(targetBranch == repositorySettings.RemoteInfo?.BranchName);
+         Assert.That(!repositorySettings.SetAutoMerge);
+      }
 
-        [TestCase(null)]
-        [TestCase("master")]
-        public async Task GetsCorrectSettingsFromTheOrganisationUrl(string targetBranch)
-        {
-            Uri repositoryUri = new("https://gitlab.com/org/user/projectname.git");
-            RepositorySettings repositorySettings = await _gitlabSettingsReader.RepositorySettings(repositoryUri, true, targetBranch);
+      [TestCase(null)]
+      [TestCase("master")]
+      public async Task GetsCorrectSettingsFromTheOrganisationUrl(string targetBranch)
+      {
+         Uri repositoryUri = new("https://gitlab.com/org/user/projectname.git");
+         RepositorySettings repositorySettings = await _gitlabSettingsReader.RepositorySettings(repositoryUri, true, targetBranch);
 
-            Assert.That(repositorySettings, Is.Not.Null);
-            Assert.That(new Uri("https://gitlab.com/api/v4/") == repositorySettings.ApiUri);
-            Assert.That(repositoryUri == repositorySettings.RepositoryUri);
-            Assert.That("org/user" == repositorySettings.RepositoryOwner);
-            Assert.That("projectname" == repositorySettings.RepositoryName);
-            Assert.That(targetBranch == repositorySettings.RemoteInfo?.BranchName);
-            Assert.That(!repositorySettings.SetAutoMerge);
-        }
-    }
+         Assert.That(repositorySettings, Is.Not.Null);
+         Assert.That(new Uri("https://gitlab.com/api/v4/") == repositorySettings.ApiUri);
+         Assert.That(repositoryUri == repositorySettings.RepositoryUri);
+         Assert.That("org/user" == repositorySettings.RepositoryOwner);
+         Assert.That("projectname" == repositorySettings.RepositoryName);
+         Assert.That(targetBranch == repositorySettings.RemoteInfo?.BranchName);
+         Assert.That(!repositorySettings.SetAutoMerge);
+      }
+   }
 }

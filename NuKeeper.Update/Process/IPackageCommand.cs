@@ -8,9 +8,9 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Update.Process
 {
-    public interface IPackageCommand
-    {
-        Task Invoke(PackageInProject currentPackage,
-            NuGetVersion newVersion, PackageSource packageSource, NuGetSources allSources);
-    }
+   public interface IPackageCommand
+   {
+      Task Invoke(PackageInProject currentPackage,
+          NuGetVersion newVersion, PackageSource packageSource, NuGetSources allSources);
+   }
 }

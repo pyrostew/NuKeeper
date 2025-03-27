@@ -7,8 +7,8 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Update.Process
 {
-    public interface ISolutionRestore
-    {
-        Task CheckRestore(IEnumerable<PackageUpdateSet> targetUpdates, IFolder workingFolder, NuGetSources sources);
-    }
+   public interface ISolutionRestore
+   {
+      Task CheckRestore(IEnumerable<PackageUpdateSet> targetUpdates, IFolder workingFolder, NuGetSources sources);
+   }
 }

@@ -23,253 +23,253 @@ using User = NuKeeper.Abstractions.CollaborationModels.User;
 
 namespace NuKeeper.GitHub
 {
-    public class OctokitClient : ICollaborationPlatform
-    {
-        private readonly INuKeeperLogger _logger;
-        private bool _initialised;
+   public class OctokitClient : ICollaborationPlatform
+   {
+      private readonly INuKeeperLogger _logger;
+      private bool _initialised;
 
-        private IGitHubClient _client;
-        private Uri _apiBase;
+      private IGitHubClient _client;
+      private Uri _apiBase;
 
-        public OctokitClient(INuKeeperLogger logger)
-        {
-            _logger = logger;
-        }
+      public OctokitClient(INuKeeperLogger logger)
+      {
+         _logger = logger;
+      }
 
-        public void Initialise(AuthSettings settings)
-        {
-            if (settings == null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
+      public void Initialise(AuthSettings settings)
+      {
+         if (settings == null)
+         {
+            throw new ArgumentNullException(nameof(settings));
+         }
 
-            _apiBase = settings.ApiBase;
-            Credentials creds = string.IsNullOrWhiteSpace(settings.Token) ? Credentials.Anonymous : new Credentials(settings.Token, AuthenticationType.Oauth);
-            _client = new GitHubClient(new ProductHeaderValue("NuKeeper"), _apiBase)
-            {
-                Credentials = creds
-            };
-            _initialised = true;
-        }
+         _apiBase = settings.ApiBase;
+         Credentials creds = string.IsNullOrWhiteSpace(settings.Token) ? Credentials.Anonymous : new Credentials(settings.Token, AuthenticationType.Oauth);
+         _client = new GitHubClient(new ProductHeaderValue("NuKeeper"), _apiBase)
+         {
+            Credentials = creds
+         };
+         _initialised = true;
+      }
 
-        private void CheckInitialised()
-        {
-            if (!_initialised)
-            {
-                throw new NuKeeperException("Github has not been initialised");
-            }
-        }
+      private void CheckInitialised()
+      {
+         if (!_initialised)
+         {
+            throw new NuKeeperException("Github has not been initialised");
+         }
+      }
 
-        public async Task<User> GetCurrentUser()
-        {
-            CheckInitialised();
+      public async Task<User> GetCurrentUser()
+      {
+         CheckInitialised();
 
-            return await ExceptionHandler(async () =>
-            {
-                Octokit.User user = await _client.User.Current();
+         return await ExceptionHandler(async () =>
+         {
+            Octokit.User user = await _client.User.Current();
 
-                IReadOnlyList<EmailAddress> emails = await _client.User.Email.GetAll();
-                EmailAddress primaryEmail = emails.FirstOrDefault(e => e.Primary);
+            IReadOnlyList<EmailAddress> emails = await _client.User.Email.GetAll();
+            EmailAddress primaryEmail = emails.FirstOrDefault(e => e.Primary);
 
-                _logger.Detailed($"Read github user '{user?.Login}'");
-                return new User(user?.Login, user?.Name, primaryEmail?.Email ?? user?.Email);
-            });
-        }
+            _logger.Detailed($"Read github user '{user?.Login}'");
+            return new User(user?.Login, user?.Name, primaryEmail?.Email ?? user?.Email);
+         });
+      }
 
-        public async Task<IReadOnlyList<Organization>> GetOrganizations()
-        {
-            CheckInitialised();
+      public async Task<IReadOnlyList<Organization>> GetOrganizations()
+      {
+         CheckInitialised();
 
-            return await ExceptionHandler(async () =>
-            {
-                IReadOnlyList<Octokit.Organization> githubOrgs = await _client.Organization.GetAll();
-                _logger.Normal($"Read {githubOrgs.Count} organisations");
+         return await ExceptionHandler(async () =>
+         {
+            IReadOnlyList<Octokit.Organization> githubOrgs = await _client.Organization.GetAll();
+            _logger.Normal($"Read {githubOrgs.Count} organisations");
 
-                return githubOrgs
-                    .Select(org => new Organization(org.Name ?? org.Login))
-                    .ToList();
-            });
-        }
+            return githubOrgs
+                   .Select(org => new Organization(org.Name ?? org.Login))
+                   .ToList();
+         });
+      }
 
-        public async Task<IReadOnlyList<Repository>> GetRepositoriesForOrganisation(string organisationName)
-        {
-            CheckInitialised();
+      public async Task<IReadOnlyList<Repository>> GetRepositoriesForOrganisation(string organisationName)
+      {
+         CheckInitialised();
 
-            return await ExceptionHandler(async () =>
-            {
-                IReadOnlyList<Octokit.Repository> repos = await _client.Repository.GetAllForOrg(organisationName);
-                _logger.Normal($"Read {repos.Count} repos for org '{organisationName}'");
-                return repos.Select(repo => new GitHubRepository(repo)).ToList();
-            });
-        }
+         return await ExceptionHandler(async () =>
+         {
+            IReadOnlyList<Octokit.Repository> repos = await _client.Repository.GetAllForOrg(organisationName);
+            _logger.Normal($"Read {repos.Count} repos for org '{organisationName}'");
+            return repos.Select(repo => new GitHubRepository(repo)).ToList();
+         });
+      }
 
-        public async Task<Repository> GetUserRepository(string userName, string repositoryName)
-        {
-            CheckInitialised();
+      public async Task<Repository> GetUserRepository(string userName, string repositoryName)
+      {
+         CheckInitialised();
 
-            _logger.Detailed($"Looking for user fork for {userName}/{repositoryName}");
+         _logger.Detailed($"Looking for user fork for {userName}/{repositoryName}");
 
-            return await ExceptionHandler(async () =>
-            {
-                try
-                {
-                    Octokit.Repository result = await _client.Repository.Get(userName, repositoryName);
-                    _logger.Normal($"User fork found at {result.GitUrl} for {result.Owner.Login}");
-                    return new GitHubRepository(result);
-                }
-                catch (NotFoundException)
-                {
-                    _logger.Detailed("User fork not found");
-                    return null;
-                }
-            });
-        }
-
-        public async Task<Repository> MakeUserFork(string owner, string repositoryName)
-        {
-            CheckInitialised();
-
-            _logger.Detailed($"Making user fork for {repositoryName}");
-
-            return await ExceptionHandler(async () =>
-            {
-                Octokit.Repository result = await _client.Repository.Forks.Create(owner, repositoryName, new NewRepositoryFork());
-                _logger.Normal($"User fork created at {result.GitUrl} for {result.Owner.Login}");
-                return new GitHubRepository(result);
-            });
-        }
-
-        public async Task<bool> RepositoryBranchExists(string userName, string repositoryName, string branchName)
-        {
-            CheckInitialised();
-
-            return await ExceptionHandler(async () =>
-            {
-                try
-                {
-                    _ = await _client.Repository.Branch.Get(userName, repositoryName, branchName);
-                    _logger.Detailed($"Branch found for {userName} / {repositoryName} / {branchName}");
-                    return true;
-                }
-                catch (NotFoundException)
-                {
-                    _logger.Detailed($"No branch found for {userName} / {repositoryName} / {branchName}");
-                    return false;
-                }
-            });
-        }
-
-        public async Task<bool> PullRequestExists(ForkData target, string headBranch, string baseBranch)
-        {
-            CheckInitialised();
-
-            return await ExceptionHandler(async () =>
-            {
-                _logger.Normal($"Checking if PR exists onto '{_apiBase} {target.Owner}/{target.Name}: {baseBranch} <= {headBranch}");
-
-                Octokit.PullRequestRequest prRequest = new()
-                {
-                    State = ItemStateFilter.Open,
-                    SortDirection = SortDirection.Descending,
-                    SortProperty = PullRequestSort.Created,
-                    Head = $"{target.Owner}:{headBranch}",
-                };
-
-                IReadOnlyList<PullRequest> pullReqList = await _client.PullRequest.GetAllForRepository(target.Owner, target.Name, prRequest).ConfigureAwait(false);
-
-                return pullReqList.Any(pr => pr.Base.Ref.EndsWith(baseBranch, StringComparison.InvariantCultureIgnoreCase));
-            });
-        }
-
-        public async Task OpenPullRequest(ForkData target, PullRequestRequest request, IEnumerable<string> labels)
-        {
-            CheckInitialised();
-
-            _ = await ExceptionHandler(async () =>
-            {
-                _logger.Normal($"Making PR onto '{_apiBase} {target.Owner}/{target.Name} from {request.Head}");
-                _logger.Detailed($"PR title: {request.Title}");
-
-                PullRequest createdPullRequest = await _client.PullRequest.Create(target.Owner, target.Name, new NewPullRequest(request.Title, request.Head, request.BaseRef) { Body = request.Body });
-
-                await AddLabelsToIssue(target, createdPullRequest.Number, labels);
-
-                return Task.CompletedTask;
-            });
-        }
-
-        public async Task<SearchCodeResult> Search(SearchCodeRequest search)
-        {
-            CheckInitialised();
-
-            return await ExceptionHandler(async () =>
-            {
-                RepositoryCollection repos = [];
-                foreach (SearchRepo repo in search.Repos)
-                {
-                    repos.Add(repo.Owner, repo.Name);
-                }
-                Octokit.SearchCodeResult result = await _client.Search.SearchCode(
-                    new Octokit.SearchCodeRequest()
-                    {
-                        Repos = repos,
-                        Extensions = search.Extensions,
-                        In = new[] { CodeInQualifier.Path },
-                        PerPage = search.PerPage
-                    });
-                return new SearchCodeResult(result.TotalCount);
-            });
-        }
-
-        private async Task AddLabelsToIssue(ForkData target, int issueNumber, IEnumerable<string> labels)
-        {
-            string[] labelsToApply = labels?
-            .Where(l => !string.IsNullOrWhiteSpace(l))
-            .ToArray();
-
-            if (labelsToApply != null && labelsToApply.Any())
-            {
-                _logger.Normal(
-                    $"Adding label(s) '{labelsToApply.JoinWithCommas()}' to issue "
-                    + $"'{_apiBase} {target.Owner}/{target.Name} {issueNumber}'");
-
-                try
-                {
-                    _ = await _client.Issue.Labels.AddToIssue(target.Owner, target.Name, issueNumber,
-                        labelsToApply);
-
-                }
-                catch (ApiException ex)
-                {
-                    _logger.Error("Failed to add labels. Continuing", ex);
-                }
-            }
-        }
-
-        private static async Task<T> ExceptionHandler<T>(Func<Task<T>> funcToCheck)
-        {
+         return await ExceptionHandler(async () =>
+         {
             try
             {
-                return await funcToCheck();
+               Octokit.Repository result = await _client.Repository.Get(userName, repositoryName);
+               _logger.Normal($"User fork found at {result.GitUrl} for {result.Owner.Login}");
+               return new GitHubRepository(result);
+            }
+            catch (NotFoundException)
+            {
+               _logger.Detailed("User fork not found");
+               return null;
+            }
+         });
+      }
+
+      public async Task<Repository> MakeUserFork(string owner, string repositoryName)
+      {
+         CheckInitialised();
+
+         _logger.Detailed($"Making user fork for {repositoryName}");
+
+         return await ExceptionHandler(async () =>
+         {
+            Octokit.Repository result = await _client.Repository.Forks.Create(owner, repositoryName, new NewRepositoryFork());
+            _logger.Normal($"User fork created at {result.GitUrl} for {result.Owner.Login}");
+            return new GitHubRepository(result);
+         });
+      }
+
+      public async Task<bool> RepositoryBranchExists(string userName, string repositoryName, string branchName)
+      {
+         CheckInitialised();
+
+         return await ExceptionHandler(async () =>
+         {
+            try
+            {
+               _ = await _client.Repository.Branch.Get(userName, repositoryName, branchName);
+               _logger.Detailed($"Branch found for {userName} / {repositoryName} / {branchName}");
+               return true;
+            }
+            catch (NotFoundException)
+            {
+               _logger.Detailed($"No branch found for {userName} / {repositoryName} / {branchName}");
+               return false;
+            }
+         });
+      }
+
+      public async Task<bool> PullRequestExists(ForkData target, string headBranch, string baseBranch)
+      {
+         CheckInitialised();
+
+         return await ExceptionHandler(async () =>
+         {
+            _logger.Normal($"Checking if PR exists onto '{_apiBase} {target.Owner}/{target.Name}: {baseBranch} <= {headBranch}");
+
+            Octokit.PullRequestRequest prRequest = new()
+            {
+               State = ItemStateFilter.Open,
+               SortDirection = SortDirection.Descending,
+               SortProperty = PullRequestSort.Created,
+               Head = $"{target.Owner}:{headBranch}",
+            };
+
+            IReadOnlyList<PullRequest> pullReqList = await _client.PullRequest.GetAllForRepository(target.Owner, target.Name, prRequest).ConfigureAwait(false);
+
+            return pullReqList.Any(pr => pr.Base.Ref.EndsWith(baseBranch, StringComparison.InvariantCultureIgnoreCase));
+         });
+      }
+
+      public async Task OpenPullRequest(ForkData target, PullRequestRequest request, IEnumerable<string> labels)
+      {
+         CheckInitialised();
+
+         _ = await ExceptionHandler(async () =>
+         {
+            _logger.Normal($"Making PR onto '{_apiBase} {target.Owner}/{target.Name} from {request.Head}");
+            _logger.Detailed($"PR title: {request.Title}");
+
+            PullRequest createdPullRequest = await _client.PullRequest.Create(target.Owner, target.Name, new NewPullRequest(request.Title, request.Head, request.BaseRef) { Body = request.Body });
+
+            await AddLabelsToIssue(target, createdPullRequest.Number, labels);
+
+            return Task.CompletedTask;
+         });
+      }
+
+      public async Task<SearchCodeResult> Search(SearchCodeRequest search)
+      {
+         CheckInitialised();
+
+         return await ExceptionHandler(async () =>
+         {
+            RepositoryCollection repos = [];
+            foreach (SearchRepo repo in search.Repos)
+            {
+               repos.Add(repo.Owner, repo.Name);
+            }
+            Octokit.SearchCodeResult result = await _client.Search.SearchCode(
+                   new Octokit.SearchCodeRequest()
+                   {
+                      Repos = repos,
+                      Extensions = search.Extensions,
+                      In = new[] { CodeInQualifier.Path },
+                      PerPage = search.PerPage
+                   });
+            return new SearchCodeResult(result.TotalCount);
+         });
+      }
+
+      private async Task AddLabelsToIssue(ForkData target, int issueNumber, IEnumerable<string> labels)
+      {
+         string[] labelsToApply = labels?
+         .Where(l => !string.IsNullOrWhiteSpace(l))
+         .ToArray();
+
+         if (labelsToApply != null && labelsToApply.Any())
+         {
+            _logger.Normal(
+                $"Adding label(s) '{labelsToApply.JoinWithCommas()}' to issue "
+                + $"'{_apiBase} {target.Owner}/{target.Name} {issueNumber}'");
+
+            try
+            {
+               _ = await _client.Issue.Labels.AddToIssue(target.Owner, target.Name, issueNumber,
+                   labelsToApply);
+
             }
             catch (ApiException ex)
             {
-                if (ex.HttpResponse?.Body != null)
-                {
-                    dynamic response = JsonConvert.DeserializeObject(ex.HttpResponse.Body.ToString());
-                    if (response?.errors != null && response.errors.Count > 0)
-                    {
-                        throw new NuKeeperException(response.errors.First.message.ToString(), ex);
-                    }
-                }
-
-                throw new NuKeeperException(ex.Message, ex);
+               _logger.Error("Failed to add labels. Continuing", ex);
             }
-        }
+         }
+      }
 
-        public Task<int> GetNumberOfOpenPullRequests(string projectName, string repositoryName)
-        {
-            return Task.FromResult(0);
-        }
-    }
+      private static async Task<T> ExceptionHandler<T>(Func<Task<T>> funcToCheck)
+      {
+         try
+         {
+            return await funcToCheck();
+         }
+         catch (ApiException ex)
+         {
+            if (ex.HttpResponse?.Body != null)
+            {
+               dynamic response = JsonConvert.DeserializeObject(ex.HttpResponse.Body.ToString());
+               if (response?.errors != null && response.errors.Count > 0)
+               {
+                  throw new NuKeeperException(response.errors.First.message.ToString(), ex);
+               }
+            }
+
+            throw new NuKeeperException(ex.Message, ex);
+         }
+      }
+
+      public Task<int> GetNumberOfOpenPullRequests(string projectName, string repositoryName)
+      {
+         return Task.FromResult(0);
+      }
+   }
 }

@@ -2,12 +2,12 @@ using NuKeeper.Abstractions.Inspections.Files;
 
 namespace NuKeeper.Inspection.Files
 {
-    public interface IFolderFactory
-    {
-        void DeleteExistingTempDirs();
+   public interface IFolderFactory
+   {
+      void DeleteExistingTempDirs();
 
-        IFolder FolderFromPath(string folderPath);
+      IFolder FolderFromPath(string folderPath);
 
-        IFolder UniqueTemporaryFolder();
-    }
+      IFolder UniqueTemporaryFolder();
+   }
 }

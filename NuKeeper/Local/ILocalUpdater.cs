@@ -8,12 +8,12 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Local
 {
-    public interface ILocalUpdater
-    {
-        Task ApplyUpdates(
-            IReadOnlyCollection<PackageUpdateSet> updates,
-            IFolder workingFolder,
-            NuGetSources sources,
-            SettingsContainer settings);
-    }
+   public interface ILocalUpdater
+   {
+      Task ApplyUpdates(
+          IReadOnlyCollection<PackageUpdateSet> updates,
+          IFolder workingFolder,
+          NuGetSources sources,
+          SettingsContainer settings);
+   }
 }

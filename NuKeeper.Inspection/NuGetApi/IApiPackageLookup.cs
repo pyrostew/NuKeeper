@@ -8,12 +8,12 @@ using NuKeeper.Abstractions.NuGetApi;
 
 namespace NuKeeper.Inspection.NuGetApi
 {
-    public interface IApiPackageLookup
-    {
-        Task<PackageLookupResult> FindVersionUpdate(
-            PackageIdentity package,
-            NuGetSources sources,
-            VersionChange allowedChange,
-            UsePrerelease usePrerelease);
-    }
+   public interface IApiPackageLookup
+   {
+      Task<PackageLookupResult> FindVersionUpdate(
+          PackageIdentity package,
+          NuGetSources sources,
+          VersionChange allowedChange,
+          UsePrerelease usePrerelease);
+   }
 }

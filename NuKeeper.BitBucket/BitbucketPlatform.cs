@@ -15,135 +15,135 @@ using User = NuKeeper.Abstractions.CollaborationModels.User;
 
 namespace NuKeeper.BitBucket
 {
-    public class BitbucketPlatform : ICollaborationPlatform
-    {
-        private readonly INuKeeperLogger _logger;
-        private readonly IHttpClientFactory _clientFactory;
-        private BitbucketRestClient _client;
-        private AuthSettings _settings;
+   public class BitbucketPlatform : ICollaborationPlatform
+   {
+      private readonly INuKeeperLogger _logger;
+      private readonly IHttpClientFactory _clientFactory;
+      private BitbucketRestClient _client;
+      private AuthSettings _settings;
 
-        public BitbucketPlatform(INuKeeperLogger logger, IHttpClientFactory clientFactory)
-        {
-            _logger = logger;
-            _clientFactory = clientFactory;
-        }
+      public BitbucketPlatform(INuKeeperLogger logger, IHttpClientFactory clientFactory)
+      {
+         _logger = logger;
+         _clientFactory = clientFactory;
+      }
 
-        public void Initialise(AuthSettings settings)
-        {
-            _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            _client = new BitbucketRestClient(_clientFactory, _logger, settings.Username, settings.Token, settings.ApiBase);
-        }
+      public void Initialise(AuthSettings settings)
+      {
+         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+         _client = new BitbucketRestClient(_clientFactory, _logger, settings.Username, settings.Token, settings.ApiBase);
+      }
 
-        public Task<User> GetCurrentUser()
-        {
-            return Task.FromResult(new User(_settings.Username, _settings.Username, _settings.Username));
-        }
+      public Task<User> GetCurrentUser()
+      {
+         return Task.FromResult(new User(_settings.Username, _settings.Username, _settings.Username));
+      }
 
-        public async Task<bool> PullRequestExists(ForkData target, string headBranch, string baseBranch)
-        {
-            if (target == null)
+      public async Task<bool> PullRequestExists(ForkData target, string headBranch, string baseBranch)
+      {
+         if (target == null)
+         {
+            throw new ArgumentNullException(nameof(target));
+         }
+
+         PullRequestsInfo result = await _client.GetPullRequests(target.Owner, target.Name, headBranch, baseBranch);
+
+         return result.values.Any();
+      }
+
+      public async Task OpenPullRequest(ForkData target, PullRequestRequest request, IEnumerable<string> labels)
+      {
+         if (target == null)
+         {
+            throw new ArgumentNullException(nameof(target));
+         }
+
+         if (request == null)
+         {
+            throw new ArgumentNullException(nameof(request));
+         }
+
+         Models.Repository repo = await _client.GetGitRepository(target.Owner, target.Name);
+         PullRequest req = new()
+         {
+            title = request.Title,
+            source = new Source
             {
-                throw new ArgumentNullException(nameof(target));
-            }
-
-            PullRequestsInfo result = await _client.GetPullRequests(target.Owner, target.Name, headBranch, baseBranch);
-
-            return result.values.Any();
-        }
-
-        public async Task OpenPullRequest(ForkData target, PullRequestRequest request, IEnumerable<string> labels)
-        {
-            if (target == null)
+               branch = new Branch
+               {
+                  name = request.Head
+               }
+            },
+            destination = new Source
             {
-                throw new ArgumentNullException(nameof(target));
-            }
+               branch = new Branch
+               {
+                  name = request.BaseRef
+               }
+            },
+            description = request.Body,
+            close_source_branch = request.DeleteBranchAfterMerge
+         };
 
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
+         _ = await _client.CreatePullRequest(target.Owner, repo.name, req);
+      }
 
-            Models.Repository repo = await _client.GetGitRepository(target.Owner, target.Name);
-            PullRequest req = new()
-            {
-                title = request.Title,
-                source = new Source
-                {
-                    branch = new Branch
-                    {
-                        name = request.Head
-                    }
-                },
-                destination = new Source
-                {
-                    branch = new Branch
-                    {
-                        name = request.BaseRef
-                    }
-                },
-                description = request.Body,
-                close_source_branch = request.DeleteBranchAfterMerge
-            };
+      public async Task<IReadOnlyList<Organization>> GetOrganizations()
+      {
+         IEnumerable<ProjectInfo> projects = await _client.GetProjects(_settings.Username);
+         return projects
+             .Select(project => new Organization(project.name))
+             .ToList();
+      }
 
-            _ = await _client.CreatePullRequest(target.Owner, repo.name, req);
-        }
+      public async Task<IReadOnlyList<Repository>> GetRepositoriesForOrganisation(string projectName)
+      {
+         IEnumerable<Models.Repository> repos = await _client.GetGitRepositories(projectName);
+         return repos.Select(MapRepository)
+             .ToList();
+      }
 
-        public async Task<IReadOnlyList<Organization>> GetOrganizations()
-        {
-            IEnumerable<ProjectInfo> projects = await _client.GetProjects(_settings.Username);
-            return projects
-                .Select(project => new Organization(project.name))
-                .ToList();
-        }
+      public async Task<Repository> GetUserRepository(string projectName, string repositoryName)
+      {
+         Models.Repository repo = await _client.GetGitRepository(projectName, repositoryName);
+         return repo == null ? default : MapRepository(repo);
+      }
 
-        public async Task<IReadOnlyList<Repository>> GetRepositoriesForOrganisation(string projectName)
-        {
-            IEnumerable<Models.Repository> repos = await _client.GetGitRepositories(projectName);
-            return repos.Select(MapRepository)
-                .ToList();
-        }
+      public Task<Repository> MakeUserFork(string owner, string repositoryName)
+      {
+         throw new NotImplementedException();
+      }
 
-        public async Task<Repository> GetUserRepository(string projectName, string repositoryName)
-        {
-            Models.Repository repo = await _client.GetGitRepository(projectName, repositoryName);
-            return repo == null ? default : MapRepository(repo);
-        }
+      public async Task<bool> RepositoryBranchExists(string projectName, string repositoryName, string branchName)
+      {
+         Models.Repository repo = await _client.GetGitRepository(projectName, repositoryName);
+         IEnumerable<Ref> refs = await _client.GetRepositoryRefs(projectName, repo.name);
+         int count = refs.Count(x => x.Name.Equals(branchName, StringComparison.OrdinalIgnoreCase));
+         if (count > 0)
+         {
+            _logger.Detailed($"Branch found for {projectName} / {repositoryName} / {branchName}");
+            return true;
+         }
+         _logger.Detailed($"No branch found for {projectName} / {repositoryName} / {branchName}");
+         return false;
+      }
 
-        public Task<Repository> MakeUserFork(string owner, string repositoryName)
-        {
-            throw new NotImplementedException();
-        }
+      public Task<SearchCodeResult> Search(SearchCodeRequest search)
+      {
+         throw new NotImplementedException();
+      }
 
-        public async Task<bool> RepositoryBranchExists(string projectName, string repositoryName, string branchName)
-        {
-            Models.Repository repo = await _client.GetGitRepository(projectName, repositoryName);
-            IEnumerable<Ref> refs = await _client.GetRepositoryRefs(projectName, repo.name);
-            int count = refs.Count(x => x.Name.Equals(branchName, StringComparison.OrdinalIgnoreCase));
-            if (count > 0)
-            {
-                _logger.Detailed($"Branch found for {projectName} / {repositoryName} / {branchName}");
-                return true;
-            }
-            _logger.Detailed($"No branch found for {projectName} / {repositoryName} / {branchName}");
-            return false;
-        }
+      private static Repository MapRepository(BitBucket.Models.Repository repo)
+      {
+         return new Repository(repo.name, false,
+                 new UserPermissions(true, true, true),
+                 new Uri(repo.links.html.href),
+                 null, false, null);
+      }
 
-        public Task<SearchCodeResult> Search(SearchCodeRequest search)
-        {
-            throw new NotImplementedException();
-        }
-
-        private static Repository MapRepository(BitBucket.Models.Repository repo)
-        {
-            return new Repository(repo.name, false,
-                    new UserPermissions(true, true, true),
-                    new Uri(repo.links.html.href),
-                    null, false, null);
-        }
-
-        public Task<int> GetNumberOfOpenPullRequests(string projectName, string repositoryName)
-        {
-            return Task.FromResult(0);
-        }
-    }
+      public Task<int> GetNumberOfOpenPullRequests(string projectName, string repositoryName)
+      {
+         return Task.FromResult(0);
+      }
+   }
 }

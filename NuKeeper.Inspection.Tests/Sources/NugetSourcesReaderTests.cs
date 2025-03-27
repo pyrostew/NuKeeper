@@ -15,95 +15,95 @@ using NUnit.Framework;
 
 namespace NuKeeper.Inspection.Tests.Sources
 {
-    public class NugetSourcesReaderTests
-    {
-        private IFolder _uniqueTemporaryFolder;
+   public class NugetSourcesReaderTests
+   {
+      private IFolder _uniqueTemporaryFolder;
 
-        [SetUp]
-        public void Setup()
-        {
-            _uniqueTemporaryFolder = TemporaryFolder();
-        }
+      [SetUp]
+      public void Setup()
+      {
+         _uniqueTemporaryFolder = TemporaryFolder();
+      }
 
-        [TearDown]
-        public void TearDown()
-        {
-            _uniqueTemporaryFolder.TryDelete();
-        }
+      [TearDown]
+      public void TearDown()
+      {
+         _uniqueTemporaryFolder.TryDelete();
+      }
 
-        [Test]
-        public void OverrideSourcesAreUsedWhenSupplied()
-        {
-            NuGetSources overrrideSources = new("overrideA");
-            INuGetSourcesReader reader = MakeNuGetSourcesReader();
+      [Test]
+      public void OverrideSourcesAreUsedWhenSupplied()
+      {
+         NuGetSources overrrideSources = new("overrideA");
+         INuGetSourcesReader reader = MakeNuGetSourcesReader();
 
-            NuGetSources result = reader.Read(_uniqueTemporaryFolder, overrrideSources);
+         NuGetSources result = reader.Read(_uniqueTemporaryFolder, overrrideSources);
 
-            Assert.That(result, Is.EqualTo(overrrideSources));
-        }
+         Assert.That(result, Is.EqualTo(overrrideSources));
+      }
 
-        [Test]
-        public void GlobalFeedIsUsedAsLastResort()
-        {
-            INuGetSourcesReader reader = MakeNuGetSourcesReader();
+      [Test]
+      public void GlobalFeedIsUsedAsLastResort()
+      {
+         INuGetSourcesReader reader = MakeNuGetSourcesReader();
 
-            NuGetSources result = reader.Read(_uniqueTemporaryFolder, null);
+         NuGetSources result = reader.Read(_uniqueTemporaryFolder, null);
 
-            Assert.That(result.Items.Count, Is.GreaterThanOrEqualTo(1));
-            Assert.That(result.Items, Does.Contain(new PackageSource("https://api.nuget.org/v3/index.json", "nuget.org")));
-        }
+         Assert.That(result.Items.Count, Is.GreaterThanOrEqualTo(1));
+         Assert.That(result.Items, Does.Contain(new PackageSource("https://api.nuget.org/v3/index.json", "nuget.org")));
+      }
 
-        private const string ConfigFileContents =
-            @"<?xml version=""1.0"" encoding=""utf-8""?>
+      private const string ConfigFileContents =
+          @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
   <packageSources>
     <add key=""From A file"" value=""https://fromFile1.com"" />
   </packageSources>
 </configuration>";
 
-        [Test]
-        public void ConfigFileIsUsed()
-        {
-            INuGetSourcesReader reader = MakeNuGetSourcesReader();
+      [Test]
+      public void ConfigFileIsUsed()
+      {
+         INuGetSourcesReader reader = MakeNuGetSourcesReader();
 
-            IFolder folder = _uniqueTemporaryFolder;
-            string path = Path.Join(folder.FullPath, "nuget.config");
-            File.WriteAllText(path, ConfigFileContents);
+         IFolder folder = _uniqueTemporaryFolder;
+         string path = Path.Join(folder.FullPath, "nuget.config");
+         File.WriteAllText(path, ConfigFileContents);
 
-            NuGetSources result = reader.Read(folder, null);
+         NuGetSources result = reader.Read(folder, null);
 
-            Assert.That(result.Items.Count, Is.GreaterThanOrEqualTo(1));
-            Assert.That(result.Items.First(), Is.EqualTo(new PackageSource("https://fromFile1.com", "From A file")));
-        }
+         Assert.That(result.Items.Count, Is.GreaterThanOrEqualTo(1));
+         Assert.That(result.Items.First(), Is.EqualTo(new PackageSource("https://fromFile1.com", "From A file")));
+      }
 
 
-        [Test]
-        public void SettingsOverridesConfigFile()
-        {
-            INuGetSourcesReader reader = MakeNuGetSourcesReader();
+      [Test]
+      public void SettingsOverridesConfigFile()
+      {
+         INuGetSourcesReader reader = MakeNuGetSourcesReader();
 
-            IFolder folder = _uniqueTemporaryFolder;
-            string path = Path.Join(folder.FullPath, "nuget.config");
-            File.WriteAllText(path, ConfigFileContents);
+         IFolder folder = _uniqueTemporaryFolder;
+         string path = Path.Join(folder.FullPath, "nuget.config");
+         File.WriteAllText(path, ConfigFileContents);
 
-            NuGetSources result = reader.Read(folder, new NuGetSources("https://fromConfigA.com"));
+         NuGetSources result = reader.Read(folder, new NuGetSources("https://fromConfigA.com"));
 
-            Assert.That(result.Items.Count, Is.EqualTo(1));
-            Assert.That(result.Items.First(), Is.EqualTo(new PackageSource("https://fromConfigA.com")));
-        }
+         Assert.That(result.Items.Count, Is.EqualTo(1));
+         Assert.That(result.Items.First(), Is.EqualTo(new PackageSource("https://fromConfigA.com")));
+      }
 
-        private static IFolder TemporaryFolder()
-        {
-            FolderFactory ff = new(Substitute.For<INuKeeperLogger>());
-            return ff.UniqueTemporaryFolder();
-        }
+      private static IFolder TemporaryFolder()
+      {
+         FolderFactory ff = new(Substitute.For<INuKeeperLogger>());
+         return ff.UniqueTemporaryFolder();
+      }
 
-        private static INuGetSourcesReader MakeNuGetSourcesReader()
-        {
-            INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
-            return new NuGetSourcesReader(
-                new NuGetConfigFileReader
-                    (logger), logger);
-        }
-    }
+      private static INuGetSourcesReader MakeNuGetSourcesReader()
+      {
+         INuKeeperLogger logger = Substitute.For<INuKeeperLogger>();
+         return new NuGetSourcesReader(
+             new NuGetConfigFileReader
+                 (logger), logger);
+      }
+   }
 }

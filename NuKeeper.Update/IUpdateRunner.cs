@@ -5,8 +5,8 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Update
 {
-    public interface IUpdateRunner
-    {
-        Task Update(PackageUpdateSet updateSet, NuGetSources sources);
-    }
+   public interface IUpdateRunner
+   {
+      Task Update(PackageUpdateSet updateSet, NuGetSources sources);
+   }
 }

@@ -9,12 +9,12 @@ using NuKeeper.Abstractions.NuGetApi;
 
 namespace NuKeeper.Inspection.NuGetApi
 {
-    public interface IBulkPackageLookup
-    {
-        Task<IDictionary<PackageIdentity, PackageLookupResult>> FindVersionUpdates(
-            IEnumerable<PackageIdentity> packages,
-            NuGetSources sources,
-            VersionChange allowedChange,
-            UsePrerelease usePrerelease);
-    }
+   public interface IBulkPackageLookup
+   {
+      Task<IDictionary<PackageIdentity, PackageLookupResult>> FindVersionUpdates(
+          IEnumerable<PackageIdentity> packages,
+          NuGetSources sources,
+          VersionChange allowedChange,
+          UsePrerelease usePrerelease);
+   }
 }

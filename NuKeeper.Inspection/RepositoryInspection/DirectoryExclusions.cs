@@ -5,30 +5,30 @@ using System.Linq;
 
 namespace NuKeeper.Inspection.RepositoryInspection
 {
-    public class DirectoryExclusions : IDirectoryExclusions
-    {
-        public bool PathIsExcluded(string path)
-        {
-            return ExcludedDirNames.Any(s => PathContains(path, s));
-        }
+   public class DirectoryExclusions : IDirectoryExclusions
+   {
+      public bool PathIsExcluded(string path)
+      {
+         return ExcludedDirNames.Any(s => PathContains(path, s));
+      }
 
-        private static bool PathContains(string fullPath, string dirName)
-        {
-            string dirInPath = Path.DirectorySeparatorChar + dirName + Path.DirectorySeparatorChar;
+      private static bool PathContains(string fullPath, string dirName)
+      {
+         string dirInPath = Path.DirectorySeparatorChar + dirName + Path.DirectorySeparatorChar;
 
-            return
-                !string.IsNullOrEmpty(fullPath) &&
-                 (fullPath.IndexOf(dirInPath, StringComparison.InvariantCultureIgnoreCase) >= 0);
-        }
+         return
+             !string.IsNullOrEmpty(fullPath) &&
+              (fullPath.IndexOf(dirInPath, StringComparison.InvariantCultureIgnoreCase) >= 0);
+      }
 
-        private static readonly List<string> ExcludedDirNames =
-        [
-            ".git",
+      private static readonly List<string> ExcludedDirNames =
+      [
+          ".git",
             ".vs",
             "obj",
             "bin",
             "node_modules",
             "packages"
-        ];
-    }
+      ];
+   }
 }

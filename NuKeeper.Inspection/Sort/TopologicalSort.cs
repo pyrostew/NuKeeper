@@ -6,100 +6,100 @@ using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Inspection.Sort
 {
-    /// <summary>
-    /// https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search
-    /// </summary>
-    public class TopologicalSort<T>
-    {
-        private readonly INuKeeperLogger _logger;
-        private readonly Func<T, T, bool> _match;
+   /// <summary>
+   /// https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search
+   /// </summary>
+   public class TopologicalSort<T>
+   {
+      private readonly INuKeeperLogger _logger;
+      private readonly Func<T, T, bool> _match;
 
-        private readonly List<T> _sortedList = [];
-        private List<SortItemData<T>> _data;
-        private bool _cycleFound;
+      private readonly List<T> _sortedList = [];
+      private List<SortItemData<T>> _data;
+      private bool _cycleFound;
 
-        public TopologicalSort(INuKeeperLogger logger, Func<T, T, bool> match)
-        {
-            _logger = logger;
-            _match = match;
-        }
+      public TopologicalSort(INuKeeperLogger logger, Func<T, T, bool> match)
+      {
+         _logger = logger;
+         _match = match;
+      }
 
-        public IEnumerable<T> Sort(
-            IReadOnlyCollection<SortItemData<T>> inputMap)
-        {
-            if (inputMap == null)
+      public IEnumerable<T> Sort(
+          IReadOnlyCollection<SortItemData<T>> inputMap)
+      {
+         if (inputMap == null)
+         {
+            throw new ArgumentNullException(nameof(inputMap));
+         }
+
+         List<T> inputItems = inputMap
+             .Select(i => i.Item)
+             .ToList();
+
+         if (inputMap.Count < 2)
+         {
+            return inputItems;
+         }
+
+         if (!inputMap.Any(i => i.Dependencies.Any()))
+         {
+            _logger.Detailed("No dependencies between items, no need to sort on dependencies");
+            return inputItems;
+         }
+
+         _data = inputMap.ToList();
+
+         return DoSortVisits(inputItems);
+      }
+
+      private IReadOnlyCollection<T> DoSortVisits(IReadOnlyCollection<T> input)
+      {
+         foreach (SortItemData<T> item in _data)
+         {
+            if (item.Mark == Mark.None)
             {
-                throw new ArgumentNullException(nameof(inputMap));
+               Visit(item);
             }
+         }
 
-            List<T> inputItems = inputMap
-                .Select(i => i.Item)
-                .ToList();
+         return _cycleFound ? input : _sortedList;
+      }
 
-            if (inputMap.Count < 2)
-            {
-                return inputItems;
-            }
+      private void Visit(SortItemData<T> item)
+      {
+         if (_cycleFound)
+         {
+            return;
+         }
 
-            if (!inputMap.Any(i => i.Dependencies.Any()))
-            {
-                _logger.Detailed("No dependencies between items, no need to sort on dependencies");
-                return inputItems;
-            }
+         if (item.Mark == Mark.Permanent)
+         {
+            return;
+         }
 
-            _data = inputMap.ToList();
+         if (item.Mark == Mark.Temporary)
+         {
+            _logger.Minimal($"Cannot sort by dependencies, cycle found at item {item}");
+            _cycleFound = true;
+            return;
+         }
 
-            return DoSortVisits(inputItems);
-        }
+         item.Mark = Mark.Temporary;
 
-        private IReadOnlyCollection<T> DoSortVisits(IReadOnlyCollection<T> input)
-        {
-            foreach (SortItemData<T> item in _data)
-            {
-                if (item.Mark == Mark.None)
-                {
-                    Visit(item);
-                }
-            }
+         foreach (SortItemData<T> dep in NodesDependedOn(item))
+         {
+            Visit(dep);
+         }
 
-            return _cycleFound ? input : _sortedList;
-        }
+         item.Mark = Mark.Permanent;
+         _sortedList.Add(item.Item);
+      }
 
-        private void Visit(SortItemData<T> item)
-        {
-            if (_cycleFound)
-            {
-                return;
-            }
-
-            if (item.Mark == Mark.Permanent)
-            {
-                return;
-            }
-
-            if (item.Mark == Mark.Temporary)
-            {
-                _logger.Minimal($"Cannot sort by dependencies, cycle found at item {item}");
-                _cycleFound = true;
-                return;
-            }
-
-            item.Mark = Mark.Temporary;
-
-            foreach (SortItemData<T> dep in NodesDependedOn(item))
-            {
-                Visit(dep);
-            }
-
-            item.Mark = Mark.Permanent;
-            _sortedList.Add(item.Item);
-        }
-
-        private IEnumerable<SortItemData<T>> NodesDependedOn(SortItemData<T> item)
-        {
-            return item.Dependencies
-                .Select(dep => _data.FirstOrDefault(i => _match(i.Item, dep)))
-                .Where(dep => dep != null);
-        }
-    }
+      private IEnumerable<SortItemData<T>> NodesDependedOn(SortItemData<T> item)
+      {
+         return item.Dependencies
+             .Select(dep => _data.FirstOrDefault(i => _match(i.Item, dep)))
+             .Where(dep => dep != null);
+      }
+   }
 }

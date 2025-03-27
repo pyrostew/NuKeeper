@@ -3,18 +3,18 @@ using System.Globalization;
 
 namespace NuKeeper.Abstractions.Formats
 {
-    public static class DateFormat
-    {
-        private const string Iso8601Format = "yyyy-MM-ddTHH\\:mm\\:ss";
+   public static class DateFormat
+   {
+      private const string Iso8601Format = "yyyy-MM-ddTHH\\:mm\\:ss";
 
-        public static string AsUtcIso8601(DateTimeOffset? source)
-        {
-            if (!source.HasValue)
-            {
-                return string.Empty;
-            }
-            DateTimeOffset utcValue = source.Value.ToUniversalTime();
-            return string.Concat(utcValue.ToString(Iso8601Format, CultureInfo.InvariantCulture), "Z");
-        }
-    }
+      public static string AsUtcIso8601(DateTimeOffset? source)
+      {
+         if (!source.HasValue)
+         {
+            return string.Empty;
+         }
+         DateTimeOffset utcValue = source.Value.ToUniversalTime();
+         return string.Concat(utcValue.ToString(Iso8601Format, CultureInfo.InvariantCulture), "Z");
+      }
+   }
 }

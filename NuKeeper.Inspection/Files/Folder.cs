@@ -7,74 +7,74 @@ using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.Inspection.Files
 {
-    public class Folder : IFolder
-    {
-        private readonly INuKeeperLogger _logger;
-        private readonly DirectoryInfo _root;
+   public class Folder : IFolder
+   {
+      private readonly INuKeeperLogger _logger;
+      private readonly DirectoryInfo _root;
 
-        public Folder(INuKeeperLogger logger, DirectoryInfo root)
-        {
-            _logger = logger;
-            _root = root;
-        }
+      public Folder(INuKeeperLogger logger, DirectoryInfo root)
+      {
+         _logger = logger;
+         _root = root;
+      }
 
-        public string FullPath => _root.FullName;
+      public string FullPath => _root.FullName;
 
-        public IReadOnlyCollection<FileInfo> Find(string pattern)
-        {
-            try
-            {
-                return _root
-                    .EnumerateFiles(pattern, SearchOption.AllDirectories)
-                    .ToList();
+      public IReadOnlyCollection<FileInfo> Find(string pattern)
+      {
+         try
+         {
+            return _root
+                .EnumerateFiles(pattern, SearchOption.AllDirectories)
+                .ToList();
 
-            }
-            catch (IOException ex)
-            {
-                _logger.Minimal(ex.Message);
-                return new List<FileInfo>();
-            }
-        }
+         }
+         catch (IOException ex)
+         {
+            _logger.Minimal(ex.Message);
+            return [];
+         }
+      }
 
-        public void TryDelete()
-        {
-            _logger.Detailed($"Attempting delete of folder {_root.FullName}");
+      public void TryDelete()
+      {
+         _logger.Detailed($"Attempting delete of folder {_root.FullName}");
 
-            try
-            {
-                DeleteDirectoryInternal(_root.FullName);
-                _logger.Detailed($"Deleted folder {_root.FullName}");
-            }
-            catch (IOException ex)
-            {
-                _logger.Detailed($"Folder delete failed: {ex.GetType().Name} {ex.Message}");
-            }
-        }
+         try
+         {
+            DeleteDirectoryInternal(_root.FullName);
+            _logger.Detailed($"Deleted folder {_root.FullName}");
+         }
+         catch (IOException ex)
+         {
+            _logger.Detailed($"Folder delete failed: {ex.GetType().Name} {ex.Message}");
+         }
+      }
 
-        /// <summary>
-        /// https://stackoverflow.com/questions/1157246/unauthorizedaccessexception-trying-to-delete-a-file-in-a-folder-where-i-can-dele
-        /// </summary>
-        /// <param name="targetDir"></param>
-        private void DeleteDirectoryInternal(string targetDir)
-        {
-            // remove any "read-only" flag that would prevent the delete
-            File.SetAttributes(targetDir, FileAttributes.Normal);
+      /// <summary>
+      /// https://stackoverflow.com/questions/1157246/unauthorizedaccessexception-trying-to-delete-a-file-in-a-folder-where-i-can-dele
+      /// </summary>
+      /// <param name="targetDir"></param>
+      private void DeleteDirectoryInternal(string targetDir)
+      {
+         // remove any "read-only" flag that would prevent the delete
+         File.SetAttributes(targetDir, FileAttributes.Normal);
 
-            string[] files = Directory.GetFiles(targetDir);
+         string[] files = Directory.GetFiles(targetDir);
 
-            foreach (string file in files)
-            {
-                File.SetAttributes(file, FileAttributes.Normal);
-                File.Delete(file);
-            }
+         foreach (string file in files)
+         {
+            File.SetAttributes(file, FileAttributes.Normal);
+            File.Delete(file);
+         }
 
-            string[] subDirs = Directory.GetDirectories(targetDir);
-            foreach (string dir in subDirs)
-            {
-                DeleteDirectoryInternal(dir);
-            }
+         string[] subDirs = Directory.GetDirectories(targetDir);
+         foreach (string dir in subDirs)
+         {
+            DeleteDirectoryInternal(dir);
+         }
 
-            Directory.Delete(targetDir, false);
-        }
-    }
+         Directory.Delete(targetDir, false);
+      }
+   }
 }

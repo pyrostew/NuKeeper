@@ -7,25 +7,25 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.Report.Formats
 {
-    public static class Age
-    {
-        public static TimeSpan Sum(IEnumerable<PackageUpdateSet> updates)
-        {
-            DateTimeOffset now = DateTimeOffset.UtcNow;
+   public static class Age
+   {
+      public static TimeSpan Sum(IEnumerable<PackageUpdateSet> updates)
+      {
+         DateTimeOffset now = DateTimeOffset.UtcNow;
 
-            TimeSpan sum = updates
-                .Select(u => u.Selected.Published)
-                .Where(p => p.HasValue)
-                .Select(p => now.Subtract(p.Value))
-                .Aggregate(TimeSpan.Zero, (t1, t2) => t1.Add(t2));
+         TimeSpan sum = updates
+             .Select(u => u.Selected.Published)
+             .Where(p => p.HasValue)
+             .Select(p => now.Subtract(p.Value))
+             .Aggregate(TimeSpan.Zero, (t1, t2) => t1.Add(t2));
 
-            return sum;
-        }
+         return sum;
+      }
 
-        public static string AsLibYears(TimeSpan totalAge)
-        {
-            double years = totalAge.TotalDays / 365;
-            return years.ToString("0.000", CultureInfo.InvariantCulture);
-        }
-    }
+      public static string AsLibYears(TimeSpan totalAge)
+      {
+         double years = totalAge.TotalDays / 365;
+         return years.ToString("0.000", CultureInfo.InvariantCulture);
+      }
+   }
 }

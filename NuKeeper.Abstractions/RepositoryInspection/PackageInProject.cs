@@ -8,35 +8,35 @@ using NuKeeper.Abstractions.NuGet;
 
 namespace NuKeeper.Abstractions.RepositoryInspection
 {
-    public class PackageInProject
-    {
-        public PackageInProject(PackageVersionRange packageVersionRange,
-            PackagePath path,
-            IEnumerable<string> projectReferences = null)
-        {
-            PackageVersionRange = packageVersionRange;
-            Path = path;
-            ProjectReferences = projectReferences?.ToList() ?? [];
-        }
+   public class PackageInProject
+   {
+      public PackageInProject(PackageVersionRange packageVersionRange,
+          PackagePath path,
+          IEnumerable<string> projectReferences = null)
+      {
+         PackageVersionRange = packageVersionRange;
+         Path = path;
+         ProjectReferences = projectReferences?.ToList() ?? [];
+      }
 
-        public PackageInProject(string id, string versionRange, PackagePath path) :
-            this(new PackageVersionRange(id, VersionRange.Parse(versionRange)), path, null)
-        {
-        }
+      public PackageInProject(string id, string versionRange, PackagePath path) :
+          this(new PackageVersionRange(id, VersionRange.Parse(versionRange)), path, null)
+      {
+      }
 
-        public PackageIdentity Identity => PackageVersionRange.SingleVersionIdentity();
+      public PackageIdentity Identity => PackageVersionRange.SingleVersionIdentity();
 
-        public PackageVersionRange PackageVersionRange { get; }
+      public PackageVersionRange PackageVersionRange { get; }
 
-        public PackagePath Path { get; }
+      public PackagePath Path { get; }
 
-        public string Id => PackageVersionRange.Id;
-        public VersionRange Range => PackageVersionRange.Version;
+      public string Id => PackageVersionRange.Id;
+      public VersionRange Range => PackageVersionRange.Version;
 
-        public NuGetVersion Version => Identity.Version;
+      public NuGetVersion Version => Identity.Version;
 
-        public bool IsPrerelease => Identity.Version.IsPrerelease;
+      public bool IsPrerelease => Identity.Version.IsPrerelease;
 
-        public IReadOnlyCollection<string> ProjectReferences { get; }
-    }
+      public IReadOnlyCollection<string> ProjectReferences { get; }
+   }
 }

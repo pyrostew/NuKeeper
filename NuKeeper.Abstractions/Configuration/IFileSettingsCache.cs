@@ -1,7 +1,7 @@
 namespace NuKeeper.Abstractions.Configuration
 {
-    public interface IFileSettingsCache
-    {
-        FileSettings GetSettings();
-    }
+   public interface IFileSettingsCache
+   {
+      FileSettings GetSettings();
+   }
 }

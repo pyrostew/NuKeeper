@@ -5,8 +5,8 @@ using NuKeeper.Abstractions.Configuration;
 
 namespace NuKeeper.Abstractions.CollaborationPlatform
 {
-    public interface IRepositoryDiscovery
-    {
-        Task<IEnumerable<RepositorySettings>> GetRepositories(SourceControlServerSettings settings);
-    }
+   public interface IRepositoryDiscovery
+   {
+      Task<IEnumerable<RepositorySettings>> GetRepositories(SourceControlServerSettings settings);
+   }
 }

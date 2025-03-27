@@ -17,153 +17,153 @@ using NuKeeper.Update.Process;
 
 namespace NuKeeper.Engine
 {
-    public class RepositoryUpdater : IRepositoryUpdater
-    {
-        private readonly INuGetSourcesReader _nugetSourcesReader;
-        private readonly IUpdateFinder _updateFinder;
-        private readonly IPackageUpdateSelection _updateSelection;
-        private readonly IPackageUpdater _packageUpdater;
-        private readonly INuKeeperLogger _logger;
-        private readonly ISolutionRestore _solutionRestore;
-        private readonly IReporter _reporter;
+   public class RepositoryUpdater : IRepositoryUpdater
+   {
+      private readonly INuGetSourcesReader _nugetSourcesReader;
+      private readonly IUpdateFinder _updateFinder;
+      private readonly IPackageUpdateSelection _updateSelection;
+      private readonly IPackageUpdater _packageUpdater;
+      private readonly INuKeeperLogger _logger;
+      private readonly ISolutionRestore _solutionRestore;
+      private readonly IReporter _reporter;
 
-        public RepositoryUpdater(
-            INuGetSourcesReader nugetSourcesReader,
-            IUpdateFinder updateFinder,
-            IPackageUpdateSelection updateSelection,
-            IPackageUpdater packageUpdater,
-            INuKeeperLogger logger,
-            ISolutionRestore solutionRestore,
-            IReporter reporter
-        )
-        {
-            _nugetSourcesReader = nugetSourcesReader;
-            _updateFinder = updateFinder;
-            _updateSelection = updateSelection;
-            _packageUpdater = packageUpdater;
-            _logger = logger;
-            _solutionRestore = solutionRestore;
-            _reporter = reporter;
-        }
+      public RepositoryUpdater(
+          INuGetSourcesReader nugetSourcesReader,
+          IUpdateFinder updateFinder,
+          IPackageUpdateSelection updateSelection,
+          IPackageUpdater packageUpdater,
+          INuKeeperLogger logger,
+          ISolutionRestore solutionRestore,
+          IReporter reporter
+      )
+      {
+         _nugetSourcesReader = nugetSourcesReader;
+         _updateFinder = updateFinder;
+         _updateSelection = updateSelection;
+         _packageUpdater = packageUpdater;
+         _logger = logger;
+         _solutionRestore = solutionRestore;
+         _reporter = reporter;
+      }
 
-        public async Task<int> Run(
-            IGitDriver git,
-            RepositoryData repository,
-            SettingsContainer settings)
-        {
-            if (repository == null)
-            {
-                throw new ArgumentNullException(nameof(repository));
-            }
+      public async Task<int> Run(
+          IGitDriver git,
+          RepositoryData repository,
+          SettingsContainer settings)
+      {
+         if (repository == null)
+         {
+            throw new ArgumentNullException(nameof(repository));
+         }
 
-            if (git == null)
-            {
-                throw new ArgumentNullException(nameof(git));
-            }
+         if (git == null)
+         {
+            throw new ArgumentNullException(nameof(git));
+         }
 
-            if (settings == null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
+         if (settings == null)
+         {
+            throw new ArgumentNullException(nameof(settings));
+         }
 
-            if (!repository.IsLocalRepo)
-            {
-                await GitInit(git, repository);
-            }
+         if (!repository.IsLocalRepo)
+         {
+            await GitInit(git, repository);
+         }
 
-            UserSettings userSettings = settings.UserSettings;
+         UserSettings userSettings = settings.UserSettings;
 
-            NuGetSources sources = _nugetSourcesReader.Read(settings.WorkingFolder ?? git.WorkingFolder, userSettings.NuGetSources);
+         NuGetSources sources = _nugetSourcesReader.Read(settings.WorkingFolder ?? git.WorkingFolder, userSettings.NuGetSources);
 
-            IReadOnlyCollection<PackageUpdateSet> updates = await _updateFinder.FindPackageUpdateSets(
-                settings.WorkingFolder ?? git.WorkingFolder,
-                sources,
-                userSettings.AllowedChange,
-                userSettings.UsePrerelease,
-                settings.PackageFilters?.Includes,
-                settings.PackageFilters?.Excludes);
+         IReadOnlyCollection<PackageUpdateSet> updates = await _updateFinder.FindPackageUpdateSets(
+             settings.WorkingFolder ?? git.WorkingFolder,
+             sources,
+             userSettings.AllowedChange,
+             userSettings.UsePrerelease,
+             settings.PackageFilters?.Includes,
+             settings.PackageFilters?.Excludes);
 
-            _reporter.Report(
-                userSettings.OutputDestination,
-                userSettings.OutputFormat,
-                repository.Pull.Name,
-                userSettings.OutputFileName,
-                updates);
+         _reporter.Report(
+             userSettings.OutputDestination,
+             userSettings.OutputFormat,
+             repository.Pull.Name,
+             userSettings.OutputFileName,
+             updates);
 
-            if (updates.Count == 0)
-            {
-                _logger.Minimal("No potential updates found. Well done. Exiting.");
-                return 0;
-            }
-
-            while (updates.Any())
-            {
-                IReadOnlyCollection<PackageUpdateSet> targetUpdates = _updateSelection.SelectTargets(
-                    repository.Push,
-                    updates,
-                    settings.PackageFilters
-                );
-
-                if (!targetUpdates.Any())
-                {
-                    _logger.Minimal("No updates can be applied. Exiting.");
-                    return 0;
-                }
-
-                (int updatesDone, bool? thresholdReached) = await DoTargetUpdates(git, repository, targetUpdates,
-                    sources, settings);
-
-                if (updatesDone != 0)
-                {
-                    return updatesDone;
-                }
-
-                if (thresholdReached.GetValueOrDefault())
-                {
-                    return 0;
-                }
-
-                updates = new ReadOnlyCollection<PackageUpdateSet>(
-                    updates.Except(targetUpdates).ToList()
-                );
-            }
-
+         if (updates.Count == 0)
+         {
+            _logger.Minimal("No potential updates found. Well done. Exiting.");
             return 0;
-        }
+         }
 
-        private async Task<(int UpdatesMade, bool? ThresholdReached)> DoTargetUpdates(
-            IGitDriver git, RepositoryData repository,
-            IReadOnlyCollection<PackageUpdateSet> targetUpdates,
-            NuGetSources sources,
-            SettingsContainer settings
-        )
-        {
-            if (targetUpdates.Count == 0)
+         while (updates.Any())
+         {
+            IReadOnlyCollection<PackageUpdateSet> targetUpdates = _updateSelection.SelectTargets(
+                repository.Push,
+                updates,
+                settings.PackageFilters
+            );
+
+            if (!targetUpdates.Any())
             {
-                return (0, null);
+               _logger.Minimal("No updates can be applied. Exiting.");
+               return 0;
             }
 
-            await _solutionRestore.CheckRestore(targetUpdates, settings.WorkingFolder ?? git.WorkingFolder, sources);
+            (int updatesDone, bool? thresholdReached) = await DoTargetUpdates(git, repository, targetUpdates,
+                sources, settings);
 
-            (int updatesDone, bool thresholdReached) = await _packageUpdater.MakeUpdatePullRequests(git, repository, targetUpdates, sources, settings);
-
-            if (updatesDone < targetUpdates.Count)
+            if (updatesDone != 0)
             {
-                _logger.Minimal($"Attempted {targetUpdates.Count} updates and did {updatesDone}");
-            }
-            else
-            {
-                _logger.Normal($"Done {updatesDone} updates");
+               return updatesDone;
             }
 
-            return (updatesDone, thresholdReached);
-        }
+            if (thresholdReached.GetValueOrDefault())
+            {
+               return 0;
+            }
 
-        private static async Task GitInit(IGitDriver git, RepositoryData repository)
-        {
-            await git.Clone(repository.Pull.Uri, repository.DefaultBranch);
-            repository.DefaultBranch ??= await git.GetCurrentHead();
-            await git.AddRemote(repository.Remote, repository.Push.Uri);
-        }
-    }
+            updates = new ReadOnlyCollection<PackageUpdateSet>(
+                updates.Except(targetUpdates).ToList()
+            );
+         }
+
+         return 0;
+      }
+
+      private async Task<(int UpdatesMade, bool? ThresholdReached)> DoTargetUpdates(
+          IGitDriver git, RepositoryData repository,
+          IReadOnlyCollection<PackageUpdateSet> targetUpdates,
+          NuGetSources sources,
+          SettingsContainer settings
+      )
+      {
+         if (targetUpdates.Count == 0)
+         {
+            return (0, null);
+         }
+
+         await _solutionRestore.CheckRestore(targetUpdates, settings.WorkingFolder ?? git.WorkingFolder, sources);
+
+         (int updatesDone, bool thresholdReached) = await _packageUpdater.MakeUpdatePullRequests(git, repository, targetUpdates, sources, settings);
+
+         if (updatesDone < targetUpdates.Count)
+         {
+            _logger.Minimal($"Attempted {targetUpdates.Count} updates and did {updatesDone}");
+         }
+         else
+         {
+            _logger.Normal($"Done {updatesDone} updates");
+         }
+
+         return (updatesDone, thresholdReached);
+      }
+
+      private static async Task GitInit(IGitDriver git, RepositoryData repository)
+      {
+         await git.Clone(repository.Pull.Uri, repository.DefaultBranch);
+         repository.DefaultBranch ??= await git.GetCurrentHead();
+         await git.AddRemote(repository.Remote, repository.Push.Uri);
+      }
+   }
 }

@@ -10,38 +10,38 @@ using NuKeeper.Update.Selection;
 
 namespace NuKeeper.Engine.Packages
 {
-    public class PackageUpdateSelection : IPackageUpdateSelection
-    {
-        private readonly INuKeeperLogger _logger;
-        private readonly IPackageUpdateSetSort _sort;
-        private readonly IUpdateSelection _updateSelection;
+   public class PackageUpdateSelection : IPackageUpdateSelection
+   {
+      private readonly INuKeeperLogger _logger;
+      private readonly IPackageUpdateSetSort _sort;
+      private readonly IUpdateSelection _updateSelection;
 
-        public PackageUpdateSelection(
-            IPackageUpdateSetSort sort,
-            IUpdateSelection updateSelection,
-            INuKeeperLogger logger)
-        {
-            _logger = logger;
-            _sort = sort;
-            _updateSelection = updateSelection;
-        }
+      public PackageUpdateSelection(
+          IPackageUpdateSetSort sort,
+          IUpdateSelection updateSelection,
+          INuKeeperLogger logger)
+      {
+         _logger = logger;
+         _sort = sort;
+         _updateSelection = updateSelection;
+      }
 
-        public IReadOnlyCollection<PackageUpdateSet> SelectTargets(
-            ForkData pushFork,
-            IReadOnlyCollection<PackageUpdateSet> potentialUpdates,
-            FilterSettings filterSettings)
-        {
-            List<PackageUpdateSet> sorted = _sort.Sort(potentialUpdates)
-                .ToList();
+      public IReadOnlyCollection<PackageUpdateSet> SelectTargets(
+          ForkData pushFork,
+          IReadOnlyCollection<PackageUpdateSet> potentialUpdates,
+          FilterSettings filterSettings)
+      {
+         List<PackageUpdateSet> sorted = _sort.Sort(potentialUpdates)
+             .ToList();
 
-            IReadOnlyCollection<PackageUpdateSet> filtered = _updateSelection.Filter(sorted, filterSettings);
+         IReadOnlyCollection<PackageUpdateSet> filtered = _updateSelection.Filter(sorted, filterSettings);
 
-            foreach (PackageUpdateSet updateSet in filtered)
-            {
-                _logger.Normal($"Selected package update of {updateSet.SelectedId} to {updateSet.SelectedVersion}");
-            }
+         foreach (PackageUpdateSet updateSet in filtered)
+         {
+            _logger.Normal($"Selected package update of {updateSet.SelectedId} to {updateSet.SelectedVersion}");
+         }
 
-            return filtered;
-        }
-    }
+         return filtered;
+      }
+   }
 }

@@ -11,72 +11,72 @@ using NuKeeper.Abstractions.Logging;
 
 namespace NuKeeper.BitBucketLocal
 {
-    public class BitbucketLocalRepositoryDiscovery : IRepositoryDiscovery
-    {
-        private readonly INuKeeperLogger _logger;
-        private readonly ICollaborationPlatform _collaborationPlatform;
-        private readonly CollaborationPlatformSettings _setting;
+   public class BitbucketLocalRepositoryDiscovery : IRepositoryDiscovery
+   {
+      private readonly INuKeeperLogger _logger;
+      private readonly ICollaborationPlatform _collaborationPlatform;
+      private readonly CollaborationPlatformSettings _setting;
 
-        public BitbucketLocalRepositoryDiscovery(INuKeeperLogger logger, ICollaborationPlatform collaborationPlatform, CollaborationPlatformSettings settings)
-        {
-            _logger = logger;
-            _collaborationPlatform = collaborationPlatform;
-            _setting = settings;
-        }
+      public BitbucketLocalRepositoryDiscovery(INuKeeperLogger logger, ICollaborationPlatform collaborationPlatform, CollaborationPlatformSettings settings)
+      {
+         _logger = logger;
+         _collaborationPlatform = collaborationPlatform;
+         _setting = settings;
+      }
 
-        public async Task<IEnumerable<RepositorySettings>> GetRepositories(SourceControlServerSettings settings)
-        {
-            if (settings == null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
+      public async Task<IEnumerable<RepositorySettings>> GetRepositories(SourceControlServerSettings settings)
+      {
+         if (settings == null)
+         {
+            throw new ArgumentNullException(nameof(settings));
+         }
 
-            switch (settings.Scope)
-            {
-                case ServerScope.Global:
-                    _logger.Error($"{settings.Scope} not yet implemented");
-                    throw new NotImplementedException();
+         switch (settings.Scope)
+         {
+            case ServerScope.Global:
+               _logger.Error($"{settings.Scope} not yet implemented");
+               throw new NotImplementedException();
 
-                case ServerScope.Organisation:
-                    return await FromOrganisation(settings.OrganisationName, settings);
+            case ServerScope.Organisation:
+               return await FromOrganisation(settings.OrganisationName, settings);
 
-                case ServerScope.Repository:
-                    return await Task.FromResult(new List<RepositorySettings> { settings.Repository }.AsEnumerable());
+            case ServerScope.Repository:
+               return await Task.FromResult(new List<RepositorySettings> { settings.Repository }.AsEnumerable());
 
-                default:
-                    _logger.Error($"Unknown Server Scope {settings.Scope}");
-                    return await Task.FromResult(Enumerable.Empty<RepositorySettings>());
-            }
-        }
+            default:
+               _logger.Error($"Unknown Server Scope {settings.Scope}");
+               return await Task.FromResult(Enumerable.Empty<RepositorySettings>());
+         }
+      }
 
 
 
-        private async Task<IReadOnlyCollection<RepositorySettings>> FromOrganisation(string organisationName, SourceControlServerSettings settings)
-        {
-            IReadOnlyList<Repository> allOrgRepos = await _collaborationPlatform.GetRepositoriesForOrganisation(organisationName);
+      private async Task<IReadOnlyCollection<RepositorySettings>> FromOrganisation(string organisationName, SourceControlServerSettings settings)
+      {
+         IReadOnlyList<Repository> allOrgRepos = await _collaborationPlatform.GetRepositoriesForOrganisation(organisationName);
 
-            List<Repository> usableRepos = allOrgRepos
-                .Where(r => MatchesIncludeExclude(r, settings))
-                .ToList();
+         List<Repository> usableRepos = allOrgRepos
+             .Where(r => MatchesIncludeExclude(r, settings))
+             .ToList();
 
-            if (allOrgRepos.Count > usableRepos.Count)
-            {
-                _logger.Detailed($"Can pull from {usableRepos.Count} repos out of {allOrgRepos.Count}");
-            }
+         if (allOrgRepos.Count > usableRepos.Count)
+         {
+            _logger.Detailed($"Can pull from {usableRepos.Count} repos out of {allOrgRepos.Count}");
+         }
 
-            return usableRepos
-                .Select(r => new RepositorySettings
-                {
-                    ApiUri = _setting.BaseApiUrl,
-                    RepositoryUri = r.CloneUrl,
-                    RepositoryName = r.Name,
-                    RepositoryOwner = organisationName
-                }).ToList();
-        }
+         return usableRepos
+             .Select(r => new RepositorySettings
+             {
+                ApiUri = _setting.BaseApiUrl,
+                RepositoryUri = r.CloneUrl,
+                RepositoryName = r.Name,
+                RepositoryOwner = organisationName
+             }).ToList();
+      }
 
-        private static bool MatchesIncludeExclude(Repository repo, SourceControlServerSettings settings)
-        {
-            return RegexMatch.IncludeExclude(repo.Name, settings.IncludeRepos, settings.ExcludeRepos);
-        }
-    }
+      private static bool MatchesIncludeExclude(Repository repo, SourceControlServerSettings settings)
+      {
+         return RegexMatch.IncludeExclude(repo.Name, settings.IncludeRepos, settings.ExcludeRepos);
+      }
+   }
 }

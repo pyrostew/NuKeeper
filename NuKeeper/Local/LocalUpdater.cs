@@ -15,63 +15,63 @@ using NuKeeper.Update.Selection;
 
 namespace NuKeeper.Local
 {
-    public class LocalUpdater : ILocalUpdater
-    {
-        private readonly IUpdateSelection _selection;
-        private readonly IUpdateRunner _updateRunner;
-        private readonly ISolutionRestore _solutionRestore;
-        private readonly INuKeeperLogger _logger;
+   public class LocalUpdater : ILocalUpdater
+   {
+      private readonly IUpdateSelection _selection;
+      private readonly IUpdateRunner _updateRunner;
+      private readonly ISolutionRestore _solutionRestore;
+      private readonly INuKeeperLogger _logger;
 
-        public LocalUpdater(
-            IUpdateSelection selection,
-            IUpdateRunner updateRunner,
-            ISolutionRestore solutionRestore,
-            INuKeeperLogger logger)
-        {
-            _selection = selection;
-            _updateRunner = updateRunner;
-            _solutionRestore = solutionRestore;
-            _logger = logger;
-        }
+      public LocalUpdater(
+          IUpdateSelection selection,
+          IUpdateRunner updateRunner,
+          ISolutionRestore solutionRestore,
+          INuKeeperLogger logger)
+      {
+         _selection = selection;
+         _updateRunner = updateRunner;
+         _solutionRestore = solutionRestore;
+         _logger = logger;
+      }
 
-        public async Task ApplyUpdates(
-            IReadOnlyCollection<PackageUpdateSet> updates,
-            IFolder workingFolder,
-            NuGetSources sources,
-            SettingsContainer settings)
-        {
-            if (settings == null)
-            {
-                throw new ArgumentNullException(nameof(settings));
-            }
+      public async Task ApplyUpdates(
+          IReadOnlyCollection<PackageUpdateSet> updates,
+          IFolder workingFolder,
+          NuGetSources sources,
+          SettingsContainer settings)
+      {
+         if (settings == null)
+         {
+            throw new ArgumentNullException(nameof(settings));
+         }
 
-            if (!updates.Any())
-            {
-                return;
-            }
+         if (!updates.Any())
+         {
+            return;
+         }
 
-            IReadOnlyCollection<PackageUpdateSet> filtered = _selection
-                .Filter(updates, settings.PackageFilters);
+         IReadOnlyCollection<PackageUpdateSet> filtered = _selection
+             .Filter(updates, settings.PackageFilters);
 
-            if (!filtered.Any())
-            {
-                _logger.Detailed("All updates were filtered out");
-                return;
-            }
+         if (!filtered.Any())
+         {
+            _logger.Detailed("All updates were filtered out");
+            return;
+         }
 
-            await ApplyUpdates(filtered, workingFolder, sources);
-        }
+         await ApplyUpdates(filtered, workingFolder, sources);
+      }
 
-        private async Task ApplyUpdates(IReadOnlyCollection<PackageUpdateSet> updates, IFolder workingFolder, NuGetSources sources)
-        {
-            await _solutionRestore.CheckRestore(updates, workingFolder, sources);
+      private async Task ApplyUpdates(IReadOnlyCollection<PackageUpdateSet> updates, IFolder workingFolder, NuGetSources sources)
+      {
+         await _solutionRestore.CheckRestore(updates, workingFolder, sources);
 
-            foreach (PackageUpdateSet update in updates)
-            {
-                _logger.Minimal("Updating " + Description.ForUpdateSet(update));
+         foreach (PackageUpdateSet update in updates)
+         {
+            _logger.Minimal("Updating " + Description.ForUpdateSet(update));
 
-                await _updateRunner.Update(update, sources);
-            }
-        }
-    }
+            await _updateRunner.Update(update, sources);
+         }
+      }
+   }
 }

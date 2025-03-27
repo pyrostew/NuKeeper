@@ -1,6 +1,6 @@
-﻿namespace NuKeeper.BitBucket.Models
+namespace NuKeeper.BitBucket.Models
 {
-    public class CommentsInfo : ListBasedPage<Comment>
-    {
-    }
+   public class CommentsInfo : ListBasedPage<Comment>
+   {
+   }
 }

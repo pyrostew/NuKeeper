@@ -11,16 +11,16 @@ using NUnit.Framework;
 
 namespace Nukeeper.AzureDevOps.Tests
 {
-    public class AzureDevOpsPlatformTests
-    {
-        [Test]
-        public void Initialise()
-        {
-            IHttpClientFactory httpClientFactory = Substitute.For<IHttpClientFactory>();
-            _ = httpClientFactory.CreateClient().Returns(new HttpClient());
+   public class AzureDevOpsPlatformTests
+   {
+      [Test]
+      public void Initialise()
+      {
+         IHttpClientFactory httpClientFactory = Substitute.For<IHttpClientFactory>();
+         _ = httpClientFactory.CreateClient().Returns(new HttpClient());
 
-            AzureDevOpsPlatform platform = new(Substitute.For<INuKeeperLogger>(), httpClientFactory);
-            platform.Initialise(new AuthSettings(new Uri("https://uri.com"), "token"));
-        }
-    }
+         AzureDevOpsPlatform platform = new(Substitute.For<INuKeeperLogger>(), httpClientFactory);
+         platform.Initialise(new AuthSettings(new Uri("https://uri.com"), "token"));
+      }
+   }
 }

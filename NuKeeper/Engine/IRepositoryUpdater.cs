@@ -5,8 +5,8 @@ using NuKeeper.Abstractions.Git;
 
 namespace NuKeeper.Engine
 {
-    public interface IRepositoryUpdater
-    {
-        Task<int> Run(IGitDriver git, RepositoryData repository, SettingsContainer settings);
-    }
+   public interface IRepositoryUpdater
+   {
+      Task<int> Run(IGitDriver git, RepositoryData repository, SettingsContainer settings);
+   }
 }

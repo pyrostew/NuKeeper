@@ -1,6 +1,6 @@
 namespace NuKeeper.Update.Process
 {
-    public interface INuGetUpdatePackageCommand : IPackageCommand
-    {
-    }
+   public interface INuGetUpdatePackageCommand : IPackageCommand
+   {
+   }
 }

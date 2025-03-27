@@ -9,75 +9,75 @@ using NUnit.Framework;
 
 namespace NuKeeper.Tests.Engine
 {
-    [TestFixture]
-    public class UpdateConsolidatorTests
-    {
-        [Test]
-        public void WhenOneItemIsConsolidated()
-        {
-            List<PackageUpdateSet> items = PackageUpdates.MakeUpdateSet("foo")
-                .InList();
+   [TestFixture]
+   public class UpdateConsolidatorTests
+   {
+      [Test]
+      public void WhenOneItemIsConsolidated()
+      {
+         List<PackageUpdateSet> items = PackageUpdates.MakeUpdateSet("foo")
+             .InList();
 
-            IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, true);
+         IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, true);
 
-            List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
+         List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
 
-            // one list, containing all the items
-            Assert.That(listOfLists.Count, Is.EqualTo(1));
-            Assert.That(listOfLists[0].Count, Is.EqualTo(1));
-        }
+         // one list, containing all the items
+         Assert.That(listOfLists.Count, Is.EqualTo(1));
+         Assert.That(listOfLists[0].Count, Is.EqualTo(1));
+      }
 
-        [Test]
-        public void WhenOneItemIsNotConsolidated()
-        {
-            List<PackageUpdateSet> items = PackageUpdates.MakeUpdateSet("foo")
-                .InList();
+      [Test]
+      public void WhenOneItemIsNotConsolidated()
+      {
+         List<PackageUpdateSet> items = PackageUpdates.MakeUpdateSet("foo")
+             .InList();
 
-            IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, false);
+         IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, false);
 
-            List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
+         List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
 
-            // one list, containing all the items
-            Assert.That(listOfLists.Count, Is.EqualTo(1));
-            Assert.That(listOfLists[0].Count, Is.EqualTo(1));
-        }
+         // one list, containing all the items
+         Assert.That(listOfLists.Count, Is.EqualTo(1));
+         Assert.That(listOfLists[0].Count, Is.EqualTo(1));
+      }
 
-        [Test]
-        public void WhenItemsAreConsolidated()
-        {
-            List<PackageUpdateSet> items =
-            [
-                PackageUpdates.MakeUpdateSet("foo"),
+      [Test]
+      public void WhenItemsAreConsolidated()
+      {
+         List<PackageUpdateSet> items =
+         [
+             PackageUpdates.MakeUpdateSet("foo"),
                 PackageUpdates.MakeUpdateSet("bar")
-            ];
+         ];
 
-            IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, true);
+         IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, true);
 
-            List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
+         List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
 
-            // one list, containing all the items
-            Assert.That(listOfLists.Count, Is.EqualTo(1));
-            Assert.That(listOfLists[0].Count, Is.EqualTo(2));
-        }
+         // one list, containing all the items
+         Assert.That(listOfLists.Count, Is.EqualTo(1));
+         Assert.That(listOfLists[0].Count, Is.EqualTo(2));
+      }
 
-        [Test]
-        public void WhenItemsAreNotConsolidated()
-        {
-            List<PackageUpdateSet> items =
-            [
-                PackageUpdates.MakeUpdateSet("foo"),
+      [Test]
+      public void WhenItemsAreNotConsolidated()
+      {
+         List<PackageUpdateSet> items =
+         [
+             PackageUpdates.MakeUpdateSet("foo"),
                 PackageUpdates.MakeUpdateSet("bar")
-            ];
+         ];
 
-            IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, false);
+         IReadOnlyCollection<IReadOnlyCollection<PackageUpdateSet>> output = UpdateConsolidator.Consolidate(items, false);
 
-            List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
+         List<IReadOnlyCollection<PackageUpdateSet>> listOfLists = output.ToList();
 
-            // two lists, each containing 1 item
-            Assert.That(listOfLists.Count, Is.EqualTo(2));
-            Assert.That(listOfLists.SelectMany(x => x).Count(), Is.EqualTo(2));
-            Assert.That(listOfLists[0].Count, Is.EqualTo(1));
-            Assert.That(listOfLists[1].Count, Is.EqualTo(1));
-        }
-    }
+         // two lists, each containing 1 item
+         Assert.That(listOfLists.Count, Is.EqualTo(2));
+         Assert.That(listOfLists.SelectMany(x => x).Count(), Is.EqualTo(2));
+         Assert.That(listOfLists[0].Count, Is.EqualTo(1));
+         Assert.That(listOfLists[1].Count, Is.EqualTo(1));
+      }
+   }
 }

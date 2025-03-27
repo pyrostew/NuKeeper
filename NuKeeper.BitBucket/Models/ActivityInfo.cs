@@ -1,6 +1,6 @@
-﻿namespace NuKeeper.BitBucket.Models
+namespace NuKeeper.BitBucket.Models
 {
-    public class ActivityInfo : ListBasedPage<Activity>
-    {
-    }
+   public class ActivityInfo : ListBasedPage<Activity>
+   {
+   }
 }

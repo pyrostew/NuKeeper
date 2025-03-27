@@ -6,10 +6,10 @@ using NuKeeper.Abstractions.Git;
 
 namespace NuKeeper.Engine
 {
-    public interface IGitRepositoryEngine
-    {
-        Task<int> Run(RepositorySettings repository,
-            GitUsernamePasswordCredentials credentials,
-            SettingsContainer settings, User user);
-    }
+   public interface IGitRepositoryEngine
+   {
+      Task<int> Run(RepositorySettings repository,
+          GitUsernamePasswordCredentials credentials,
+          SettingsContainer settings, User user);
+   }
 }

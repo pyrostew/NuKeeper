@@ -1,17 +1,17 @@
 namespace NuKeeper.Abstractions.Logging
 {
-    public enum LogLevel
-    {
-        Quiet = 0,
-        Q = Quiet,
+   public enum LogLevel
+   {
+      Quiet = 0,
+      Q = Quiet,
 
-        Minimal = 1,
-        M = Minimal,
+      Minimal = 1,
+      M = Minimal,
 
-        Normal = 2,
-        N = Normal,
+      Normal = 2,
+      N = Normal,
 
-        Detailed = 3,
-        D = Detailed
-    }
+      Detailed = 3,
+      D = Detailed
+   }
 }

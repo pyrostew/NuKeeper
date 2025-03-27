@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -13,58 +13,58 @@ using NUnit.Framework;
 
 namespace NuKeeper.Integration.Tests.NuGet.Process
 {
-    [TestFixture]
-    public class UpdateDirectoryBuildTargetsCommandPackageDownloadTests : TestWithFailureLogging
-    {
-        private readonly string _testFileWithUpdate =
-            @"<Project><ItemGroup><PackageDownload Update=""foo"" Version=""[{packageVersion}]"" /></ItemGroup></Project>";
+   [TestFixture]
+   public class UpdateDirectoryBuildTargetsCommandPackageDownloadTests : TestWithFailureLogging
+   {
+      private readonly string _testFileWithUpdate =
+          @"<Project><ItemGroup><PackageDownload Update=""foo"" Version=""[{packageVersion}]"" /></ItemGroup></Project>";
 
-        private readonly string _testFileWithInclude =
-            @"<Project><ItemGroup><PackageDownload Include=""foo"" Version=""[{packageVersion}]"" /></ItemGroup></Project>";
+      private readonly string _testFileWithInclude =
+          @"<Project><ItemGroup><PackageDownload Include=""foo"" Version=""[{packageVersion}]"" /></ItemGroup></Project>";
 
-        [Test]
-        public async Task ShouldUpdateValidFileWithUpdateAttribute()
-        {
-            await ExecuteValidUpdateTest(_testFileWithUpdate, "<PackageDownload Update=\"foo\" Version=\"[{packageVersion}]\" />");
-        }
+      [Test]
+      public async Task ShouldUpdateValidFileWithUpdateAttribute()
+      {
+         await ExecuteValidUpdateTest(_testFileWithUpdate, "<PackageDownload Update=\"foo\" Version=\"[{packageVersion}]\" />");
+      }
 
-        [Test]
-        public async Task ShouldUpdateValidFileWithIncludeAttribute()
-        {
-            await ExecuteValidUpdateTest(_testFileWithInclude, "<PackageDownload Include=\"foo\" Version=\"[{packageVersion}]\" />");
-        }
+      [Test]
+      public async Task ShouldUpdateValidFileWithIncludeAttribute()
+      {
+         await ExecuteValidUpdateTest(_testFileWithInclude, "<PackageDownload Include=\"foo\" Version=\"[{packageVersion}]\" />");
+      }
 
-        [Test]
-        public async Task ShouldUpdateValidFileWithIncludeAndVerboseVersion()
-        {
-            await ExecuteValidUpdateTest(
-                @"<Project><ItemGroup><PackageDownload Include=""foo""><Version>[{packageVersion}]</Version></PackageDownload></ItemGroup></Project>",
-                @"<Version>[{packageVersion}]</Version>");
-        }
+      [Test]
+      public async Task ShouldUpdateValidFileWithIncludeAndVerboseVersion()
+      {
+         await ExecuteValidUpdateTest(
+             @"<Project><ItemGroup><PackageDownload Include=""foo""><Version>[{packageVersion}]</Version></PackageDownload></ItemGroup></Project>",
+             @"<Version>[{packageVersion}]</Version>");
+      }
 
-        private async Task ExecuteValidUpdateTest(string testProjectContents, string expectedPackageString, [CallerMemberName] string memberName = "")
-        {
-            const string oldPackageVersion = "5.2.31";
-            const string newPackageVersion = "5.3.4";
+      private async Task ExecuteValidUpdateTest(string testProjectContents, string expectedPackageString, [CallerMemberName] string memberName = "")
+      {
+         const string oldPackageVersion = "5.2.31";
+         const string newPackageVersion = "5.3.4";
 
-            string testFolder = memberName;
-            string testFile = "Directory.Build.props";
-            string workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory, testFolder);
-            _ = Directory.CreateDirectory(workDirectory);
-            string projectContents = testProjectContents.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase);
-            string projectPath = Path.Combine(workDirectory, testFile);
-            await File.WriteAllTextAsync(projectPath, projectContents);
+         string testFolder = memberName;
+         string testFile = "Directory.Build.props";
+         string workDirectory = Path.Combine(TestContext.CurrentContext.WorkDirectory, testFolder);
+         _ = Directory.CreateDirectory(workDirectory);
+         string projectContents = testProjectContents.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase);
+         string projectPath = Path.Combine(workDirectory, testFile);
+         await File.WriteAllTextAsync(projectPath, projectContents);
 
-            UpdateDirectoryBuildTargetsCommand command = new(NukeeperLogger);
+         UpdateDirectoryBuildTargetsCommand command = new(NukeeperLogger);
 
-            PackageInProject package = new("foo", oldPackageVersion,
-                new PackagePath(workDirectory, testFile, PackageReferenceType.DirectoryBuildTargets));
+         PackageInProject package = new("foo", oldPackageVersion,
+             new PackagePath(workDirectory, testFile, PackageReferenceType.DirectoryBuildTargets));
 
-            await command.Invoke(package, new NuGetVersion(newPackageVersion), null, NuGetSources.GlobalFeed);
+         await command.Invoke(package, new NuGetVersion(newPackageVersion), null, NuGetSources.GlobalFeed);
 
-            string contents = await File.ReadAllTextAsync(projectPath);
-            Assert.That(contents, Does.Contain(expectedPackageString.Replace("{packageVersion}", newPackageVersion, StringComparison.OrdinalIgnoreCase)));
-            Assert.That(contents, Does.Not.Contain(expectedPackageString.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase)));
-        }
-    }
+         string contents = await File.ReadAllTextAsync(projectPath);
+         Assert.That(contents, Does.Contain(expectedPackageString.Replace("{packageVersion}", newPackageVersion, StringComparison.OrdinalIgnoreCase)));
+         Assert.That(contents, Does.Not.Contain(expectedPackageString.Replace("{packageVersion}", oldPackageVersion, StringComparison.OrdinalIgnoreCase)));
+      }
+   }
 }

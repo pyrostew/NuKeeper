@@ -6,22 +6,22 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.Sort
 {
-    public class PackageUpdateSetSort : IPackageUpdateSetSort
-    {
-        private readonly INuKeeperLogger _logger;
+   public class PackageUpdateSetSort : IPackageUpdateSetSort
+   {
+      private readonly INuKeeperLogger _logger;
 
-        public PackageUpdateSetSort(INuKeeperLogger logger)
-        {
-            _logger = logger;
-        }
+      public PackageUpdateSetSort(INuKeeperLogger logger)
+      {
+         _logger = logger;
+      }
 
-        public IEnumerable<PackageUpdateSet> Sort(IReadOnlyCollection<PackageUpdateSet> input)
-        {
-            PrioritySort prioritySorter = new();
-            PackageUpdateSetTopologicalSort topoSorter = new(_logger);
+      public IEnumerable<PackageUpdateSet> Sort(IReadOnlyCollection<PackageUpdateSet> input)
+      {
+         PrioritySort prioritySorter = new();
+         PackageUpdateSetTopologicalSort topoSorter = new(_logger);
 
-            IEnumerable<PackageUpdateSet> priorityOrder = prioritySorter.Sort(input);
-            return topoSorter.Sort(priorityOrder.ToList());
-        }
-    }
+         IEnumerable<PackageUpdateSet> priorityOrder = prioritySorter.Sort(input);
+         return topoSorter.Sort(priorityOrder.ToList());
+      }
+   }
 }

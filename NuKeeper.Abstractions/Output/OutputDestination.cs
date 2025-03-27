@@ -1,9 +1,9 @@
 namespace NuKeeper.Abstractions.Output
 {
-    public enum OutputDestination
-    {
-        Console,
-        File,
-        Off
-    }
+   public enum OutputDestination
+   {
+      Console,
+      File,
+      Off
+   }
 }

@@ -6,11 +6,11 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Engine.Packages
 {
-    public interface IPackageUpdateSelection
-    {
-        IReadOnlyCollection<PackageUpdateSet> SelectTargets(
-            ForkData pushFork,
-            IReadOnlyCollection<PackageUpdateSet> potentialUpdates,
-            FilterSettings filterSettings);
-    }
+   public interface IPackageUpdateSelection
+   {
+      IReadOnlyCollection<PackageUpdateSet> SelectTargets(
+          ForkData pushFork,
+          IReadOnlyCollection<PackageUpdateSet> potentialUpdates,
+          FilterSettings filterSettings);
+   }
 }

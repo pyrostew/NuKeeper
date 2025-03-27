@@ -9,43 +9,43 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Update.Process
 {
-    public class SolutionRestore : ISolutionRestore
-    {
-        private readonly IFileRestoreCommand _fileRestoreCommand;
+   public class SolutionRestore : ISolutionRestore
+   {
+      private readonly IFileRestoreCommand _fileRestoreCommand;
 
-        public SolutionRestore(IFileRestoreCommand fileRestoreCommand)
-        {
-            _fileRestoreCommand = fileRestoreCommand;
-        }
+      public SolutionRestore(IFileRestoreCommand fileRestoreCommand)
+      {
+         _fileRestoreCommand = fileRestoreCommand;
+      }
 
-        public async Task CheckRestore(IEnumerable<PackageUpdateSet> targetUpdates, IFolder workingFolder, NuGetSources sources)
-        {
-            if (workingFolder == null)
-            {
-                throw new ArgumentNullException(nameof(workingFolder));
-            }
+      public async Task CheckRestore(IEnumerable<PackageUpdateSet> targetUpdates, IFolder workingFolder, NuGetSources sources)
+      {
+         if (workingFolder == null)
+         {
+            throw new ArgumentNullException(nameof(workingFolder));
+         }
 
-            if (AnyProjectRequiresNuGetRestore(targetUpdates))
-            {
-                await Restore(workingFolder, sources);
-            }
-        }
+         if (AnyProjectRequiresNuGetRestore(targetUpdates))
+         {
+            await Restore(workingFolder, sources);
+         }
+      }
 
-        private async Task Restore(IFolder workingFolder, NuGetSources sources)
-        {
-            IReadOnlyCollection<System.IO.FileInfo> solutionFiles = workingFolder.Find("*.sln");
+      private async Task Restore(IFolder workingFolder, NuGetSources sources)
+      {
+         IReadOnlyCollection<System.IO.FileInfo> solutionFiles = workingFolder.Find("*.sln");
 
-            foreach (System.IO.FileInfo sln in solutionFiles)
-            {
-                await _fileRestoreCommand.Invoke(sln, sources);
-            }
-        }
+         foreach (System.IO.FileInfo sln in solutionFiles)
+         {
+            await _fileRestoreCommand.Invoke(sln, sources);
+         }
+      }
 
-        private static bool AnyProjectRequiresNuGetRestore(IEnumerable<PackageUpdateSet> targetUpdates)
-        {
-            return targetUpdates.SelectMany(u => u.CurrentPackages)
-                .Any(p => p.Path.PackageReferenceType != PackageReferenceType.ProjectFile);
-        }
-    }
+      private static bool AnyProjectRequiresNuGetRestore(IEnumerable<PackageUpdateSet> targetUpdates)
+      {
+         return targetUpdates.SelectMany(u => u.CurrentPackages)
+             .Any(p => p.Path.PackageReferenceType != PackageReferenceType.ProjectFile);
+      }
+   }
 }
 

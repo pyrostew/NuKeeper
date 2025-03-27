@@ -1,6 +1,6 @@
-﻿namespace NuKeeper.BitBucket.Models
+namespace NuKeeper.BitBucket.Models
 {
-    public class PullRequestsInfo : ListBasedPage<PullRequest>
-    {
-    }
+   public class PullRequestsInfo : ListBasedPage<PullRequest>
+   {
+   }
 }

@@ -6,65 +6,65 @@ using NuKeeper.Abstractions.RepositoryInspection;
 
 namespace NuKeeper.Inspection.Sort
 {
-    public class PackageInProjectTopologicalSort
-    {
-        private readonly INuKeeperLogger _logger;
+   public class PackageInProjectTopologicalSort
+   {
+      private readonly INuKeeperLogger _logger;
 
-        public PackageInProjectTopologicalSort(INuKeeperLogger logger)
-        {
-            _logger = logger;
-        }
+      public PackageInProjectTopologicalSort(INuKeeperLogger logger)
+      {
+         _logger = logger;
+      }
 
-        public IEnumerable<PackageInProject> Sort(IReadOnlyCollection<PackageInProject> input)
-        {
-            TopologicalSort<PackageInProject> topo = new(_logger, Match);
+      public IEnumerable<PackageInProject> Sort(IReadOnlyCollection<PackageInProject> input)
+      {
+         TopologicalSort<PackageInProject> topo = new(_logger, Match);
 
-            List<SortItemData<PackageInProject>> inputMap = input.Select(p =>
-                    new SortItemData<PackageInProject>(p, ProjectDeps(p, input)))
-                .ToList();
+         List<SortItemData<PackageInProject>> inputMap = input.Select(p =>
+                 new SortItemData<PackageInProject>(p, ProjectDeps(p, input)))
+             .ToList();
 
-            List<PackageInProject> sorted = topo.Sort(inputMap)
-                .ToList();
+         List<PackageInProject> sorted = topo.Sort(inputMap)
+             .ToList();
 
-            sorted.Reverse();
+         sorted.Reverse();
 
-            ReportSort(input.ToList(), sorted);
+         ReportSort(input.ToList(), sorted);
 
-            return sorted;
-        }
+         return sorted;
+      }
 
-        private bool Match(PackageInProject a, PackageInProject b)
-        {
-            return a.Path.FullName == b.Path.FullName;
-        }
+      private bool Match(PackageInProject a, PackageInProject b)
+      {
+         return a.Path.FullName == b.Path.FullName;
+      }
 
-        private static IReadOnlyCollection<PackageInProject> ProjectDeps(PackageInProject selected,
-            IReadOnlyCollection<PackageInProject> all)
-        {
-            IReadOnlyCollection<string> deps = selected.ProjectReferences;
-            return all.Where(i => deps.Any(d => d == i.Path.FullName)).ToList();
-        }
+      private static IReadOnlyCollection<PackageInProject> ProjectDeps(PackageInProject selected,
+          IReadOnlyCollection<PackageInProject> all)
+      {
+         IReadOnlyCollection<string> deps = selected.ProjectReferences;
+         return all.Where(i => deps.Any(d => d == i.Path.FullName)).ToList();
+      }
 
-        private void ReportSort(IList<PackageInProject> input, IList<PackageInProject> output)
-        {
-            bool hasChange = false;
+      private void ReportSort(IList<PackageInProject> input, IList<PackageInProject> output)
+      {
+         bool hasChange = false;
 
-            for (int i = 0; i < output.Count; i++)
+         for (int i = 0; i < output.Count; i++)
+         {
+            if (input[i] != output[i])
             {
-                if (input[i] != output[i])
-                {
-                    hasChange = true;
-                    PackageInProject firstChange = output[i];
-                    int originalIndex = input.IndexOf(firstChange);
-                    _logger.Detailed($"Resorted {output.Count} projects by dependencies, first change is {firstChange.Path.RelativePath} moved to position {i} from {originalIndex}.");
-                    break;
-                }
+               hasChange = true;
+               PackageInProject firstChange = output[i];
+               int originalIndex = input.IndexOf(firstChange);
+               _logger.Detailed($"Resorted {output.Count} projects by dependencies, first change is {firstChange.Path.RelativePath} moved to position {i} from {originalIndex}.");
+               break;
             }
+         }
 
-            if (!hasChange)
-            {
-                _logger.Detailed($"Sorted {output.Count} projects by dependencies but no change made");
-            }
-        }
-    }
+         if (!hasChange)
+         {
+            _logger.Detailed($"Sorted {output.Count} projects by dependencies but no change made");
+         }
+      }
+   }
 }

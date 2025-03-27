@@ -6,10 +6,10 @@ using NuKeeper.Abstractions.NuGetApi;
 
 namespace NuKeeper.Inspection.NuGetApi
 {
-    public interface IPackageVersionsLookup
-    {
-        Task<IReadOnlyCollection<PackageSearchMetadata>> Lookup(
-            string packageName, bool includePrerelease,
-            NuGetSources sources);
-    }
+   public interface IPackageVersionsLookup
+   {
+      Task<IReadOnlyCollection<PackageSearchMetadata>> Lookup(
+          string packageName, bool includePrerelease,
+          NuGetSources sources);
+   }
 }

@@ -1,6 +1,6 @@
-﻿namespace NuKeeper.BitBucket.Models
+namespace NuKeeper.BitBucket.Models
 {
-    public class Team : User
-    {
-    }
+   public class Team : User
+   {
+   }
 }

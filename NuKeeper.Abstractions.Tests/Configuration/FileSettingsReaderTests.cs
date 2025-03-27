@@ -13,91 +13,91 @@ using NUnit.Framework;
 
 namespace NuKeeper.Abstractions.Tests.Configuration
 {
-    [TestFixture]
-    public class FileSettingsReaderTests
-    {
-        private string _uniqueTemporaryFolder;
+   [TestFixture]
+   public class FileSettingsReaderTests
+   {
+      private string _uniqueTemporaryFolder;
 
-        [SetUp]
-        public void Setup()
-        {
-            _uniqueTemporaryFolder = UniqueTemporaryFolder();
-        }
+      [SetUp]
+      public void Setup()
+      {
+         _uniqueTemporaryFolder = UniqueTemporaryFolder();
+      }
 
-        [TearDown]
-        public void TearDown()
-        {
-            if (Directory.Exists(_uniqueTemporaryFolder))
-            {
-                Directory.Delete(_uniqueTemporaryFolder, true);
-            }
-        }
+      [TearDown]
+      public void TearDown()
+      {
+         if (Directory.Exists(_uniqueTemporaryFolder))
+         {
+            Directory.Delete(_uniqueTemporaryFolder, true);
+         }
+      }
 
 
 
-        [Test]
-        public void MissingFileReturnsNoSettings()
-        {
-            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
+      [Test]
+      public void MissingFileReturnsNoSettings()
+      {
+         FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            FileSettings data = fsr.Read(_uniqueTemporaryFolder);
+         FileSettings data = fsr.Read(_uniqueTemporaryFolder);
 
-            Assert.That(data, Is.Not.Null);
-            Assert.That(data.Age, Is.Null);
-            Assert.That(data.Api, Is.Null);
-            Assert.That(data.Include, Is.Null);
-            Assert.That(data.Exclude, Is.Null);
-            Assert.That(data.Label, Is.Null);
-            Assert.That(data.MaxPackageUpdates, Is.Null);
-            Assert.That(data.MaxOpenPullRequests, Is.Null);
-            Assert.That(data.MaxRepo, Is.Null);
-            Assert.That(data.Verbosity, Is.Null);
-            Assert.That(data.Change, Is.Null);
-            Assert.That(data.ForkMode, Is.Null);
-            Assert.That(data.UsePrerelease, Is.Null);
+         Assert.That(data, Is.Not.Null);
+         Assert.That(data.Age, Is.Null);
+         Assert.That(data.Api, Is.Null);
+         Assert.That(data.Include, Is.Null);
+         Assert.That(data.Exclude, Is.Null);
+         Assert.That(data.Label, Is.Null);
+         Assert.That(data.MaxPackageUpdates, Is.Null);
+         Assert.That(data.MaxOpenPullRequests, Is.Null);
+         Assert.That(data.MaxRepo, Is.Null);
+         Assert.That(data.Verbosity, Is.Null);
+         Assert.That(data.Change, Is.Null);
+         Assert.That(data.ForkMode, Is.Null);
+         Assert.That(data.UsePrerelease, Is.Null);
 
-            Assert.That(data.OutputDestination, Is.Null);
-            Assert.That(data.OutputFormat, Is.Null);
-            Assert.That(data.OutputFileName, Is.Null);
-            Assert.That(data.LogDestination, Is.Null);
-            Assert.That(data.Platform, Is.Null);
-            Assert.That(data.BranchNameTemplate, Is.Null);
-            Assert.That(data.DeleteBranchAfterMerge, Is.Null);
-        }
+         Assert.That(data.OutputDestination, Is.Null);
+         Assert.That(data.OutputFormat, Is.Null);
+         Assert.That(data.OutputFileName, Is.Null);
+         Assert.That(data.LogDestination, Is.Null);
+         Assert.That(data.Platform, Is.Null);
+         Assert.That(data.BranchNameTemplate, Is.Null);
+         Assert.That(data.DeleteBranchAfterMerge, Is.Null);
+      }
 
-        [Test]
-        public void EmptyConfigReturnsNoSettings()
-        {
-            string path = MakeTestFile("{}");
+      [Test]
+      public void EmptyConfigReturnsNoSettings()
+      {
+         string path = MakeTestFile("{}");
 
-            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
+         FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            FileSettings data = fsr.Read(path);
+         FileSettings data = fsr.Read(path);
 
-            Assert.That(data, Is.Not.Null);
-            Assert.That(data.Age, Is.Null);
-            Assert.That(data.Api, Is.Null);
-            Assert.That(data.Include, Is.Null);
-            Assert.That(data.Exclude, Is.Null);
-            Assert.That(data.Label, Is.Null);
-            Assert.That(data.MaxPackageUpdates, Is.Null);
-            Assert.That(data.MaxOpenPullRequests, Is.Null);
-            Assert.That(data.MaxRepo, Is.Null);
-            Assert.That(data.Verbosity, Is.Null);
-            Assert.That(data.Change, Is.Null);
-            Assert.That(data.ForkMode, Is.Null);
-            Assert.That(data.UsePrerelease, Is.Null);
+         Assert.That(data, Is.Not.Null);
+         Assert.That(data.Age, Is.Null);
+         Assert.That(data.Api, Is.Null);
+         Assert.That(data.Include, Is.Null);
+         Assert.That(data.Exclude, Is.Null);
+         Assert.That(data.Label, Is.Null);
+         Assert.That(data.MaxPackageUpdates, Is.Null);
+         Assert.That(data.MaxOpenPullRequests, Is.Null);
+         Assert.That(data.MaxRepo, Is.Null);
+         Assert.That(data.Verbosity, Is.Null);
+         Assert.That(data.Change, Is.Null);
+         Assert.That(data.ForkMode, Is.Null);
+         Assert.That(data.UsePrerelease, Is.Null);
 
-            Assert.That(data.OutputDestination, Is.Null);
-            Assert.That(data.OutputFormat, Is.Null);
-            Assert.That(data.OutputFileName, Is.Null);
-            Assert.That(data.LogDestination, Is.Null);
-            Assert.That(data.Platform, Is.Null);
-            Assert.That(data.BranchNameTemplate, Is.Null);
-            Assert.That(data.DeleteBranchAfterMerge, Is.Null);
-        }
+         Assert.That(data.OutputDestination, Is.Null);
+         Assert.That(data.OutputFormat, Is.Null);
+         Assert.That(data.OutputFileName, Is.Null);
+         Assert.That(data.LogDestination, Is.Null);
+         Assert.That(data.Platform, Is.Null);
+         Assert.That(data.BranchNameTemplate, Is.Null);
+         Assert.That(data.DeleteBranchAfterMerge, Is.Null);
+      }
 
-        private const string FullFileData = @"{
+      private const string FullFileData = @"{
                ""age"":""3d"",
                ""api"":""http://api.com"",
                ""include"":""fred"",
@@ -122,81 +122,81 @@ namespace NuKeeper.Abstractions.Tests.Configuration
                ""DeleteBranchAfterMerge"": ""true""
         }";
 
-        [Test]
-        public void PopulatedConfigReturnsAllStringSettings()
-        {
-            string path = MakeTestFile(FullFileData);
+      [Test]
+      public void PopulatedConfigReturnsAllStringSettings()
+      {
+         string path = MakeTestFile(FullFileData);
 
-            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
+         FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            FileSettings data = fsr.Read(path);
+         FileSettings data = fsr.Read(path);
 
-            Assert.That(data, Is.Not.Null);
-            Assert.That(data.Age, Is.EqualTo("3d"));
-            Assert.That(data.Api, Is.EqualTo("http://api.com"));
-            Assert.That(data.Include, Is.EqualTo("fred"));
-            Assert.That(data.Exclude, Is.EqualTo("fish"));
-            Assert.That(data.IncludeRepos, Is.EqualTo("repoIn"));
-            Assert.That(data.ExcludeRepos, Is.EqualTo("repoOut"));
-            Assert.That(data.LogFile, Is.EqualTo("somefile.log"));
-            Assert.That(data.OutputFileName, Is.EqualTo("out_42.txt"));
-            Assert.That(data.BranchNameTemplate, Is.EqualTo("nukeeper/MyBranch"));
-            Assert.That(data.DeleteBranchAfterMerge, Is.EqualTo(true));
-        }
+         Assert.That(data, Is.Not.Null);
+         Assert.That(data.Age, Is.EqualTo("3d"));
+         Assert.That(data.Api, Is.EqualTo("http://api.com"));
+         Assert.That(data.Include, Is.EqualTo("fred"));
+         Assert.That(data.Exclude, Is.EqualTo("fish"));
+         Assert.That(data.IncludeRepos, Is.EqualTo("repoIn"));
+         Assert.That(data.ExcludeRepos, Is.EqualTo("repoOut"));
+         Assert.That(data.LogFile, Is.EqualTo("somefile.log"));
+         Assert.That(data.OutputFileName, Is.EqualTo("out_42.txt"));
+         Assert.That(data.BranchNameTemplate, Is.EqualTo("nukeeper/MyBranch"));
+         Assert.That(data.DeleteBranchAfterMerge, Is.EqualTo(true));
+      }
 
-        [Test]
-        public void PopulatedConfigReturnsLabels()
-        {
-            string path = MakeTestFile(FullFileData);
+      [Test]
+      public void PopulatedConfigReturnsLabels()
+      {
+         string path = MakeTestFile(FullFileData);
 
-            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
+         FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            FileSettings data = fsr.Read(path);
+         FileSettings data = fsr.Read(path);
 
-            Assert.That(data.Label.Count, Is.EqualTo(2));
-            Assert.That(data.Label, Does.Contain("foo"));
-            Assert.That(data.Label, Does.Contain("bar"));
-        }
+         Assert.That(data.Label.Count, Is.EqualTo(2));
+         Assert.That(data.Label, Does.Contain("foo"));
+         Assert.That(data.Label, Does.Contain("bar"));
+      }
 
-        [Test]
-        public void PopulatedConfigReturnsNumericSettings()
-        {
-            string path = MakeTestFile(FullFileData);
+      [Test]
+      public void PopulatedConfigReturnsNumericSettings()
+      {
+         string path = MakeTestFile(FullFileData);
 
-            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
+         FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            FileSettings data = fsr.Read(path);
+         FileSettings data = fsr.Read(path);
 
-            Assert.That(data.MaxPackageUpdates, Is.EqualTo(42));
-            Assert.That(data.MaxOpenPullRequests, Is.EqualTo(10));
-            Assert.That(data.MaxRepo, Is.EqualTo(12));
-        }
+         Assert.That(data.MaxPackageUpdates, Is.EqualTo(42));
+         Assert.That(data.MaxOpenPullRequests, Is.EqualTo(10));
+         Assert.That(data.MaxRepo, Is.EqualTo(12));
+      }
 
-        [Test]
-        public void PopulatedConfigReturnsEnumSettings()
-        {
-            string path = MakeTestFile(FullFileData);
+      [Test]
+      public void PopulatedConfigReturnsEnumSettings()
+      {
+         string path = MakeTestFile(FullFileData);
 
-            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
+         FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            FileSettings data = fsr.Read(path);
+         FileSettings data = fsr.Read(path);
 
-            Assert.That(data.Change, Is.EqualTo(VersionChange.Minor));
-            Assert.That(data.ForkMode, Is.EqualTo(ForkMode.PreferFork));
-            Assert.That(data.UsePrerelease, Is.EqualTo(UsePrerelease.Never));
+         Assert.That(data.Change, Is.EqualTo(VersionChange.Minor));
+         Assert.That(data.ForkMode, Is.EqualTo(ForkMode.PreferFork));
+         Assert.That(data.UsePrerelease, Is.EqualTo(UsePrerelease.Never));
 
-            Assert.That(data.Verbosity, Is.EqualTo(LogLevel.Detailed));
-            Assert.That(data.LogDestination, Is.EqualTo(LogDestination.File));
+         Assert.That(data.Verbosity, Is.EqualTo(LogLevel.Detailed));
+         Assert.That(data.LogDestination, Is.EqualTo(LogDestination.File));
 
-            Assert.That(data.OutputDestination, Is.EqualTo(OutputDestination.Console));
-            Assert.That(data.OutputFormat, Is.EqualTo(OutputFormat.Text));
-            Assert.That(data.Platform, Is.EqualTo(Platform.Bitbucket));
-        }
+         Assert.That(data.OutputDestination, Is.EqualTo(OutputDestination.Console));
+         Assert.That(data.OutputFormat, Is.EqualTo(OutputFormat.Text));
+         Assert.That(data.Platform, Is.EqualTo(Platform.Bitbucket));
+      }
 
-        [Test]
-        public void ConfigKeysAreCaseInsensitive()
-        {
-            const string configData = @"{
+      [Test]
+      public void ConfigKeysAreCaseInsensitive()
+      {
+         const string configData = @"{
                ""Age"":""3d"",
                ""API"":""http://api.com"",
                ""iNClude"":""fred"",
@@ -212,65 +212,65 @@ namespace NuKeeper.Abstractions.Tests.Configuration
                ""deLeTEBranCHafTERMerge"": ""true""
             }";
 
-            string path = MakeTestFile(configData);
+         string path = MakeTestFile(configData);
 
-            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
+         FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            FileSettings data = fsr.Read(path);
+         FileSettings data = fsr.Read(path);
 
-            Assert.That(data, Is.Not.Null);
-            Assert.That(data.Age, Is.EqualTo("3d"));
-            Assert.That(data.Api, Is.EqualTo("http://api.com"));
-            Assert.That(data.Include, Is.EqualTo("fred"));
-            Assert.That(data.Exclude, Is.EqualTo("fish"));
-            Assert.That(data.IncludeRepos, Is.EqualTo("repo2"));
-            Assert.That(data.Label.Count, Is.EqualTo(1));
-            Assert.That(data.Label, Does.Contain("mark"));
-            Assert.That(data.MaxPackageUpdates, Is.EqualTo(4));
-            Assert.That(data.MaxOpenPullRequests, Is.EqualTo(10));
-            Assert.That(data.MaxRepo, Is.EqualTo(3));
-            Assert.That(data.Verbosity, Is.EqualTo(LogLevel.Quiet));
-            Assert.That(data.Change, Is.EqualTo(VersionChange.Patch));
-            Assert.That(data.BranchNameTemplate, Is.EqualTo("nukeeper/MyBranch"));
-            Assert.That(data.DeleteBranchAfterMerge, Is.EqualTo(true));
-        }
+         Assert.That(data, Is.Not.Null);
+         Assert.That(data.Age, Is.EqualTo("3d"));
+         Assert.That(data.Api, Is.EqualTo("http://api.com"));
+         Assert.That(data.Include, Is.EqualTo("fred"));
+         Assert.That(data.Exclude, Is.EqualTo("fish"));
+         Assert.That(data.IncludeRepos, Is.EqualTo("repo2"));
+         Assert.That(data.Label.Count, Is.EqualTo(1));
+         Assert.That(data.Label, Does.Contain("mark"));
+         Assert.That(data.MaxPackageUpdates, Is.EqualTo(4));
+         Assert.That(data.MaxOpenPullRequests, Is.EqualTo(10));
+         Assert.That(data.MaxRepo, Is.EqualTo(3));
+         Assert.That(data.Verbosity, Is.EqualTo(LogLevel.Quiet));
+         Assert.That(data.Change, Is.EqualTo(VersionChange.Patch));
+         Assert.That(data.BranchNameTemplate, Is.EqualTo("nukeeper/MyBranch"));
+         Assert.That(data.DeleteBranchAfterMerge, Is.EqualTo(true));
+      }
 
-        [Test]
-        public void ExtraKeysAreIgnored()
-        {
-            const string configData = @"{
+      [Test]
+      public void ExtraKeysAreIgnored()
+      {
+         const string configData = @"{
                ""age"":""3d"",
                ""api"":""http://api.com"",
                ""something"":""nothing""
             }";
 
-            string path = MakeTestFile(configData);
+         string path = MakeTestFile(configData);
 
-            FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
+         FileSettingsReader fsr = new(Substitute.For<INuKeeperLogger>());
 
-            FileSettings data = fsr.Read(path);
+         FileSettings data = fsr.Read(path);
 
-            Assert.That(data, Is.Not.Null);
-            Assert.That(data.Age, Is.EqualTo("3d"));
-            Assert.That(data.Api, Is.EqualTo("http://api.com"));
-        }
+         Assert.That(data, Is.Not.Null);
+         Assert.That(data.Age, Is.EqualTo("3d"));
+         Assert.That(data.Api, Is.EqualTo("http://api.com"));
+      }
 
-        private string MakeTestFile(string contents)
-        {
-            string path = Path.Join(_uniqueTemporaryFolder, "nukeeper.settings.json");
-            File.WriteAllText(path, contents);
-            return _uniqueTemporaryFolder;
-        }
+      private string MakeTestFile(string contents)
+      {
+         string path = Path.Join(_uniqueTemporaryFolder, "nukeeper.settings.json");
+         File.WriteAllText(path, contents);
+         return _uniqueTemporaryFolder;
+      }
 
-        private static string UniqueTemporaryFolder()
-        {
-            string uniqueName = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
-            string folder = Path.Combine(Path.GetTempPath(), "NuKeeper", uniqueName);
+      private static string UniqueTemporaryFolder()
+      {
+         string uniqueName = Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture);
+         string folder = Path.Combine(Path.GetTempPath(), "NuKeeper", uniqueName);
 
-            DirectoryInfo tempDir = new(folder);
-            tempDir.Create();
+         DirectoryInfo tempDir = new(folder);
+         tempDir.Create();
 
-            return folder;
-        }
-    }
+         return folder;
+      }
+   }
 }
