@@ -49,12 +49,70 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
       }
 
       [Test]
+      public void ShouldUpdateSDKStyleAndMixedProjects()
+      {
+         const string oldPackageVersion = "13.0.2";
+         const string newPackageVersion = "13.0.3";
+         const string expectedPackageString =
+             @"<PackageReference Include=""Newtonsoft.Json"" Version=""{packageVersion}"" />";
+         const string testFolder = nameof(ShouldUpdateSDKStyleAndMixedProjects);
+
+         string testProject = $"{testFolder}.csproj";
+
+         string workDirectory = Path.Combine(_uniqueTemporaryFolder.FullPath, testFolder);
+         Directory.CreateDirectory(workDirectory);
+         string packagesFolder = Path.Combine(workDirectory, "packages");
+         Directory.CreateDirectory(packagesFolder);
+
+         string projectContents = TestStrings.SimpleDotNetDependsOnMixed.Replace("{packageVersion}", oldPackageVersion,
+             StringComparison.OrdinalIgnoreCase);
+         string projectPath = Path.Combine(workDirectory, testProject);
+         File.WriteAllText(projectPath, projectContents);
+
+         string mixedLibPath = Path.Combine(workDirectory, "MixedLibrary.vcxproj");
+
+         File.WriteAllText(mixedLibPath, TestStrings.MixedProjectWithPackageReference);
+
+         File.WriteAllText(Path.Combine(workDirectory, "nuget.config"), _nugetConfig);
+
+         Abstractions.Logging.INuKeeperLogger logger = NukeeperLogger;
+         ExternalProcess externalProcess = new(logger);
+
+         MonoExecutor monoExecutor = new(logger, externalProcess);
+
+         NuGetPath nuGetPath = new(logger);
+         NuGetVersion nuGetVersion = new(newPackageVersion);
+         PackageSource packageSource = new(NuGetConstants.V3FeedUrl);
+
+         DotNetUpdatePackageCommand updateCommand = new(externalProcess);
+
+         PackageInProject packageToUpdate = new("Newtonsoft.json", oldPackageVersion,
+             new PackagePath(workDirectory, testProject, PackageReferenceType.PackagesConfig));
+
+         updateCommand.Invoke(packageToUpdate, nuGetVersion, packageSource, NuGetSources.GlobalFeed).Wait();
+
+         packageToUpdate = new("Newtonsoft.json", oldPackageVersion,
+             new PackagePath(workDirectory, "MixedLibrary.vcxproj", PackageReferenceType.PackagesConfig));
+
+         updateCommand.Invoke(packageToUpdate, nuGetVersion, packageSource, NuGetSources.GlobalFeed).Wait();
+
+         string contents = File.ReadAllText(projectPath);
+         Assert.That(contents,
+             Does.Contain(expectedPackageString.Replace("{packageVersion}", newPackageVersion,
+                 StringComparison.OrdinalIgnoreCase)));
+         Assert.That(contents,
+             Does.Not.Contain(expectedPackageString.Replace("{packageVersion}", oldPackageVersion,
+                 StringComparison.OrdinalIgnoreCase)));
+
+      }
+
+      [Test]
       public async Task ShouldUpdateSDKStyleProjectsThatReferenceMixedProjects()
       {
          const string oldPackageVersion = "13.0.2";
-         //const string newPackageVersion = "13.0.3";
-         //const string expectedPackageString =
-         //    @"<PackageReference Include=""Newtonsoft.Json"" Version=""{packageVersion}"" />";
+         const string newPackageVersion = "13.0.3";
+         const string expectedPackageString =
+             @"<PackageReference Include=""Newtonsoft.Json"" Version=""{packageVersion}"" />";
          const string testFolder = nameof(ShouldUpdateSDKStyleProjectsThatReferenceMixedProjects);
 
          string testProject = $"{testFolder}.csproj";
@@ -69,7 +127,35 @@ namespace NuKeeper.Integration.Tests.NuGet.Process
          string projectPath = Path.Combine(workDirectory, testProject);
          await File.WriteAllTextAsync(projectPath, projectContents);
 
-         File.WriteAllText(Path.Combine(workDirectory, "\\MixedLibrary\\MixedLibrary.vcxproj"), TestStrings.SimpleMixedProject);
+         string mixedLibPath = Path.Combine(workDirectory, "MixedLibrary.vcxproj");
+
+         File.WriteAllText(mixedLibPath, TestStrings.SimpleMixedProject);
+
+         File.WriteAllText(Path.Combine(workDirectory, "nuget.config"), _nugetConfig);
+
+         Abstractions.Logging.INuKeeperLogger logger = NukeeperLogger;
+         ExternalProcess externalProcess = new(logger);
+
+         MonoExecutor monoExecutor = new(logger, externalProcess);
+
+         NuGetPath nuGetPath = new(logger);
+         NuGetVersion nuGetVersion = new(newPackageVersion);
+         PackageSource packageSource = new(NuGetConstants.V3FeedUrl);
+
+         DotNetUpdatePackageCommand updateCommand = new(externalProcess);
+
+         PackageInProject packageToUpdate = new("Newtonsoft.json", oldPackageVersion,
+             new PackagePath(workDirectory, testProject, PackageReferenceType.PackagesConfig));
+
+         await updateCommand.Invoke(packageToUpdate, nuGetVersion, packageSource, NuGetSources.GlobalFeed);
+
+         string contents = await File.ReadAllTextAsync(projectPath);
+         Assert.That(contents,
+             Does.Contain(expectedPackageString.Replace("{packageVersion}", newPackageVersion,
+                 StringComparison.OrdinalIgnoreCase)));
+         Assert.That(contents,
+             Does.Not.Contain(expectedPackageString.Replace("{packageVersion}", oldPackageVersion,
+                 StringComparison.OrdinalIgnoreCase)));
       }
 
       [Test]
